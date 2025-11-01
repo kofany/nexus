@@ -87,47 +87,26 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleData(data: Buffer): void {
 		log.info(`${colors.cyan("[WeeChat Relay Client]")} Received data from ${this.id}, length: ${data.length}`);
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Data as string: "${data.toString('utf8')}"`);
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Data as hex: ${data.toString('hex')}`);
-
-		// Check if this is a text command (starts with ASCII characters)
-		const firstByte = data[0];
-		if (firstByte >= 0x20 && firstByte <= 0x7E) {
-			// This looks like text, not binary protocol
-			log.info(`${colors.yellow("[WeeChat Relay Client]")} Received TEXT data, not binary!`);
-			this.handleTextCommand(data.toString('utf8'));
-			return;
-		}
 
 		// Append to buffer
 		this.buffer = Buffer.concat([this.buffer, data]);
 
-		// Try to parse messages
-		while (this.buffer.length >= 5) {
-			// Read message length (first 4 bytes, big endian)
-			const messageLength = this.buffer.readUInt32BE(0);
+		// WeeChat Relay uses TEXT protocol (line-based)
+		// Parse lines ending with \n
+		let newlineIndex: number;
+		while ((newlineIndex = this.buffer.indexOf('\n')) !== -1) {
+			// Extract line (without \n)
+			const line = this.buffer.slice(0, newlineIndex).toString('utf8').trim();
+			this.buffer = this.buffer.slice(newlineIndex + 1);
 
-			log.info(`${colors.cyan("[WeeChat Relay Client]")} Message length: ${messageLength}, buffer length: ${this.buffer.length}`);
-
-			// Check if we have the full message
-			if (this.buffer.length < messageLength) {
-				log.info(`${colors.yellow("[WeeChat Relay Client]")} Waiting for more data...`);
-				break; // Wait for more data
+			if (line.length === 0) {
+				continue; // Skip empty lines
 			}
 
-			// Extract message
-			const messageData = this.buffer.slice(0, messageLength);
-			this.buffer = this.buffer.slice(messageLength);
+			log.info(`${colors.cyan("[WeeChat Relay Client]")} Received command line: "${line}"`);
 
-			// Parse and handle message
-			try {
-				this.handleMessage(messageData);
-			} catch (err) {
-				log.error(
-					`${colors.red("[WeeChat Relay Client]")} Error parsing message from ${this.id}: ${err}`
-				);
-				this.emit("error", err);
-			}
+			// Handle text command
+			this.handleTextCommand(line);
 		}
 	}
 
@@ -136,6 +115,13 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleTextCommand(line: string): void {
 		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsing text command: "${line}"`);
+
+		// Trim the line
+		line = line.trim();
+
+		if (line.length === 0) {
+			return; // Skip empty lines
+		}
 
 		// Parse command: (id) command arguments
 		let msgID = "";
@@ -151,7 +137,7 @@ export class WeeChatRelayClient extends EventEmitter {
 			}
 		}
 
-		// Parse command and arguments
+		// Parse command and arguments (only first space, rest is args)
 		const spaceIdx = line.indexOf(" ");
 		if (spaceIdx !== -1) {
 			cmd = line.substring(0, spaceIdx);
