@@ -2619,9 +2619,10 @@ export class IrssiClient {
 		// Create server
 		log.info(`${colors.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer on port ${this.config.weechatRelay.port}...`);
 		this.weechatRelayServer = new WeeChatRelayServer({
-			tcpPort: undefined, // Disable TCP for now
-			wsPort: this.config.weechatRelay.port,
-			wsHost: "0.0.0.0", // Listen on all interfaces
+			tcpPort: this.config.weechatRelay.port, // TCP for Lith
+			tcpHost: "0.0.0.0", // Listen on all interfaces
+			wsPort: undefined, // Disable WebSocket (use TCP only)
+			wsHost: undefined,
 			wsPath: "/weechat",
 			password: this.weechatRelayPassword,
 			passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
