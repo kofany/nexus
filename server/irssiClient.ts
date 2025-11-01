@@ -2580,7 +2580,11 @@ export class IrssiClient {
 	 * Start WeeChat Relay server for this user
 	 */
 	async startWeeChatRelay(): Promise<void> {
+		log.info(`${colors.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${colors.bold(this.name)}`);
+		log.info(`${colors.cyan("[WeeChat Relay]")} Config:`, JSON.stringify(this.config.weechatRelay));
+
 		if (!this.config.weechatRelay?.enabled) {
+			log.info(`${colors.yellow("[WeeChat Relay]")} Not enabled for user ${colors.bold(this.name)}`);
 			return;
 		}
 
@@ -2595,6 +2599,8 @@ export class IrssiClient {
 			return;
 		}
 
+		log.info(`${colors.cyan("[WeeChat Relay]")} Decrypting password for user ${colors.bold(this.name)}`);
+
 		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
 		this.weechatRelayPassword = await decryptIrssiPassword(
 			this.config.weechatRelay.passwordEncrypted,
@@ -2602,12 +2608,16 @@ export class IrssiClient {
 			this.config.weechatRelay.port
 		);
 
+		log.info(`${colors.cyan("[WeeChat Relay]")} Password decrypted, length: ${this.weechatRelayPassword.length}`);
+
 		// Import WeeChat Relay components
+		log.info(`${colors.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
 		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer");
 		const {ErssiToWeeChatAdapter} = await import("./weechatRelay/erssiToWeechatAdapter");
 		const {WeeChatToErssiAdapter} = await import("./weechatRelay/weechatToErssiAdapter");
 
 		// Create server
+		log.info(`${colors.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer on port ${this.config.weechatRelay.port}...`);
 		this.weechatRelayServer = new WeeChatRelayServer({
 			tcpPort: undefined, // Disable TCP for now
 			wsPort: this.config.weechatRelay.port,
@@ -2654,10 +2664,11 @@ export class IrssiClient {
 		});
 
 		// Start server
+		log.info(`${colors.cyan("[WeeChat Relay]")} Starting server...`);
 		await this.weechatRelayServer.start();
 
 		log.info(
-			`${colors.green("[WeeChat Relay]")} Started for user ${colors.bold(this.name)} on port ${this.config.weechatRelay.port}`
+			`${colors.green("[WeeChat Relay]")} ✅ Started for user ${colors.bold(this.name)} on port ${this.config.weechatRelay.port}`
 		);
 	}
 
