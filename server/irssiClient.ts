@@ -2668,7 +2668,10 @@ export class IrssiClient {
 				// Format: (_buffer_line_added) hdata buffer/lines/line/line_data ...
 				const msg = `(_buffer_line_added) _buffer_line_added buffer=${data.buffer} date=${data.date} prefix=${data.prefix} message=${data.message}\n`;
 
-				relayClient.send(msg);
+				// Send directly to socket (TEXT protocol)
+				if ((relayClient as any).socket) {
+					(relayClient as any).socket.write(msg);
+				}
 			});
 
 			erssiAdapter.on("buffer:update", () => {
