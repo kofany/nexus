@@ -48,8 +48,10 @@ export class WeeChatToErssiAdapter extends EventEmitter {
 	 * Setup handlers for relay client commands
 	 */
 	private setupRelayHandlers(): void {
-		this.relayClient.on("command", (command: string, data: any) => {
-			switch (command) {
+		this.relayClient.on("command", (data: {command: string; id: string; args: string}) => {
+			log.info(`${colors.cyan("[WeeChatToErssiAdapter]")} Received command: ${data.command}, id: ${data.id}`);
+
+			switch (data.command) {
 				case "hdata":
 					this.handleHData(data.id, data.args);
 					break;
