@@ -335,7 +335,14 @@ export class WeeChatToErssiAdapter extends EventEmitter {
 	 * Handle sync command (subscribe to updates)
 	 */
 	private handleSync(id: string, args: string): void {
-		log.debug(`${colors.cyan("[WeeChat->Erssi]")} Sync: ${args}`);
+		log.debug(`${colors.cyan("[WeeChat->Erssi]")} Sync: "${args}"`);
+
+		// Empty args or "*" = sync all buffers
+		if (!args || args.trim() === "" || args.trim() === "*") {
+			this.syncAll = true;
+			log.info(`${colors.green("[WeeChat->Erssi]")} ✅ Syncing ALL buffers (syncAll=true)`);
+			return;
+		}
 
 		// Parse: "* buffer,nicklist" or "0x12345 buffer"
 		const parts = args.split(" ");
@@ -345,14 +352,14 @@ export class WeeChatToErssiAdapter extends EventEmitter {
 		if (target === "*") {
 			// Sync all buffers
 			this.syncAll = true;
-			log.info(`${colors.green("[WeeChat->Erssi]")} Syncing all buffers`);
+			log.info(`${colors.green("[WeeChat->Erssi]")} ✅ Syncing ALL buffers (syncAll=true)`);
 		} else {
 			// Sync specific buffer
 			const match = target.match(/0x([0-9a-f]+)/i);
 			if (match) {
 				const bufferPtr = BigInt("0x" + match[1]);
 				this.syncedBuffers.add(bufferPtr);
-				log.info(`${colors.green("[WeeChat->Erssi]")} Syncing buffer: ${target}`);
+				log.info(`${colors.green("[WeeChat->Erssi]")} ✅ Syncing buffer: ${target}`);
 			}
 		}
 	}
