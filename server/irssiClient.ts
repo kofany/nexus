@@ -132,6 +132,7 @@ export class IrssiClient {
 	// WeeChat Relay server (for Lith clients) - per user!
 	weechatRelayServer: any = null; // WeeChatRelayServer instance
 	weechatRelayPassword: string | null = null; // Decrypted WeeChat password (in memory)
+	weechatErssiAdapter: any = null; // ErssiToWeeChatAdapter instance (shared by all Lith clients)
 
 	// Message storage (encrypted)
 	messageStorage: EncryptedMessageStorage | null = null;
@@ -1976,6 +1977,12 @@ export class IrssiClient {
 			);
 			this.markAsRead(network.uuid, channel.name, false); // fromIrssi=false
 		}
+
+		// Forward to WeeChat Relay (Lith clients)
+		if (this.weechatErssiAdapter && network && channel) {
+			// Emit event that adapter will catch
+			(this.weechatErssiAdapter as any).handleNewMessage(network, channel, msg);
+		}
 	}
 
 	private async handleChannelJoin(networkUuid: string, channel: Chan): Promise<void> {
@@ -2616,6 +2623,12 @@ export class IrssiClient {
 		const {ErssiToWeeChatAdapter} = await import("./weechatRelay/erssiToWeechatAdapter");
 		const {WeeChatToErssiAdapter} = await import("./weechatRelay/weechatToErssiAdapter");
 
+		// Create shared ErssiToWeeChatAdapter (one per user, shared by all Lith clients)
+		if (!this.weechatErssiAdapter) {
+			log.info(`${colors.cyan("[WeeChat Relay]")} Creating ErssiToWeeChatAdapter...`);
+			this.weechatErssiAdapter = new ErssiToWeeChatAdapter(this);
+		}
+
 		// Create server
 		log.info(`${colors.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer on port ${this.config.weechatRelay.port}...`);
 		this.weechatRelayServer = new WeeChatRelayServer({
@@ -2646,6 +2659,40 @@ export class IrssiClient {
 			// Create adapters
 			const erssiAdapter = new ErssiToWeeChatAdapter(this);
 			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
+
+			// Connect erssiAdapter events to relayClient
+			erssiAdapter.on("line_data", (data: any) => {
+				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
+
+				// Build WeeChat line_data message
+				const {WeeChatHDataBuilder} = require("./weechatRelay/weechatHData");
+				const builder = new WeeChatHDataBuilder();
+
+				// Add line data
+				builder.addPath("buffer/lines/line/line_data");
+				builder.addKeys([
+					{name: "buffer", type: "ptr"},
+					{name: "date", type: "tim"},
+					{name: "prefix", type: "str"},
+					{name: "message", type: "str"},
+				]);
+				builder.addItem({
+					buffer: data.buffer,
+					date: data.date,
+					prefix: data.prefix,
+					message: data.message,
+				});
+
+				relayClient.send({
+					id: "_buffer_line_added",
+					data: builder.build(),
+				});
+			});
+
+			erssiAdapter.on("buffer:update", () => {
+				log.info(`${colors.cyan("[Erssi->WeeChat]")} Buffer update for ${clientId}`);
+				// Buffer updates are handled by hdata requests
+			});
 
 			// Store adapters on the relay client for cleanup
 			(relayClient as any)._adapters = {erssiAdapter, weechatAdapter};

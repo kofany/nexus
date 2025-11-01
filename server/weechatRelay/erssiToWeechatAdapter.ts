@@ -50,6 +50,27 @@ export class ErssiToWeeChatAdapter extends EventEmitter {
 		super();
 		this.irssiClient = irssiClient;
 		this.initializeBuffers();
+		// Note: We don't use event listeners here because IrssiClient doesn't extend EventEmitter
+		// Instead, IrssiClient.handleMessage() calls handleNewMessage() directly
+	}
+
+	/**
+	 * Handle new message from IrssiClient
+	 */
+	public handleNewMessage(network: NetworkData, channel: Chan, msg: Msg): void {
+		const buffer = this.getOrCreateBuffer(network, channel);
+
+		log.info(`${colors.cyan("[Erssi->WeeChat]")} Emitting line_data for buffer ${buffer.pointer}`);
+
+		// Emit line_data event for WeeChat clients
+		this.emit("line_data", {
+			buffer: buffer.pointer,
+			date: Math.floor(msg.time.getTime() / 1000),
+			prefix: msg.from?.nick || "",
+			message: msg.text,
+			highlight: msg.highlight || false,
+			self: msg.self || false,
+		});
 	}
 
 	/**
