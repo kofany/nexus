@@ -2667,27 +2667,26 @@ export class IrssiClient {
 				// Import WeeChatMessage for BINARY protocol
 				const {WeeChatMessage} = await import("./weechatRelay/weechatProtocol");
 
-				// Build BINARY message according to WeeChat Relay protocol
-				// https://weechat.org/files/doc/devel/weechat_relay_protocol.en.html#message_buffer_line_added
+				// Build BINARY message - EXACTLY like Go bridge!
+				// Path: "line_data" (not "buffer/lines/line/line_data")
+				// Keys: buffer,date,date_printed,displayed,highlight,tags_array,prefix,message
 				const msg = new WeeChatMessage("_buffer_line_added");
 
 				// Add hdata type
 				msg.addType("hda");
 
-				// Add hdata path: buffer/lines/line/line_data
-				msg.addString("buffer/lines/line/line_data");
+				// Add hdata path
+				msg.addString("line_data");
 
-				// Add keys: buffer,date,date_printed,displayed,highlight,prefix,message
-				msg.addString("buffer:ptr,date:tim,date_printed:tim,displayed:chr,highlight:chr,prefix:str,message:str");
+				// Add keys with types
+				msg.addString("buffer:ptr,date:tim,date_printed:tim,displayed:chr,highlight:chr,tags_array:arr,prefix:str,message:str");
 
 				// Add count (1 item)
 				msg.addInt(1);
 
-				// Add p-path (4 pointers: buffer, lines, line, line_data)
-				msg.addPointer(data.buffer);  // buffer pointer
-				msg.addPointer(BigInt(0));    // lines pointer (fake)
-				msg.addPointer(BigInt(0));    // line pointer (fake)
-				msg.addPointer(BigInt(0));    // line_data pointer (fake)
+				// Add p-path (1 pointer: line_data pointer)
+				const linePtr = BigInt(Date.now() * 1000000); // Generate unique pointer
+				msg.addPointer(linePtr);
 
 				// Add values
 				msg.addPointer(data.buffer);       // buffer pointer
@@ -2695,6 +2694,18 @@ export class IrssiClient {
 				msg.addTime(data.date);            // date_printed (same as date)
 				msg.addChar(1);                    // displayed (1 = yes)
 				msg.addChar(data.highlight ? 1 : 0); // highlight
+
+				// Add tags_array (array of strings)
+				const tags = ["irc_privmsg", "notify_message", "prefix_nick_white", "log1"];
+				if (data.self) {
+					tags.push("self_msg");
+				}
+				if (data.highlight) {
+					tags.push("notify_highlight");
+				}
+				// addArray(type, values) - type is "str" for strings
+				msg.addArray("str", tags);
+
 				msg.addString(data.prefix);        // prefix (nick)
 				msg.addString(data.message);       // message text
 
