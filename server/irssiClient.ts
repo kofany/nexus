@@ -2660,8 +2660,23 @@ export class IrssiClient {
 			const erssiAdapter = this.weechatErssiAdapter;
 			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
 
-			// WeeChatToErssiAdapter already handles line_data events from erssiAdapter!
-			// No need to manually connect events here - it's done in setupErssiAdapterHandlers()
+			// Connect line_data events to THIS relayClient
+			const lineDataHandler = (data: any) => {
+				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
+
+				// Send as TEXT protocol: "(_buffer_line_added) _buffer_line_added buffer=X date=Y prefix=Z message=W\n"
+				const msg = `(_buffer_line_added) _buffer_line_added buffer=${data.buffer} date=${data.date} prefix=${data.prefix} message=${data.message}\n`;
+
+				// Send directly to socket
+				if ((relayClient as any).socket) {
+					(relayClient as any).socket.write(msg);
+				}
+			};
+
+			erssiAdapter.on("line_data", lineDataHandler);
+
+			// Store handler for cleanup
+			(relayClient as any)._lineDataHandler = lineDataHandler;
 
 			// Store adapters on the relay client for cleanup
 			(relayClient as any)._adapters = {erssiAdapter, weechatAdapter};
@@ -2670,13 +2685,21 @@ export class IrssiClient {
 		this.weechatRelayServer.on("client:close", (clientId: string) => {
 			log.info(`${colors.yellow("[WeeChat Relay]")} Client closed: ${clientId}`);
 
-			// Cleanup adapters
+			// Cleanup adapters and handlers
 			const relayClient = this.weechatRelayServer.getClient(clientId);
-			if (relayClient && (relayClient as any)._adapters) {
-				const {erssiAdapter, weechatAdapter} = (relayClient as any)._adapters;
-				erssiAdapter.removeAllListeners();
-				weechatAdapter.removeAllListeners();
-				delete (relayClient as any)._adapters;
+			if (relayClient) {
+				// Remove line_data handler
+				if ((relayClient as any)._lineDataHandler) {
+					this.weechatErssiAdapter.removeListener("line_data", (relayClient as any)._lineDataHandler);
+					delete (relayClient as any)._lineDataHandler;
+				}
+
+				// Cleanup adapters
+				if ((relayClient as any)._adapters) {
+					const {weechatAdapter} = (relayClient as any)._adapters;
+					weechatAdapter.removeAllListeners();
+					delete (relayClient as any)._adapters;
+				}
 			}
 		});
 

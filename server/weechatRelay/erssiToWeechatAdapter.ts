@@ -60,11 +60,11 @@ export class ErssiToWeeChatAdapter extends EventEmitter {
 	public handleNewMessage(network: NetworkData, channel: Chan, msg: Msg): void {
 		const buffer = this.getOrCreateBuffer(network, channel);
 
-		log.info(`${colors.cyan("[Erssi->WeeChat]")} Emitting line:added for buffer ${buffer.pointer}`);
+		log.info(`${colors.cyan("[Erssi->WeeChat]")} Emitting line_data for buffer ${buffer.pointer}`);
 
-		// Emit line:added event for WeeChat clients (WeeChatToErssiAdapter listens to this)
-		this.emit("line:added", buffer, {
-			id: msg.id,
+		// Emit line_data event for WeeChat clients
+		this.emit("line_data", {
+			buffer: buffer.pointer,
 			date: Math.floor(msg.time.getTime() / 1000),
 			prefix: msg.from?.nick || "",
 			message: msg.text,

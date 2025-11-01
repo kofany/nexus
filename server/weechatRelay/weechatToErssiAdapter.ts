@@ -97,8 +97,11 @@ export class WeeChatToErssiAdapter extends EventEmitter {
 		});
 
 		this.erssiAdapter.on("line:added", (buffer: any, msg: any) => {
+			log.info(`${colors.cyan("[WeeChatToErssiAdapter]")} line:added event: buffer=${buffer.pointer}, syncAll=${this.syncAll}, synced=${this.syncedBuffers.has(buffer.pointer)}`);
 			if (this.syncAll || this.syncedBuffers.has(buffer.pointer)) {
 				this.sendLineAdded(buffer, msg);
+			} else {
+				log.warn(`${colors.yellow("[WeeChatToErssiAdapter]")} ❌ NOT sending line (syncAll=false, buffer not synced)`);
 			}
 		});
 
