@@ -268,7 +268,7 @@ export class WeeChatRelayClient extends EventEmitter {
 	 * Handle init command (authentication)
 	 */
 	private handleInit(id: string, args: string): void {
-		log.info(`${colors.green("[WeeChat Relay Client]")} Init from ${this.id}`);
+		log.info(`${colors.green("[WeeChat Relay Client]")} Init from ${this.id}, args: ${args}`);
 
 		// Parse options
 		const options: Record<string, string> = {};
@@ -282,16 +282,26 @@ export class WeeChatRelayClient extends EventEmitter {
 			}
 		}
 
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed options: ${JSON.stringify(options)}`);
+
 		// Check password
 		let passwordOk = false;
 		const expectedPassword = this.config.password || "";
 
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Expected password length: ${expectedPassword.length}`);
+
 		if (options.password) {
 			// Plain text password
+			log.info(`${colors.cyan("[WeeChat Relay Client]")} Using plain text password`);
 			passwordOk = options.password === expectedPassword;
+			log.info(`${colors.cyan("[WeeChat Relay Client]")} Password match: ${passwordOk}`);
 		} else if (options.password_hash) {
 			// Hashed password
+			log.info(`${colors.cyan("[WeeChat Relay Client]")} Using hashed password: ${options.password_hash}`);
 			passwordOk = this.verifyPasswordHash(options.password_hash, expectedPassword);
+			log.info(`${colors.cyan("[WeeChat Relay Client]")} Hash verification: ${passwordOk}`);
+		} else {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} No password or password_hash provided!`);
 		}
 
 		if (passwordOk) {
