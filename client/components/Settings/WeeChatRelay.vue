@@ -214,6 +214,11 @@ export default defineComponent({
 		});
 
 		const saveSettings = () => {
+			console.log("[WeeChatRelay] saveSettings called", {
+				canSave: canSave.value,
+				config: config.value,
+			});
+
 			if (!canSave.value) {
 				status.value = {
 					type: "error",
@@ -227,19 +232,24 @@ export default defineComponent({
 				message: "Saving WeeChat Relay settings...",
 			};
 
-			socket.emit("weechat:config:save", {
+			const payload = {
 				enabled: config.value.enabled,
 				port: config.value.port,
 				password: config.value.password,
 				compression: config.value.compression,
-			});
+			};
+
+			console.log("[WeeChatRelay] Emitting weechat:config:save", payload);
+			socket.emit("weechat:config:save", payload);
 		};
 
 		const loadCurrentConfig = () => {
+			console.log("[WeeChatRelay] Loading current config, socket connected:", socket.connected);
 			socket.emit("weechat:config:get");
 		};
 
 		const handleConfigInfo = (data: WeeChatRelayConfig) => {
+			console.log("[WeeChatRelay] Received config info", data);
 			currentConfig.value = data;
 			// Pre-fill form with current config (except password)
 			config.value.enabled = data.enabled;
@@ -249,6 +259,7 @@ export default defineComponent({
 		};
 
 		const handleSuccess = (data: {message: string}) => {
+			console.log("[WeeChatRelay] Success", data);
 			status.value = {
 				type: "success",
 				message: data.message,
@@ -260,6 +271,7 @@ export default defineComponent({
 		};
 
 		const handleError = (data: {error: string}) => {
+			console.log("[WeeChatRelay] Error", data);
 			status.value = {
 				type: "error",
 				message: data.error,
@@ -267,10 +279,12 @@ export default defineComponent({
 		};
 
 		onMounted(() => {
+			console.log("[WeeChatRelay] Component mounted, loading config");
 			// Load existing config
 			loadCurrentConfig();
 
 			// Listen for events
+			console.log("[WeeChatRelay] Registering socket listeners");
 			socket.on("weechat:config:info", handleConfigInfo);
 			socket.on("weechat:config:success", handleSuccess);
 			socket.on("weechat:config:error", handleError);
