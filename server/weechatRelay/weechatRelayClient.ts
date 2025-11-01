@@ -457,10 +457,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 * Verify password hash
 	 */
 	private verifyPasswordHash(hash: string, expectedPassword: string): boolean {
-		// Format: "algo:salt:hash" or "algo:params:salt:iterations:hash"
+		// Format: "algo:salt:hash" or "pbkdf2+hashAlgo:salt:iterations:hash"
 		const parts = hash.split(":");
 
 		if (parts.length < 2) {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Invalid hash format: ${hash}`);
 			return false;
 		}
 
@@ -478,24 +479,44 @@ export class WeeChatRelayClient extends EventEmitter {
 					.update(expectedPassword)
 					.digest("hex");
 
+				log.info(`${colors.cyan("[WeeChat Relay Client]")} SHA computed: ${computed}, received: ${receivedHash}`);
 				return computed === receivedHash;
-			} else if (algo === "pbkdf2") {
-				// Format: "pbkdf2:sha256:salt:iterations:hash"
-				const hashAlgo = parts[1];
-				const salt = parts[2];
-				const iterations = parseInt(parts[3], 10);
-				const receivedHash = parts[4];
+			} else if (algo.startsWith("pbkdf2")) {
+				// Format: "pbkdf2+sha512:salt:iterations:hash" or "pbkdf2:sha256:salt:iterations:hash"
+				let hashAlgo: string;
+				let salt: string;
+				let iterations: number;
+				let receivedHash: string;
 
+				if (algo.includes("+")) {
+					// New format: "pbkdf2+sha512:salt:iterations:hash"
+					hashAlgo = algo.split("+")[1]; // "sha512"
+					salt = parts[1];
+					iterations = parseInt(parts[2], 10);
+					receivedHash = parts[3];
+				} else {
+					// Old format: "pbkdf2:sha256:salt:iterations:hash"
+					hashAlgo = parts[1];
+					salt = parts[2];
+					iterations = parseInt(parts[3], 10);
+					receivedHash = parts[4];
+				}
+
+				log.info(`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 params: algo=${hashAlgo}, salt=${salt}, iterations=${iterations}`);
+
+				const keylen = hashAlgo === "sha512" ? 64 : 32;
 				const computed = crypto
 					.pbkdf2Sync(
 						expectedPassword,
 						Buffer.from(salt, "hex"),
 						iterations,
-						hashAlgo === "sha512" ? 64 : 32,
+						keylen,
 						hashAlgo
 					)
 					.toString("hex");
 
+				log.info(`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 computed: ${computed}`);
+				log.info(`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 received: ${receivedHash}`);
 				return computed === receivedHash;
 			}
 		} catch (err) {
