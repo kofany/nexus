@@ -87,6 +87,17 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleData(data: Buffer): void {
 		log.info(`${colors.cyan("[WeeChat Relay Client]")} Received data from ${this.id}, length: ${data.length}`);
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Data as string: "${data.toString('utf8')}"`);
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Data as hex: ${data.toString('hex')}`);
+
+		// Check if this is a text command (starts with ASCII characters)
+		const firstByte = data[0];
+		if (firstByte >= 0x20 && firstByte <= 0x7E) {
+			// This looks like text, not binary protocol
+			log.info(`${colors.yellow("[WeeChat Relay Client]")} Received TEXT data, not binary!`);
+			this.handleTextCommand(data.toString('utf8'));
+			return;
+		}
 
 		// Append to buffer
 		this.buffer = Buffer.concat([this.buffer, data]);
@@ -117,6 +128,69 @@ export class WeeChatRelayClient extends EventEmitter {
 				);
 				this.emit("error", err);
 			}
+		}
+	}
+
+	/**
+	 * Handle text command (line-based protocol)
+	 */
+	private handleTextCommand(line: string): void {
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsing text command: "${line}"`);
+
+		// Parse command: (id) command arguments
+		let msgID = "";
+		let cmd = "";
+		let args = "";
+
+		// Check for message ID: (id) command args
+		if (line.startsWith("(")) {
+			const endIdx = line.indexOf(")");
+			if (endIdx !== -1) {
+				msgID = line.substring(1, endIdx);
+				line = line.substring(endIdx + 1).trim();
+			}
+		}
+
+		// Parse command and arguments
+		const spaceIdx = line.indexOf(" ");
+		if (spaceIdx !== -1) {
+			cmd = line.substring(0, spaceIdx);
+			args = line.substring(spaceIdx + 1).trim();
+		} else {
+			cmd = line;
+		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed: cmd="${cmd}", id="${msgID}", args="${args}"`);
+
+		// Handle command
+		switch (cmd.toLowerCase()) {
+			case "handshake":
+				this.handleHandshake(msgID, args);
+				break;
+			case "init":
+				this.handleInit(msgID, args);
+				break;
+			case "hdata":
+				this.handleHData(msgID, args);
+				break;
+			case "input":
+				this.handleInput(msgID, args);
+				break;
+			case "sync":
+				this.handleSync(msgID, args);
+				break;
+			case "desync":
+				this.handleDesync(msgID, args);
+				break;
+			case "nicklist":
+				this.handleNicklist(msgID, args);
+				break;
+			case "quit":
+				log.info(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} requested quit`);
+				this.close();
+				break;
+			default:
+				log.warn(`${colors.yellow("[WeeChat Relay Client]")} Unknown command: ${cmd}`);
 		}
 	}
 
@@ -329,6 +403,71 @@ export class WeeChatRelayClient extends EventEmitter {
 	}
 
 	/**
+	 * Handle hdata request
+	 */
+	private handleHData(id: string, args: string): void {
+		if (!this.authenticated) {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for hdata`);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} hdata request: ${args}`);
+		this.emit("command", {command: "hdata", id, args});
+	}
+
+	/**
+	 * Handle input (send message)
+	 */
+	private handleInput(id: string, args: string): void {
+		if (!this.authenticated) {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for input`);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} input: ${args}`);
+		this.emit("command", {command: "input", id, args});
+	}
+
+	/**
+	 * Handle sync request
+	 */
+	private handleSync(id: string, args: string): void {
+		if (!this.authenticated) {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for sync`);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} sync: ${args}`);
+		this.emit("command", {command: "sync", id, args});
+	}
+
+	/**
+	 * Handle desync request
+	 */
+	private handleDesync(id: string, args: string): void {
+		if (!this.authenticated) {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for desync`);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} desync: ${args}`);
+		this.emit("command", {command: "desync", id, args});
+	}
+
+	/**
+	 * Handle nicklist request
+	 */
+	private handleNicklist(id: string, args: string): void {
+		if (!this.authenticated) {
+			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for nicklist`);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} nicklist: ${args}`);
+		this.emit("command", {command: "nicklist", id, args});
+	}
+
+	/**
 	 * Verify password hash
 	 */
 	private verifyPasswordHash(hash: string, expectedPassword: string): boolean {
@@ -383,40 +522,20 @@ export class WeeChatRelayClient extends EventEmitter {
 	/**
 	 * Handle other commands (to be implemented by adapter)
 	 */
-	private handleHData(id: string, args: string): void {
-		this.emit("command", "hdata", {id, args});
-	}
-
 	private handleInfo(id: string, args: string): void {
-		this.emit("command", "info", {id, args});
+		this.emit("command", {command: "info", id, args});
 	}
 
 	private handleInfoList(id: string, args: string): void {
-		this.emit("command", "infolist", {id, args});
-	}
-
-	private handleNicklist(id: string, args: string): void {
-		this.emit("command", "nicklist", {id, args});
-	}
-
-	private handleInput(id: string, args: string): void {
-		this.emit("command", "input", {id, args});
+		this.emit("command", {command: "infolist", id, args});
 	}
 
 	private handleCompletion(id: string, args: string): void {
-		this.emit("command", "completion", {id, args});
-	}
-
-	private handleSync(id: string, args: string): void {
-		this.emit("command", "sync", {id, args});
-	}
-
-	private handleDesync(id: string, args: string): void {
-		this.emit("command", "desync", {id, args});
+		this.emit("command", {command: "completion", id, args});
 	}
 
 	private handleTest(id: string, args: string): void {
-		this.emit("command", "test", {id, args});
+		this.emit("command", {command: "test", id, args});
 	}
 
 	private handlePing(id: string, args: string): void {
