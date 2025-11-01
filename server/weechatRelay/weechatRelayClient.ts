@@ -86,6 +86,8 @@ export class WeeChatRelayClient extends EventEmitter {
 	 * Handle incoming data
 	 */
 	private handleData(data: Buffer): void {
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Received data from ${this.id}, length: ${data.length}`);
+
 		// Append to buffer
 		this.buffer = Buffer.concat([this.buffer, data]);
 
@@ -94,8 +96,11 @@ export class WeeChatRelayClient extends EventEmitter {
 			// Read message length (first 4 bytes, big endian)
 			const messageLength = this.buffer.readUInt32BE(0);
 
+			log.info(`${colors.cyan("[WeeChat Relay Client]")} Message length: ${messageLength}, buffer length: ${this.buffer.length}`);
+
 			// Check if we have the full message
 			if (this.buffer.length < messageLength) {
+				log.info(`${colors.yellow("[WeeChat Relay Client]")} Waiting for more data...`);
 				break; // Wait for more data
 			}
 
@@ -119,12 +124,14 @@ export class WeeChatRelayClient extends EventEmitter {
 	 * Handle parsed message
 	 */
 	private handleMessage(data: Buffer): void {
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsing message from ${this.id}, data length: ${data.length}`);
+
 		const parser = new WeeChatParser(data);
 
 		// Read message ID
 		const messageId = parser.readString() || "";
 
-		log.debug(
+		log.info(
 			`${colors.cyan("[WeeChat Relay Client]")} Message from ${this.id}: ${messageId}`
 		);
 
@@ -155,6 +162,8 @@ export class WeeChatRelayClient extends EventEmitter {
 				command = messageId;
 			}
 		}
+
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed command: "${command}", id: "${commandId}", args: "${args}"`);
 
 		// Handle command
 		switch (command.toLowerCase()) {
