@@ -17,6 +17,7 @@ import GeneralSettings from "../components/Settings/General.vue";
 import AccountSettings from "../components/Settings/Account.vue";
 import NotificationSettings from "../components/Settings/Notifications.vue";
 import IrssiConnectionSettings from "../components/Settings/IrssiConnection.vue";
+import WeeChatRelaySettings from "../components/Settings/WeeChatRelay.vue";
 import {ClientChan} from "./types";
 
 const router = createRouter({
@@ -74,6 +75,11 @@ const router = createRouter({
 					name: "IrssiConnection",
 					path: "irssi",
 					component: IrssiConnectionSettings,
+				},
+				{
+					name: "WeeChatRelay",
+					path: "weechat",
+					component: WeeChatRelaySettings,
 				},
 				{
 					name: "Account",

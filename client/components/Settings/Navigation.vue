@@ -7,6 +7,7 @@
 			<SettingTabItem name="Appearance" class-name="appearance" to="appearance" />
 			<SettingTabItem name="Notifications" class-name="notifications" to="notifications" />
 			<SettingTabItem name="irssi Connection" class-name="irssi" to="irssi" />
+			<SettingTabItem name="WeeChat Relay" class-name="weechat" to="weechat" />
 			<SettingTabItem name="Account" class-name="account" to="account" />
 		</ul>
 	</aside>
@@ -87,6 +88,10 @@
 
 .settings-menu .irssi::before {
 	content: "\f233"; /* http://fontawesome.io/icon/server/ */
+}
+
+.settings-menu .weechat::before {
+	content: "\f1eb"; /* http://fontawesome.io/icon/wifi/ */
 }
 
 .settings-menu button:hover,
