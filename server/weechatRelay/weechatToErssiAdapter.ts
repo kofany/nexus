@@ -271,15 +271,18 @@ export class WeeChatToErssiAdapter extends EventEmitter {
 			msg.addString("default");
 
 			// prefix: mode prefix (@, +, etc.)
-			let prefix = "";
-			if (user.mode) {
-				if (user.mode.includes("o")) prefix = "@";
-				else if (user.mode.includes("v")) prefix = "+";
-			}
+			// user.mode is already a symbol (e.g. "@", "+", "%")
+			// modes array contains symbols: ["@"], ["+"], etc.
+			const prefix = user.mode || ""; // First mode symbol
 			msg.addString(prefix);
 
 			// prefix_color: color for prefix
-			msg.addString(prefix ? "lightgreen" : "default");
+			const prefixColor = prefix === "@" ? "lightgreen" :
+			                   prefix === "+" ? "yellow" :
+			                   prefix === "%" ? "cyan" :
+			                   prefix === "~" ? "lightred" :
+			                   prefix === "&" ? "lightmagenta" : "default";
+			msg.addString(prefixColor);
 		}
 
 		this.relayClient.send(msg);
