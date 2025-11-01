@@ -512,4 +512,63 @@ module.exports = {
 		// server window, displayed on the client.
 		raw: false,
 	},
+
+	// ## WeeChat Relay Bridge
+	//
+	// This enables a WeeChat Relay protocol bridge, allowing clients like Lith
+	// to connect to nexuslounge and access erssi through WeeChat Relay protocol.
+	//
+	// The bridge translates between WeeChat Relay binary protocol and erssi fe-web JSON protocol.
+	weechatRelay: {
+		// ### `weechatRelay.enabled`
+		//
+		// Enable or disable the WeeChat Relay bridge.
+		enabled: false,
+
+		// ### `weechatRelay.tcpPort`
+		//
+		// TCP port for plain WeeChat Relay connections.
+		tcpPort: 9001,
+
+		// ### `weechatRelay.tcpHost`
+		//
+		// TCP host to bind to.
+		tcpHost: "127.0.0.1",
+
+		// ### `weechatRelay.wsPort`
+		//
+		// WebSocket port for WeeChat Relay connections.
+		wsPort: 9002,
+
+		// ### `weechatRelay.wsHost`
+		//
+		// WebSocket host to bind to.
+		wsHost: "127.0.0.1",
+
+		// ### `weechatRelay.wsPath`
+		//
+		// WebSocket path.
+		wsPath: "/weechat",
+
+		// ### `weechatRelay.password`
+		//
+		// Password for WeeChat Relay authentication.
+		// Leave empty to use the same password as The Lounge.
+		password: "",
+
+		// ### `weechatRelay.passwordHashAlgo`
+		//
+		// Supported password hash algorithms.
+		passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
+
+		// ### `weechatRelay.passwordHashIterations`
+		//
+		// Number of iterations for PBKDF2 password hashing.
+		passwordHashIterations: 100000,
+
+		// ### `weechatRelay.compression`
+		//
+		// Enable zlib compression for WeeChat Relay protocol.
+		compression: true,
+	},
 };

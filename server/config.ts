@@ -83,6 +83,19 @@ type StoragePolicy = {
 	deletionPolicy: "statusOnly" | "everything";
 };
 
+type WeeChatRelay = {
+	enabled: boolean;
+	tcpPort: number;
+	tcpHost: string;
+	wsPort: number;
+	wsHost: string;
+	wsPath: string;
+	password: string;
+	passwordHashAlgo: string[];
+	passwordHashIterations: number;
+	compression: boolean;
+};
+
 export type ConfigType = {
 	public: boolean;
 	host: string | undefined;
@@ -112,6 +125,7 @@ export type ConfigType = {
 	ldap: Ldap;
 	debug: Debug;
 	themeColor: string;
+	weechatRelay: WeeChatRelay;
 };
 
 class Config {
