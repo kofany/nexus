@@ -1232,6 +1232,13 @@ function initializeIrssiClient(
 
 		// Send commands list
 		socket.emit("commands", inputs.getCommands());
+
+		// Start WeeChat Relay server (if enabled and not already running)
+		if (client.config.weechatRelay?.enabled && !client.weechatRelayServer) {
+			client.startWeeChatRelay().catch((error) => {
+				log.error(`Failed to start WeeChat Relay for user ${colors.bold(client.name)}: ${error}`);
+			});
+		}
 	};
 
 	// Handle token generation for non-public mode
