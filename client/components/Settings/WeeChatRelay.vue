@@ -162,7 +162,7 @@
 </style>
 
 <script lang="ts">
-import {defineComponent, ref, computed, onMounted, onBeforeUnmount} from "vue";
+import {defineComponent, ref, computed, onMounted} from "vue";
 import socket from "../../js/socket";
 import RevealPassword from "../RevealPassword.vue";
 
@@ -248,53 +248,43 @@ export default defineComponent({
 			socket.emit("weechat:config:get");
 		};
 
-		const handleConfigInfo = (data: WeeChatRelayConfig) => {
-			console.log("[WeeChatRelay] Received config info", data);
-			currentConfig.value = data;
-			// Pre-fill form with current config (except password)
-			config.value.enabled = data.enabled;
-			config.value.port = data.port;
-			config.value.compression = data.compression;
-			// Don't pre-fill password for security
-		};
-
-		const handleSuccess = (data: {message: string}) => {
-			console.log("[WeeChatRelay] Success", data);
-			status.value = {
-				type: "success",
-				message: data.message,
-			};
-			// Reload current config
-			loadCurrentConfig();
-			// Clear password field after successful save
-			config.value.password = "";
-		};
-
-		const handleError = (data: {error: string}) => {
-			console.log("[WeeChatRelay] Error", data);
-			status.value = {
-				type: "error",
-				message: data.error,
-			};
-		};
-
 		onMounted(() => {
 			console.log("[WeeChatRelay] Component mounted, loading config");
 			// Load existing config
 			loadCurrentConfig();
 
-			// Listen for events
-			console.log("[WeeChatRelay] Registering socket listeners");
-			socket.on("weechat:config:info", handleConfigInfo);
-			socket.on("weechat:config:success", handleSuccess);
-			socket.on("weechat:config:error", handleError);
-		});
+			// Listen for config info
+			socket.on("weechat:config:info", (data: WeeChatRelayConfig) => {
+				console.log("[WeeChatRelay] Received config info", data);
+				currentConfig.value = data;
+				// Pre-fill form with current config (except password)
+				config.value.enabled = data.enabled;
+				config.value.port = data.port;
+				config.value.compression = data.compression;
+				// Don't pre-fill password for security
+			});
 
-		onBeforeUnmount(() => {
-			// Clean up listeners
-			socket.off("weechat:config:info", handleConfigInfo);
-			socket.off("weechat:config:success", handleSuccess);
-			socket.off("weechat:config:error", handleError);
+			// Listen for save success
+			socket.on("weechat:config:success", (data: {message: string}) => {
+				console.log("[WeeChatRelay] Success", data);
+				status.value = {
+					type: "success",
+					message: data.message,
+				};
+				// Reload current config
+				loadCurrentConfig();
+				// Clear password field after successful save
+				config.value.password = "";
+			});
+
+			// Listen for errors
+			socket.on("weechat:config:error", (data: {error: string}) => {
+				console.log("[WeeChatRelay] Error", data);
+				status.value = {
+					type: "error",
+					message: data.error,
+				};
+			});
 		});
 
 		return {
