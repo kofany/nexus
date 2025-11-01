@@ -2665,28 +2665,38 @@ export class IrssiClient {
 				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
 
 				// Import WeeChatMessage for BINARY protocol
-				const {WeeChatMessage, OBJ_POINTER, OBJ_TIME, OBJ_STRING} = await import("./weechatRelay/weechatProtocol");
+				const {WeeChatMessage} = await import("./weechatRelay/weechatProtocol");
 
-				// Build BINARY message
+				// Build BINARY message according to WeeChat Relay protocol
+				// https://weechat.org/files/doc/devel/weechat_relay_protocol.en.html#message_buffer_line_added
 				const msg = new WeeChatMessage("_buffer_line_added");
 
 				// Add hdata type
 				msg.addType("hda");
 
-				// Add hdata path
+				// Add hdata path: buffer/lines/line/line_data
 				msg.addString("buffer/lines/line/line_data");
 
-				// Add keys: "buffer,date,prefix,message"
-				msg.addString("buffer,date,prefix,message");
+				// Add keys: buffer,date,date_printed,displayed,highlight,prefix,message
+				msg.addString("buffer:ptr,date:tim,date_printed:tim,displayed:chr,highlight:chr,prefix:str,message:str");
 
 				// Add count (1 item)
 				msg.addInt(1);
 
-				// Add item
+				// Add p-path (4 pointers: buffer, lines, line, line_data)
 				msg.addPointer(data.buffer);  // buffer pointer
-				msg.addTime(data.date);       // date (timestamp)
-				msg.addString(data.prefix);   // prefix (nick)
-				msg.addString(data.message);  // message text
+				msg.addPointer(BigInt(0));    // lines pointer (fake)
+				msg.addPointer(BigInt(0));    // line pointer (fake)
+				msg.addPointer(BigInt(0));    // line_data pointer (fake)
+
+				// Add values
+				msg.addPointer(data.buffer);       // buffer pointer
+				msg.addTime(data.date);            // date (timestamp)
+				msg.addTime(data.date);            // date_printed (same as date)
+				msg.addChar(1);                    // displayed (1 = yes)
+				msg.addChar(data.highlight ? 1 : 0); // highlight
+				msg.addString(data.prefix);        // prefix (nick)
+				msg.addString(data.message);       // message text
 
 				// Build and send
 				const binary = msg.build(false); // no compression
