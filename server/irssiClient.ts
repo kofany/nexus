@@ -2656,11 +2656,11 @@ export class IrssiClient {
 				return;
 			}
 
-			// Create adapters
-			const erssiAdapter = new ErssiToWeeChatAdapter(this);
+			// Use shared ErssiToWeeChatAdapter (one per user, shared by all Lith clients)
+			const erssiAdapter = this.weechatErssiAdapter;
 			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
 
-			// Connect erssiAdapter events to relayClient
+			// Connect erssiAdapter events to THIS relayClient
 			erssiAdapter.on("line_data", (data: any) => {
 				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
 
