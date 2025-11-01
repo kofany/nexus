@@ -2660,24 +2660,8 @@ export class IrssiClient {
 			const erssiAdapter = this.weechatErssiAdapter;
 			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
 
-			// Connect erssiAdapter events to THIS relayClient
-			erssiAdapter.on("line_data", (data: any) => {
-				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
-
-				// Send as TEXT protocol (not binary)
-				// Format: (_buffer_line_added) hdata buffer/lines/line/line_data ...
-				const msg = `(_buffer_line_added) _buffer_line_added buffer=${data.buffer} date=${data.date} prefix=${data.prefix} message=${data.message}\n`;
-
-				// Send directly to socket (TEXT protocol)
-				if ((relayClient as any).socket) {
-					(relayClient as any).socket.write(msg);
-				}
-			});
-
-			erssiAdapter.on("buffer:update", () => {
-				log.info(`${colors.cyan("[Erssi->WeeChat]")} Buffer update for ${clientId}`);
-				// Buffer updates are handled by hdata requests
-			});
+			// WeeChatToErssiAdapter already handles line_data events from erssiAdapter!
+			// No need to manually connect events here - it's done in setupErssiAdapterHandlers()
 
 			// Store adapters on the relay client for cleanup
 			(relayClient as any)._adapters = {erssiAdapter, weechatAdapter};
