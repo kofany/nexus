@@ -1005,12 +1005,15 @@ function initializeClient(
 						port
 					);
 
-					// Update config
-					irssiClient.config.weechatRelay = {
-						enabled: true,
-						port,
-						passwordEncrypted,
-						compression: compression ?? true,
+					// Update config (create NEW object like irssi:config:save does)
+					irssiClient.config = {
+						...irssiClient.config,
+						weechatRelay: {
+							enabled: true,
+							port,
+							passwordEncrypted,
+							compression: compression ?? true,
+						},
 					};
 
 					// Save to disk
@@ -1020,15 +1023,18 @@ function initializeClient(
 					await irssiClient.startWeeChatRelay();
 
 					(socket as any).emit("weechat:config:success", {
-						message: "WeeChat Relay enabled and started",
+						message: "WeeChat Relay enabled and started on port " + port,
 					});
 				} else {
-					// Disable
-					irssiClient.config.weechatRelay = {
-						enabled: false,
-						port: port || 9001,
-						passwordEncrypted: "",
-						compression: true,
+					// Disable (create NEW object)
+					irssiClient.config = {
+						...irssiClient.config,
+						weechatRelay: {
+							enabled: false,
+							port: port || 9001,
+							passwordEncrypted: "",
+							compression: true,
+						},
 					};
 
 					// Save to disk
