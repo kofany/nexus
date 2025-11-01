@@ -2661,15 +2661,38 @@ export class IrssiClient {
 			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
 
 			// Connect line_data events to THIS relayClient
-			const lineDataHandler = (data: any) => {
+			const lineDataHandler = async (data: any) => {
 				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
 
-				// Send as TEXT protocol: "(_buffer_line_added) _buffer_line_added buffer=X date=Y prefix=Z message=W\n"
-				const msg = `(_buffer_line_added) _buffer_line_added buffer=${data.buffer} date=${data.date} prefix=${data.prefix} message=${data.message}\n`;
+				// Import WeeChatMessage for BINARY protocol
+				const {WeeChatMessage, OBJ_POINTER, OBJ_TIME, OBJ_STRING} = await import("./weechatRelay/weechatProtocol");
 
-				// Send directly to socket
+				// Build BINARY message
+				const msg = new WeeChatMessage("_buffer_line_added");
+
+				// Add hdata type
+				msg.addType("hda");
+
+				// Add hdata path
+				msg.addString("buffer/lines/line/line_data");
+
+				// Add keys: "buffer,date,prefix,message"
+				msg.addString("buffer,date,prefix,message");
+
+				// Add count (1 item)
+				msg.addInt(1);
+
+				// Add item
+				msg.addPointer(data.buffer);  // buffer pointer
+				msg.addTime(data.date);       // date (timestamp)
+				msg.addString(data.prefix);   // prefix (nick)
+				msg.addString(data.message);  // message text
+
+				// Build and send
+				const binary = msg.build(false); // no compression
+
 				if ((relayClient as any).socket) {
-					(relayClient as any).socket.write(msg);
+					(relayClient as any).socket.write(binary);
 				}
 			};
 
