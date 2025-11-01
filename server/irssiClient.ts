@@ -2664,29 +2664,11 @@ export class IrssiClient {
 			erssiAdapter.on("line_data", (data: any) => {
 				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
 
-				// Build WeeChat line_data message
-				const {WeeChatHDataBuilder} = require("./weechatRelay/weechatHData");
-				const builder = new WeeChatHDataBuilder();
+				// Send as TEXT protocol (not binary)
+				// Format: (_buffer_line_added) hdata buffer/lines/line/line_data ...
+				const msg = `(_buffer_line_added) _buffer_line_added buffer=${data.buffer} date=${data.date} prefix=${data.prefix} message=${data.message}\n`;
 
-				// Add line data
-				builder.addPath("buffer/lines/line/line_data");
-				builder.addKeys([
-					{name: "buffer", type: "ptr"},
-					{name: "date", type: "tim"},
-					{name: "prefix", type: "str"},
-					{name: "message", type: "str"},
-				]);
-				builder.addItem({
-					buffer: data.buffer,
-					date: data.date,
-					prefix: data.prefix,
-					message: data.message,
-				});
-
-				relayClient.send({
-					id: "_buffer_line_added",
-					data: builder.build(),
-				});
+				relayClient.send(msg);
 			});
 
 			erssiAdapter.on("buffer:update", () => {
