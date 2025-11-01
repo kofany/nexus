@@ -2,31 +2,28 @@
 
 This bridge allows WeeChat Relay protocol clients (like Lith) to connect to nexuslounge and access erssi IRC through the WeeChat Relay protocol.
 
+**Per-User Architecture:** Each user has their own WeeChat Relay server on a unique port, just like each user has their own erssi connection.
+
 ## Architecture
 
 ```
-Lith Client (Qt/QML)
-    |
-    | WeeChat Relay Protocol (binary over WebSocket/TCP)
-    |
-    v
-WeeChatRelayServer
-    |
-    | Commands/Events
-    |
-    v
-WeeChatToErssiAdapter <---> ErssiToWeeChatAdapter
-                                |
-                                | erssi fe-web protocol (JSON over WebSocket)
-                                |
-                                v
-                            IrssiClient
-                                |
-                                | WebSocket (TLS + AES-256-GCM)
-                                |
-                                v
-                            erssi fe-web module
+User 1:
+  Lith Client → WeeChatRelayServer (port 9001) → IrssiClient → erssi
+  Vue Browser → Socket.io → IrssiClient → erssi
+
+User 2:
+  Lith Client → WeeChatRelayServer (port 9002) → IrssiClient → erssi
+  Vue Browser → Socket.io → IrssiClient → erssi
+
+User 3:
+  Lith Client → WeeChatRelayServer (port 9003) → IrssiClient → erssi
+  Vue Browser → Socket.io → IrssiClient → erssi
 ```
+
+Each user can use:
+- Multiple Vue browsers (already working)
+- Multiple Lith clients (new!)
+- Both at the same time!
 
 ## Components
 
@@ -105,45 +102,65 @@ Translates WeeChat Relay commands to erssi actions.
 - `info version` - Get version info
 - `ping` - Ping/pong
 
-### 7. weechatBridge.ts
-Main bridge coordinator that connects everything together.
+## Configuration (Per-User)
 
-**Features:**
-- Manages WeeChat Relay server lifecycle
-- Creates adapters per authenticated client
-- Maps WeeChat users to IrssiClient instances
-- Handles client disconnections
+Configuration is stored in each user's `user.json` file:
 
-## Configuration
-
-Add to `config.js`:
-
-```javascript
-weechatRelay: {
-    enabled: true,
-    tcpPort: 9001,
-    tcpHost: "127.0.0.1",
-    wsPort: 9002,
-    wsHost: "127.0.0.1",
-    wsPath: "/weechat",
-    password: "",  // Leave empty to use The Lounge password
-    passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
-    passwordHashIterations: 100000,
-    compression: true,
+```json
+{
+  "log": true,
+  "password": "bcrypt_hash",
+  "irssiConnection": {
+    "host": "91.121.226.216",
+    "port": 9111,
+    "passwordEncrypted": "...",
+    "encryption": true,
+    "useTLS": true,
+    "rejectUnauthorized": false
+  },
+  "weechatRelay": {
+    "enabled": true,
+    "port": 9001,
+    "passwordEncrypted": "...",
+    "compression": true
+  }
 }
 ```
 
+**Configuration via UI:**
+- Go to Settings → WeeChat Relay (next to Irssi Connection)
+- Enable WeeChat Relay
+- Set unique port (e.g., 9001, 9002, 9003...)
+- Set password
+- Save
+
+**Password encryption:**
+- Password is encrypted using the same method as irssiConnection
+- Stored as `passwordEncrypted` in user.json
+- Decrypted in memory when user logs in
+
 ## Usage with Lith
 
-1. Enable the bridge in nexuslounge config
-2. Start nexuslounge
-3. Configure Lith:
-   - Host: nexuslounge server address
-   - Port: 9002 (WebSocket) or 9001 (TCP)
-   - Use WebSocket: Yes (recommended)
+1. **Configure in nexuslounge UI:**
+   - Login to nexuslounge web interface
+   - Go to Settings → WeeChat Relay
+   - Enable: Yes
+   - Port: Choose unique port (e.g., 9001)
+   - Password: Set a password for Lith
+   - Save
+
+2. **Configure Lith:**
+   - Host: Your nexuslounge server address
+   - Port: The port you configured (e.g., 9001)
+   - Use WebSocket: Yes
+   - Path: /weechat
    - Use SSL: Yes (if nexuslounge uses HTTPS)
-   - Password: Your nexuslounge user password
-4. Connect!
+   - Password: The password you set in step 1
+
+3. **Connect!**
+   - Lith will connect to your personal WeeChat Relay server
+   - You'll see all your erssi networks, channels, and messages
+   - You can use Lith and Vue browser at the same time!
 
 ## Protocol Flow
 

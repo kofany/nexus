@@ -51,11 +51,20 @@ export type IrssiConnectionConfig = {
 	rejectUnauthorized: boolean; // Accept self-signed certificates
 };
 
+// WeeChat Relay config (per-user, stored in user.json)
+export type WeeChatRelayConfig = {
+	enabled: boolean;
+	port: number; // Unique port for this user
+	passwordEncrypted: string; // Encrypted with encryption key (like irssiConnection)
+	compression: boolean;
+};
+
 // User config for irssi proxy mode
 export type IrssiUserConfig = {
 	log: boolean;
 	password: string; // bcrypt hash (for authentication)
 	irssiConnection: IrssiConnectionConfig;
+	weechatRelay?: WeeChatRelayConfig; // Optional WeeChat Relay configuration
 	sessions: {
 		[token: string]: {
 			lastUse: number;
@@ -119,6 +128,10 @@ export class IrssiClient {
 
 	// Browser sessions (multiple browsers per user)
 	attachedBrowsers: Map<string, BrowserSession> = new Map();
+
+	// WeeChat Relay server (for Lith clients) - per user!
+	weechatRelayServer: any = null; // WeeChatRelayServer instance
+	weechatRelayPassword: string | null = null; // Decrypted WeeChat password (in memory)
 
 	// Message storage (encrypted)
 	messageStorage: EncryptedMessageStorage | null = null;
@@ -255,6 +268,13 @@ export class IrssiClient {
 			log.error(`Failed to connect to irssi for user ${colors.bold(this.name)}: ${error}`);
 			// Don't throw - user is already logged in to The Lounge
 		});
+
+		// Step 5: Start WeeChat Relay server (if enabled)
+		if (this.config.weechatRelay?.enabled) {
+			this.startWeeChatRelay().catch((error) => {
+				log.error(`Failed to start WeeChat Relay for user ${colors.bold(this.name)}: ${error}`);
+			});
+		}
 
 		log.info(`User ${colors.bold(this.name)} logged in successfully`);
 	}
@@ -1375,6 +1395,11 @@ export class IrssiClient {
 			session.socket.disconnect(true);
 		}
 		this.attachedBrowsers.clear();
+
+		// Stop WeeChat Relay server
+		if (this.weechatRelayServer) {
+			await this.stopWeeChatRelay();
+		}
 
 		// Disconnect from irssi
 		if (this.irssiConnection) {
@@ -2549,6 +2574,106 @@ export class IrssiClient {
 			data.chatnet = chatnet;
 		}
 		return await this.sendIrssiRequest("server_remove", data);
+	}
+
+	/**
+	 * Start WeeChat Relay server for this user
+	 */
+	async startWeeChatRelay(): Promise<void> {
+		if (!this.config.weechatRelay?.enabled) {
+			return;
+		}
+
+		if (this.weechatRelayServer) {
+			log.warn(`WeeChat Relay already running for user ${colors.bold(this.name)}`);
+			return;
+		}
+
+		// Decrypt WeeChat password
+		if (!this.config.weechatRelay.passwordEncrypted) {
+			log.warn(`User ${colors.bold(this.name)} has no WeeChat Relay password configured`);
+			return;
+		}
+
+		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
+		this.weechatRelayPassword = await decryptIrssiPassword(
+			this.config.weechatRelay.passwordEncrypted,
+			"weechat-relay", // Use fixed salt for WeeChat password
+			this.config.weechatRelay.port
+		);
+
+		// Import WeeChat Relay components
+		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer");
+		const {ErssiToWeeChatAdapter} = await import("./weechatRelay/erssiToWeechatAdapter");
+		const {WeeChatToErssiAdapter} = await import("./weechatRelay/weechatToErssiAdapter");
+
+		// Create server
+		this.weechatRelayServer = new WeeChatRelayServer({
+			tcpPort: undefined, // Disable TCP for now
+			wsPort: this.config.weechatRelay.port,
+			wsHost: "0.0.0.0", // Listen on all interfaces
+			wsPath: "/weechat",
+			password: this.weechatRelayPassword,
+			passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
+			passwordHashIterations: 100000,
+			compression: this.config.weechatRelay.compression,
+		});
+
+		// Setup event handlers
+		this.weechatRelayServer.on("client:authenticated", (clientId: string, username: string) => {
+			log.info(
+				`${colors.green("[WeeChat Relay]")} Client authenticated: ${clientId} for user ${this.name}`
+			);
+
+			// Get relay client
+			const relayClient = this.weechatRelayServer.getClient(clientId);
+			if (!relayClient) {
+				log.error(`Relay client not found: ${clientId}`);
+				return;
+			}
+
+			// Create adapters
+			const erssiAdapter = new ErssiToWeeChatAdapter(this);
+			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
+
+			// Store adapters on the relay client for cleanup
+			(relayClient as any)._adapters = {erssiAdapter, weechatAdapter};
+		});
+
+		this.weechatRelayServer.on("client:close", (clientId: string) => {
+			log.info(`${colors.yellow("[WeeChat Relay]")} Client closed: ${clientId}`);
+
+			// Cleanup adapters
+			const relayClient = this.weechatRelayServer.getClient(clientId);
+			if (relayClient && (relayClient as any)._adapters) {
+				const {erssiAdapter, weechatAdapter} = (relayClient as any)._adapters;
+				erssiAdapter.removeAllListeners();
+				weechatAdapter.removeAllListeners();
+				delete (relayClient as any)._adapters;
+			}
+		});
+
+		// Start server
+		await this.weechatRelayServer.start();
+
+		log.info(
+			`${colors.green("[WeeChat Relay]")} Started for user ${colors.bold(this.name)} on port ${this.config.weechatRelay.port}`
+		);
+	}
+
+	/**
+	 * Stop WeeChat Relay server
+	 */
+	async stopWeeChatRelay(): Promise<void> {
+		if (!this.weechatRelayServer) {
+			return;
+		}
+
+		await this.weechatRelayServer.stop();
+		this.weechatRelayServer = null;
+		this.weechatRelayPassword = null;
+
+		log.info(`${colors.yellow("[WeeChat Relay]")} Stopped for user ${colors.bold(this.name)}`);
 	}
 }
 

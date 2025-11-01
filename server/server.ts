@@ -19,7 +19,6 @@ import Identification from "./identification";
 import changelog from "./plugins/changelog";
 import inputs from "./plugins/inputs";
 import Auth from "./plugins/auth";
-import {WeeChatBridge} from "./weechatRelay/weechatBridge";
 
 import themes from "./plugins/packages/themes";
 themes.loadLocalThemes();
@@ -263,31 +262,6 @@ export default async function (
 
 		manager = new ClientManager();
 		packages.loadPackages();
-
-		// Initialize WeeChat Relay Bridge
-		if (Config.values.weechatRelay.enabled) {
-			const weechatBridge = new WeeChatBridge(
-				{
-					enabled: Config.values.weechatRelay.enabled,
-					relay: {
-						tcpPort: Config.values.weechatRelay.tcpPort,
-						tcpHost: Config.values.weechatRelay.tcpHost,
-						wsPort: Config.values.weechatRelay.wsPort,
-						wsHost: Config.values.weechatRelay.wsHost,
-						wsPath: Config.values.weechatRelay.wsPath,
-						password: Config.values.weechatRelay.password || "",
-						passwordHashAlgo: Config.values.weechatRelay.passwordHashAlgo,
-						passwordHashIterations: Config.values.weechatRelay.passwordHashIterations,
-						compression: Config.values.weechatRelay.compression,
-					},
-				},
-				manager
-			);
-
-			weechatBridge.start().catch((err) => {
-				log.error(`${colors.red("[WeeChat Bridge]")} Failed to start: ${err}`);
-			});
-		}
 
 		const defaultTheme = themes.getByName(Config.values.theme);
 
