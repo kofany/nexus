@@ -1550,6 +1550,109 @@ function initializeIrssiClient(
 		}
 	});
 
+	// WeeChat Relay configuration
+	(socket as any).on("weechat:config:get", () => {
+		log.info(`[weechat:config:get] Request from ${socket.id}`);
+
+		// Return config (without password)
+		(socket as any).emit("weechat:config:info", {
+			enabled: client.config.weechatRelay?.enabled || false,
+			port: client.config.weechatRelay?.port || 9001,
+			compression: client.config.weechatRelay?.compression ?? true,
+		});
+	});
+
+	(socket as any).on("weechat:config:save", async (data: any) => {
+		log.info(`[weechat:config:save] Request from ${socket.id}:`, data);
+
+		if (!_.isPlainObject(data)) {
+			(socket as any).emit("weechat:config:error", {
+				error: "Invalid data",
+			});
+			return;
+		}
+
+		const {enabled, port, password, compression} = data;
+
+		// Validate
+		if (enabled && (!port || !password)) {
+			(socket as any).emit("weechat:config:error", {
+				error: "Port and password are required when enabled",
+			});
+			return;
+		}
+
+		if (enabled && (port < 1024 || port > 65535)) {
+			(socket as any).emit("weechat:config:error", {
+				error: "Port must be between 1024 and 65535",
+			});
+			return;
+		}
+
+		try {
+			// Import helper
+			const {encryptIrssiPassword} = await import("./irssiConfigHelper");
+
+			// Stop existing WeeChat Relay if running
+			if (client.weechatRelayServer) {
+				await client.stopWeeChatRelay();
+			}
+
+			if (enabled) {
+				// Encrypt password
+				const passwordEncrypted = await encryptIrssiPassword(
+					password,
+					"weechat-relay",
+					port
+				);
+
+				// Update config (create NEW object like irssi:config:save does)
+				client.config = {
+					...client.config,
+					weechatRelay: {
+						enabled: true,
+						port,
+						passwordEncrypted,
+						compression: compression ?? true,
+					},
+				};
+
+				// Save to disk
+				client.save();
+
+				// Start WeeChat Relay
+				await client.startWeeChatRelay();
+
+				(socket as any).emit("weechat:config:success", {
+					message: "WeeChat Relay enabled and started on port " + port,
+				});
+			} else {
+				// Disable (create NEW object)
+				client.config = {
+					...client.config,
+					weechatRelay: {
+						enabled: false,
+						port: port || 9001,
+						passwordEncrypted: "",
+						compression: true,
+					},
+				};
+
+				// Save to disk
+				client.save();
+
+				(socket as any).emit("weechat:config:success", {
+					message: "WeeChat Relay disabled",
+				});
+			}
+		} catch (error) {
+			log.error(`Failed to save WeeChat Relay config: ${error}`);
+			(socket as any).emit("weechat:config:error", {
+				error: `Failed to save: ${error}`,
+			});
+		}
+	});
+
 	// Network/Server management handlers
 	socket.on("network:list_irssi", async (callback) => {
 		try {
