@@ -880,6 +880,86 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	}
 
 	/**
+	 * Get nick color (hash-based, like Vue colorClass)
+	 * Returns WeeChat color code (1-32)
+	 */
+	private getNickColor(nick: string): number {
+		let hash = 0;
+		for (let i = 0; i < nick.length; i++) {
+			hash += nick.charCodeAt(i);
+		}
+		return 1 + (hash % 32); // color-1 to color-32
+	}
+
+	/**
+	 * Format string with WeeChat color codes
+	 * @param text - text to format
+	 * @param color - WeeChat color code (number 1-256 or color name)
+	 * @param bold - make text bold
+	 * @returns formatted string with WeeChat color codes
+	 *
+	 * WeeChat color format:
+	 * - \x19F + 2-digit color = foreground standard color (00-99)
+	 * - \x19F@ + 5-digit color = foreground extended color (00000-99999)
+	 * - \x1A* = set bold attribute
+	 * - \x1B* = clear bold attribute
+	 * - \x1C = reset all colors and attributes
+	 */
+	private formatWithColor(text: string, color?: number | string, bold: boolean = false): string {
+		if (!text) return "";
+
+		let result = "";
+
+		// Add bold attribute if specified (BEFORE color!)
+		if (bold) {
+			result += "\x1A*"; // set bold
+		}
+
+		// Add color code if specified
+		if (color !== undefined) {
+			if (typeof color === "number") {
+				// Standard color (1-99) or extended (100-256)
+				if (color <= 99) {
+					// Standard color: \x19F + 2-digit color
+					result += `\x19F${String(color).padStart(2, "0")}`;
+				} else {
+					// Extended color: \x19F@ + 5-digit color
+					result += `\x19F@${String(color).padStart(5, "0")}`;
+				}
+			} else {
+				// Named color (e.g., "green", "red", "cyan")
+				// WeeChat named colors: use standard color codes
+				const namedColors: Record<string, number> = {
+					"black": 0,
+					"red": 1,
+					"green": 2,
+					"yellow": 3,
+					"blue": 4,
+					"magenta": 5,
+					"cyan": 6,
+					"white": 7,
+					"gray": 8,
+					"lightred": 9,
+					"lightgreen": 10,
+					"lightyellow": 11,
+					"lightblue": 12,
+					"lightmagenta": 13,
+					"lightcyan": 14,
+				};
+				const colorCode = namedColors[color.toLowerCase()] ?? 7; // default to white
+				result += `\x19F${String(colorCode).padStart(2, "0")}`;
+			}
+		}
+
+		result += text;
+
+		// Reset formatting
+		result += "\x1C"; // reset all colors and attributes
+
+		return result;
+	}
+
+	/**
 	 * Send line added event
 	 * Format matches official WeeChat Relay protocol (full format)
 	 * This provides better compatibility with Lith features like smart filtering
@@ -991,30 +1071,62 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		msg.addArray("str", tags);
 
-		// Field 11: prefix:str (nickname or system prefix)
-		const prefix = message.from?.nick || "";
+		// Field 11: prefix:str (nickname or system prefix with color)
+		const nick = message.from?.nick || "";
+		let prefix = "";
+
+		if (nick) {
+			// Get nick color (hash-based, same as Vue)
+			const nickColor = this.getNickColor(nick);
+
+			// Format prefix with color and bold
+			// For normal messages: colored bold nick
+			// For highlights: use different color (red/orange)
+			if (message.highlight) {
+				prefix = this.formatWithColor(nick, "red", true);
+			} else if (message.self) {
+				// Own messages: use cyan/blue
+				prefix = this.formatWithColor(nick, "cyan", true);
+			} else {
+				// Other users: use hash-based color
+				prefix = this.formatWithColor(nick, nickColor, true);
+			}
+		}
+
 		msg.addString(prefix);
 
-		// Field 12: message:str (message text)
+		// Field 12: message:str (message text with formatting)
 		// Format messages according to WeeChat protocol
 		let messageText = message.text || "";
+
+		// Add color to message text based on type
 		if (message.type === "kick" && message.target?.nick) {
 			const reason = message.text || "no reason";
-			messageText = `has kicked ${message.target.nick} (${reason})`;
+			const targetNick = this.formatWithColor(message.target.nick, this.getNickColor(message.target.nick), true);
+			messageText = `has kicked ${targetNick} (${reason})`;
 		} else if (message.type === "join") {
-			// JOIN: "has joined #channel"
-			messageText = `has joined ${buffer.channelName || ""}`;
+			// JOIN: "has joined #channel" (green)
+			messageText = this.formatWithColor(`has joined ${buffer.channelName || ""}`, "green");
 		} else if (message.type === "part") {
-			// PART: "has left #channel (reason)" or "has left #channel"
+			// PART: "has left #channel (reason)" (yellow)
 			const reason = message.text;
-			messageText = reason
+			const text = reason
 				? `has left ${buffer.channelName || ""} (${reason})`
 				: `has left ${buffer.channelName || ""}`;
+			messageText = this.formatWithColor(text, "yellow");
 		} else if (message.type === "quit") {
-			// QUIT: "has quit (reason)" or "has quit"
+			// QUIT: "has quit (reason)" (red)
 			const reason = message.text;
-			messageText = reason ? `has quit (${reason})` : `has quit`;
+			const text = reason ? `has quit (${reason})` : `has quit`;
+			messageText = this.formatWithColor(text, "red");
+		} else if (message.highlight) {
+			// Highlighted messages: use bold + red/orange
+			messageText = this.formatWithColor(messageText, "red", true);
+		} else if (message.self) {
+			// Own messages: use default color (no special formatting)
+			// messageText stays as is
 		}
+
 		msg.addString(messageText);
 
 		this.relayClient.send(msg);
