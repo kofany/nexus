@@ -8,3 +8,8 @@ coverage/
 public/
 dist/
 .yarn/
+.augment-guidelines
+app7.log
+node.log
+node.log
+PROMPT.md
