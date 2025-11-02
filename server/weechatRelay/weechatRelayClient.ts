@@ -160,6 +160,12 @@ export class WeeChatRelayClient extends EventEmitter {
 			case "hdata":
 				this.handleHData(msgID, args);
 				break;
+			case "info":
+				this.handleInfo(msgID, args);
+				break;
+			case "infolist":
+				this.handleInfoList(msgID, args);
+				break;
 			case "input":
 				this.handleInput(msgID, args);
 				break;
@@ -171,6 +177,9 @@ export class WeeChatRelayClient extends EventEmitter {
 				break;
 			case "nicklist":
 				this.handleNicklist(msgID, args);
+				break;
+			case "ping":
+				this.handlePing(msgID, args);
 				break;
 			case "quit":
 				log.info(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} requested quit`);
@@ -538,20 +547,20 @@ export class WeeChatRelayClient extends EventEmitter {
 		this.emit("command", {command: "infolist", id, args});
 	}
 
+	private handlePing(id: string, args: string): void {
+		// Respond to ping with pong
+		const msg = new WeeChatMessage(id);
+		msg.addType("str");
+		msg.addString("pong");
+		this.send(msg);
+	}
+
 	private handleCompletion(id: string, args: string): void {
 		this.emit("command", {command: "completion", id, args});
 	}
 
 	private handleTest(id: string, args: string): void {
 		this.emit("command", {command: "test", id, args});
-	}
-
-	private handlePing(id: string, args: string): void {
-		// Send pong
-		const msg = new WeeChatMessage("_pong");
-		msg.addType(OBJ_STRING);
-		msg.addString(args || "");
-		this.send(msg);
 	}
 
 	private handleQuit(id: string, args: string): void {

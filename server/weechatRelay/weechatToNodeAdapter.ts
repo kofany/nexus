@@ -31,6 +31,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	private relayClient: WeeChatRelayClient;
 	private syncedBuffers: Set<bigint> = new Set();
 	private syncAll: boolean = true; // Default to true - sync all buffers automatically
+	private eventHandlers: Map<string, (...args: any[]) => void> = new Map(); // Track handlers for cleanup
 
 	constructor(
 		irssiClient: IrssiClient,
@@ -45,8 +46,29 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		this.setupRelayHandlers();
 		this.setupNodeAdapterHandlers();
 
+		// Setup cleanup on client disconnect
+		this.relayClient.once("close", () => {
+			this.cleanup();
+		});
+
 		// Log that we're syncing all buffers by default
 		log.info(`${colors.green("[WeeChat->Node]")} ✅ Auto-syncing ALL buffers (syncAll=true by default)`);
+	}
+
+	/**
+	 * Cleanup event handlers when client disconnects
+	 */
+	private cleanup(): void {
+		log.info(`${colors.yellow("[WeeChat->Node]")} Cleaning up event handlers for disconnected client`);
+
+		// Remove all event handlers from nodeAdapter
+		for (const [event, handler] of this.eventHandlers) {
+			this.nodeAdapter.removeListener(event, handler);
+		}
+		this.eventHandlers.clear();
+
+		// Remove all listeners from this adapter
+		this.removeAllListeners();
 	}
 
 	/**
@@ -93,22 +115,28 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	 * These are the same events that Vue frontend receives from IrssiClient
 	 */
 	private setupNodeAdapterHandlers(): void {
+		// Helper to register handler and track it for cleanup
+		const registerHandler = (event: string, handler: (...args: any[]) => void) => {
+			this.nodeAdapter.on(event, handler);
+			this.eventHandlers.set(event + "_" + this.eventHandlers.size, handler);
+		};
+
 		// buffer_opened: New channel opened
-		this.nodeAdapter.on("buffer_opened", (data: any) => {
+		registerHandler("buffer_opened", (data: any) => {
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				this.sendBufferOpened(data);
 			}
 		});
 
 		// buffer_closing: Channel closed
-		this.nodeAdapter.on("buffer_closing", (data: any) => {
+		registerHandler("buffer_closing", (data: any) => {
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				this.sendBufferClosed(data);
 			}
 		});
 
 		// buffer_line_added: New message
-		this.nodeAdapter.on("buffer_line_added", (data: any) => {
+		registerHandler("buffer_line_added", (data: any) => {
 			log.debug(`${colors.cyan("[WeeChat->Node]")} buffer_line_added: buffer=${data.bufferPtr}, syncAll=${this.syncAll}`);
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				// Extract buffer and msg from data
@@ -122,31 +150,30 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		});
 
 		// nicklist_diff: Nicklist update (users join/part/mode change)
-		this.nodeAdapter.on("nicklist_diff", (data: any) => {
+		registerHandler("nicklist_diff", (data: any) => {
 			log.debug(`${colors.cyan("[WeeChat->Node]")} nicklist_diff: buffer=${data.bufferPtr}, users=${data.users.length}`);
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				this.sendNicklistDiff(data);
 			}
 		});
 
-		// nicklist_diff: Nicklist changed
-		this.nodeAdapter.on("nicklist_diff", (data: any) => {
-			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
-				this.sendNicklistDiff(data);
-			}
-		});
-
 		// buffer_title_changed: Topic changed
-		this.nodeAdapter.on("buffer_title_changed", (data: any) => {
+		registerHandler("buffer_title_changed", (data: any) => {
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				this.sendBufferTitleChanged(data);
 			}
 		});
 
 		// hotlist_changed: Unread/highlight changed
-		this.nodeAdapter.on("hotlist_changed", (data: any) => {
+		registerHandler("hotlist_changed", (data: any) => {
 			// Hotlist is global, always send
 			this.sendHotlistChanged(data);
+		});
+
+		// line_data: Real-time message (for weechat-android compatibility)
+		registerHandler("line_data", (data: any) => {
+			// line_data is sent directly to relayClient, not through this adapter
+			// This is handled in irssiClient.ts
 		});
 	}
 
@@ -894,16 +921,22 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	/**
 	 * Format string with WeeChat color codes
 	 * @param text - text to format
-	 * @param color - WeeChat color code (number 1-256 or color name)
+	 * @param color - WeeChat color code (number 0-255 or color name)
 	 * @param bold - make text bold
 	 * @returns formatted string with WeeChat color codes
 	 *
-	 * WeeChat color format:
-	 * - \x19F + 2-digit color = foreground standard color (00-99)
-	 * - \x19F@ + 5-digit color = foreground extended color (00000-99999)
+	 * WeeChat color format (from weechatRN parser.js):
+	 * - \x19F + 2-digit color = foreground standard color (00-15 = WeeChat named colors)
+	 * - \x19F@ + 5-digit color = foreground extended color (00000-00255 = 256 color palette)
 	 * - \x1A* = set bold attribute
-	 * - \x1B* = clear bold attribute
 	 * - \x1C = reset all colors and attributes
+	 *
+	 * Standard colors (0-15):
+	 * 0=default, 1=black, 2=darkgray, 3=red, 4=lightred, 5=green, 6=lightgreen,
+	 * 7=brown, 8=yellow, 9=blue, 10=lightblue, 11=magenta, 12=lightmagenta,
+	 * 13=cyan, 14=lightcyan, 15=gray, 16=white
+	 *
+	 * Extended colors (0-255): Full 256 color palette
 	 */
 	private formatWithColor(text: string, color?: number | string, bold: boolean = false): string {
 		if (!text) return "";
@@ -918,35 +951,38 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		// Add color code if specified
 		if (color !== undefined) {
 			if (typeof color === "number") {
-				// Standard color (1-99) or extended (100-256)
-				if (color <= 99) {
-					// Standard color: \x19F + 2-digit color
+				// WeeChat uses 0-15 for standard colors, 16-255 for extended
+				// But we use hash-based colors 1-32, so map to extended palette
+				if (color <= 15) {
+					// Standard WeeChat color (0-15): \x19F + 2-digit
 					result += `\x19F${String(color).padStart(2, "0")}`;
 				} else {
-					// Extended color: \x19F@ + 5-digit color
+					// Extended color (16-255): \x19F@ + 5-digit
 					result += `\x19F@${String(color).padStart(5, "0")}`;
 				}
 			} else {
 				// Named color (e.g., "green", "red", "cyan")
-				// WeeChat named colors: use standard color codes
+				// Map to WeeChat standard colors (0-15)
 				const namedColors: Record<string, number> = {
-					"black": 0,
-					"red": 1,
-					"green": 2,
-					"yellow": 3,
-					"blue": 4,
-					"magenta": 5,
-					"cyan": 6,
-					"white": 7,
-					"gray": 8,
-					"lightred": 9,
-					"lightgreen": 10,
-					"lightyellow": 11,
-					"lightblue": 12,
-					"lightmagenta": 13,
+					"default": 0,
+					"black": 1,
+					"darkgray": 2,
+					"red": 3,
+					"lightred": 4,
+					"green": 5,
+					"lightgreen": 6,
+					"brown": 7,
+					"yellow": 8,
+					"blue": 9,
+					"lightblue": 10,
+					"magenta": 11,
+					"lightmagenta": 12,
+					"cyan": 13,
 					"lightcyan": 14,
+					"gray": 15,
+					"white": 16,
 				};
-				const colorCode = namedColors[color.toLowerCase()] ?? 7; // default to white
+				const colorCode = namedColors[color.toLowerCase()] ?? 0; // default to default
 				result += `\x19F${String(colorCode).padStart(2, "0")}`;
 			}
 		}
@@ -965,7 +1001,8 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	 * This provides better compatibility with Lith features like smart filtering
 	 */
 	private sendLineAdded(buffer: any, message: any): void {
-		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending line added: ${buffer.fullName}`);
+		try {
+			log.debug(`${colors.cyan("[WeeChat->Node]")} Sending line added: ${buffer.fullName}, self=${message.self}, highlight=${message.highlight}`);
 
 		const msg = new WeeChatMessage("_buffer_line_added");
 		msg.addType(OBJ_HDATA);
@@ -1129,7 +1166,11 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		msg.addString(messageText);
 
-		this.relayClient.send(msg);
+			log.debug(`${colors.cyan("[WeeChat->Node]")} Sending _buffer_line_added: prefix="${prefix}", message="${messageText.substring(0, 50)}..."`);
+			this.relayClient.send(msg);
+		} catch (error) {
+			log.error(`${colors.red("[WeeChat->Node]")} Error in sendLineAdded: ${error}`);
+		}
 	}
 
 	/**

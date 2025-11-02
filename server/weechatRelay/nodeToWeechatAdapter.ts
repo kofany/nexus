@@ -49,6 +49,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		super();
 		this.irssiClient = irssiClient;
 
+		// Increase max listeners - we may have multiple WeeChat clients connected
+		// Each client adds ~6 listeners (buffer_opened, buffer_closing, buffer_line_added, etc.)
+		// Default is 10, so allow up to 50 clients (300 listeners)
+		this.setMaxListeners(300);
+
 		log.info(`${colors.cyan("[Node->WeeChat]")} Adapter initialized for user ${irssiClient.name}`);
 	}
 
