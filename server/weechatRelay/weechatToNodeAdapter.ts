@@ -48,27 +48,34 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		// Setup cleanup on client disconnect
 		this.relayClient.once("close", () => {
+			log.warn(`${colors.red("[WeeChat->Node]")} 🔴 Client close event received, calling cleanup()`);
 			this.cleanup();
 		});
 
 		// Log that we're syncing all buffers by default
-		log.info(`${colors.green("[WeeChat->Node]")} ✅ Auto-syncing ALL buffers (syncAll=true by default)`);
+		log.info(`${colors.green("[WeeChat->Node]")} ✅ Auto-syncing ALL buffers (syncAll=true by default) - client: ${this.relayClient.getId()}`);
 	}
 
 	/**
 	 * Cleanup event handlers when client disconnects
 	 */
 	private cleanup(): void {
-		log.info(`${colors.yellow("[WeeChat->Node]")} Cleaning up event handlers for disconnected client`);
+		log.info(`${colors.yellow("[WeeChat->Node]")} Cleaning up event handlers for disconnected client: ${this.relayClient.getId()}`);
+		log.info(`${colors.yellow("[WeeChat->Node]")} Removing ${this.eventHandlers.size} event handlers from nodeAdapter`);
 
 		// Remove all event handlers from nodeAdapter
-		for (const [event, handler] of this.eventHandlers) {
-			this.nodeAdapter.removeListener(event, handler);
+		for (const [key, handler] of this.eventHandlers) {
+			// Extract event name from key (format: "event_N")
+			const eventName = key.substring(0, key.lastIndexOf("_"));
+			log.debug(`${colors.yellow("[WeeChat->Node]")} Removing handler: ${key} (event: ${eventName})`);
+			this.nodeAdapter.removeListener(eventName, handler);
 		}
 		this.eventHandlers.clear();
 
 		// Remove all listeners from this adapter
 		this.removeAllListeners();
+
+		log.info(`${colors.green("[WeeChat->Node]")} ✅ Cleanup complete for client: ${this.relayClient.getId()}`);
 	}
 
 	/**
