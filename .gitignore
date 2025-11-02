@@ -13,3 +13,7 @@ app7.log
 node.log
 node.log
 PROMPT.md
+*.md
+*.log
+node.log
+PROMPT.md

@@ -375,6 +375,18 @@ export class WeeChatRelayClient extends EventEmitter {
 
 		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed options: ${JSON.stringify(options)}`);
 
+		// Check compression (IMPORTANT: Must be set BEFORE authentication!)
+		if (options.compression) {
+			const requestedComp = options.compression.split(",");
+			if (requestedComp.includes("zlib") && this.config.compression) {
+				this.compression = true;
+				log.info(`${colors.green("[WeeChat Relay Client]")} Compression enabled: zlib`);
+			} else {
+				this.compression = false;
+				log.info(`${colors.yellow("[WeeChat Relay Client]")} Compression disabled (requested: ${options.compression}, config: ${this.config.compression})`);
+			}
+		}
+
 		// Check password
 		let passwordOk = false;
 		const expectedPassword = this.config.password || "";

@@ -328,13 +328,15 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const msg = new WeeChatMessage(id);
 
 		const fields: HDataField[] = [
-			{name: "id", type: "ptr"},
 			{name: "number", type: "int"},
-			{name: "name", type: "str"}, // Full name (plugin.name format)
+			{name: "full_name", type: "str"},
 			{name: "short_name", type: "str"},
-			{name: "hidden", type: "int"}, // 0=visible, 1=hidden
+			{name: "type", type: "int"},
 			{name: "title", type: "str"},
-			{name: "local_variables", type: "htb"}, // HASHTABLE (not string!)
+			{name: "nicklist", type: "int"},
+			{name: "local_variables", type: "htb"},
+			{name: "notify", type: "int"},
+			{name: "hidden", type: "int"},
 		];
 
 		const objects: HDataObject[] = [];
@@ -356,13 +358,15 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			objects.push({
 				pointers: [serverPtr],
 				values: {
-					id: serverPtr,
 					number: bufferNumber++,
-					name: network.name, // Full name
+					full_name: `irc.server.${network.name}`,
 					short_name: network.name,
-					hidden: 0, // Not hidden
+					type: 0, // server
 					title: network.serverTag || network.name,
+					nicklist: 0,
 					local_variables: serverLocalVars,
+					notify: 3,
+					hidden: 0,
 				},
 			});
 
@@ -382,13 +386,15 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				objects.push({
 					pointers: [bufferPtr],
 					values: {
-						id: bufferPtr,
 						number: bufferNumber++,
-						name: `${network.name}.${channel.name}`, // Full name (plugin.name format)
+						full_name: `irc.${network.name}.${channel.name}`,
 						short_name: channel.name,
-						hidden: 0, // Not hidden
+						type: isChannel ? 1 : 2, // 1=channel, 2=private (approx)
 						title: channel.topic || "",
+						nicklist: isChannel ? 1 : 0,
 						local_variables: localVars,
+						notify: 3,
+						hidden: 0,
 					},
 				});
 			}
@@ -412,10 +418,262 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	}
 
 	/**
-	 * Build lines HData (for history)
+	 * Build bulk lines HData (for weechat-android)
+	 * Returns last N lines for ALL buffers
+	 * Format: buffer:gui_buffers(*)/own_lines/last_line(-N)/data id,buffer,displayed
+	 */
+	buildBulkLinesHData(id: string, count: number = 25, keys: string = ""): WeeChatMessage {
+		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildBulkLinesHData: id="${id}", count=${count}, keys="${keys}"`);
+
+		const msg = new WeeChatMessage(id);
+
+		// IMPORTANT: Only send fields that client requested!
+		// Weechat-android requests: "id,buffer,displayed" (3 fields)
+		// Lith requests: all fields
+		// Parse requested keys
+		const requestedKeys = keys ? keys.split(",").map(k => k.trim()) : [];
+		log.info(`${colors.cyan("[Node->WeeChat DEBUG]")} Requested keys: ${requestedKeys.join(", ")}`);
+
+		// Build fields based on requested keys
+		// If no keys specified, send all fields (Lith style)
+		let fields: HDataField[] = [];
+
+		const typeForKey = (k: string): HDataField => {
+			switch (k) {
+				case "buffer": return {name: "buffer", type: "ptr"};
+				case "id":     return {name: "id", type: "int"}; // WeeChat >=4.4 uses int; android handles both
+				case "date":   return {name: "date", type: "tim"};
+				case "date_usec": return {name: "date_usec", type: "int"};
+				case "date_printed": return {name: "date_printed", type: "tim"};
+				case "date_usec_printed": return {name: "date_usec_printed", type: "int"};
+				case "displayed": return {name: "displayed", type: "chr"};
+				case "notify_level": return {name: "notify_level", type: "int"};
+				case "notify": return {name: "notify", type: "int"};
+				case "highlight": return {name: "highlight", type: "chr"};
+				case "tags_array": return {name: "tags_array", type: "arr", arrayType: "str"};
+				case "prefix": return {name: "prefix", type: "str"};
+				case "message": return {name: "message", type: "str"};
+				default: return {name: k as any, type: "str"};
+			}
+		};
+
+		if (requestedKeys.length > 0) {
+			// preserve order EXACTLY as requested by client
+			fields = requestedKeys.map(typeForKey);
+		} else {
+			// default full set (Lith)
+			fields = [
+				typeForKey("buffer"),
+				typeForKey("id"),
+				typeForKey("date"),
+				typeForKey("date_usec"),
+				typeForKey("date_printed"),
+				typeForKey("date_usec_printed"),
+				typeForKey("displayed"),
+				typeForKey("notify_level"),
+				typeForKey("highlight"),
+				typeForKey("tags_array"),
+				typeForKey("prefix"),
+				typeForKey("message"),
+			];
+		}
+
+		const objects: HDataObject[] = [];
+		let totalLines = 0;
+
+		// Iterate through all networks and channels
+		for (const network of this.irssiClient.networks) {
+			for (const channel of network.channels) {
+				// Skip lobby
+				if (channel.type === ChanType.LOBBY) {
+					continue;
+				}
+
+				const bufferPtr = this.getBufferPointer(channel.id);
+				// TEMPORARY: Limit to 5 lines per buffer to debug crash
+				const actualCount = Math.min(count, 5);
+				const messages = channel.messages.slice(-actualCount);
+
+				if (messages.length === 0) {
+					continue; // Skip empty buffers
+				}
+
+				// Generate pointers for hpath: buffer/lines/line/line_data
+				// We need 4 pointers: buffer, lines, line, line_data
+				const linesPtr = generatePointer(); // Pointer to lines container
+
+				for (const m of messages) {
+					const linePtr = generatePointer(); // Pointer to line
+					const lineDataPtr = generatePointer(); // Pointer to line_data
+					const timestamp = Math.floor(m.time.getTime() / 1000);
+
+					// Build values object with ONLY requested fields
+					const values: Record<string, any> = {};
+
+					if (requestedKeys.length === 0 || requestedKeys.includes("buffer")) {
+						values.buffer = bufferPtr;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("id")) {
+						// Use a simple increasing integer as line id (per message)
+						values.id = totalLines; // int id
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("date")) {
+						values.date = timestamp;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("date_usec")) {
+						values.date_usec = 0;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("date_printed")) {
+						values.date_printed = timestamp;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("date_usec_printed")) {
+						values.date_usec_printed = 0;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("displayed")) {
+						values.displayed = 1;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("notify_level")) {
+						values.notify_level = m.highlight ? 3 : 1;
+					}
+					if (requestedKeys.includes("notify")) {
+						values.notify = m.highlight ? 3 : 1;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("highlight")) {
+						values.highlight = m.highlight ? 1 : 0;
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("tags_array")) {
+						values.tags_array = this.buildMessageTags(m);
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("prefix")) {
+						values.prefix = m.from?.nick || "";
+					}
+					if (requestedKeys.length === 0 || requestedKeys.includes("message")) {
+						values.message = m.text;
+					}
+
+					objects.push({
+						// IMPORTANT: Number of pointers MUST match number of elements in hpath!
+						// hpath = "buffer/lines/line/line_data" → 4 pointers
+						pointers: [bufferPtr, linesPtr, linePtr, lineDataPtr],
+						values,
+					});
+					totalLines++;
+				}
+			}
+		}
+
+		if (objects.length > 0) {
+			// IMPORTANT: hpath must match the request format!
+			// Weechat-android requests: buffer:gui_buffers(*)/own_lines/last_line(-N)/data
+			// So hpath should be: buffer/lines/line/line_data (same as buildLinesHData)
+			buildHData(msg, "buffer/lines/line/line_data", fields, objects);
+			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${totalLines} lines for ${this.irssiClient.networks.reduce((sum, n) => sum + n.channels.length - 1, 0)} buffers`);
+		} else {
+			buildEmptyHData(msg);
+			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send (bulk)`);
+		}
+
+		return msg;
+	}
+
+	/**
+	 * Build lines HData for a single buffer with requested keys (weechat-android style)
+	 * Example request keys: "id,date,displayed,prefix,message,highlight,notify,tags_array"
+	 */
+	buildBufferOwnLinesHData(id: string, bufferPtr: bigint, count: number = 100, keys: string = ""): WeeChatMessage {
+		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildBufferOwnLinesHData: id="${id}", bufferPtr=${bufferPtr.toString(16)}, count=${count}, keys="${keys}"`);
+		const msg = new WeeChatMessage(id);
+
+		// Resolve buffer and channel from pointer
+		const buffer = this.getBufferByPointer(bufferPtr);
+		if (!buffer || !buffer.channel) {
+			buildEmptyHData(msg);
+			return msg;
+		}
+		const channel = buffer.channel as Chan;
+
+		// Parse requested keys
+		const requestedKeys = keys ? keys.split(",").map((k) => k.trim()) : [];
+		const typeForKey = (k: string): HDataField => {
+			switch (k) {
+				case "buffer": return {name: "buffer", type: "ptr"};
+				case "id": return {name: "id", type: "int"};
+				case "date": return {name: "date", type: "tim"};
+				case "date_usec": return {name: "date_usec", type: "int"};
+				case "date_printed": return {name: "date_printed", type: "tim"};
+				case "date_usec_printed": return {name: "date_usec_printed", type: "int"};
+				case "displayed": return {name: "displayed", type: "chr"};
+				case "notify": return {name: "notify", type: "int"};
+				case "notify_level": return {name: "notify_level", type: "int"};
+				case "highlight": return {name: "highlight", type: "chr"};
+				case "tags_array": return {name: "tags_array", type: "arr", arrayType: "str"};
+				case "prefix": return {name: "prefix", type: "str"};
+				case "message": return {name: "message", type: "str"};
+				default: return {name: k as any, type: "str"};
+			}
+		};
+
+		const fields: HDataField[] = requestedKeys.length > 0
+			? requestedKeys.map(typeForKey)
+			: [
+				// default full set
+				{name: "buffer", type: "ptr"},
+				{name: "id", type: "int"},
+				{name: "date", type: "tim"},
+				{name: "date_usec", type: "int"},
+				{name: "date_printed", type: "tim"},
+				{name: "date_usec_printed", type: "int"},
+				{name: "displayed", type: "chr"},
+				{name: "notify_level", type: "int"},
+				{name: "highlight", type: "chr"},
+				{name: "tags_array", type: "arr", arrayType: "str"},
+				{name: "prefix", type: "str"},
+				{name: "message", type: "str"},
+			];
+
+		const objects: HDataObject[] = [];
+		const messages = channel.messages.slice(-count);
+		const linesPtr = generatePointer();
+		let idx = 0;
+		for (const m of messages) {
+			const linePtr = generatePointer();
+			const lineDataPtr = generatePointer();
+			const ts = Math.floor(m.time.getTime() / 1000);
+			const values: Record<string, any> = {};
+			if (requestedKeys.length === 0 || requestedKeys.includes("buffer")) values.buffer = bufferPtr;
+			if (requestedKeys.length === 0 || requestedKeys.includes("id")) values.id = idx++;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date")) values.date = ts;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date_usec")) values.date_usec = 0;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date_printed")) values.date_printed = ts;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date_usec_printed")) values.date_usec_printed = 0;
+			if (requestedKeys.length === 0 || requestedKeys.includes("displayed")) values.displayed = 1;
+			if (requestedKeys.includes("notify")) values.notify = m.highlight ? 3 : 1;
+			if (requestedKeys.length === 0 || requestedKeys.includes("notify_level")) values.notify_level = m.highlight ? 3 : 1;
+			if (requestedKeys.length === 0 || requestedKeys.includes("highlight")) values.highlight = m.highlight ? 1 : 0;
+			if (requestedKeys.length === 0 || requestedKeys.includes("tags_array")) values.tags_array = this.buildMessageTags(m);
+			if (requestedKeys.length === 0 || requestedKeys.includes("prefix")) values.prefix = m.from?.nick || "";
+			if (requestedKeys.length === 0 || requestedKeys.includes("message")) values.message = m.text;
+
+			objects.push({ pointers: [bufferPtr, linesPtr, linePtr, lineDataPtr], values });
+		}
+
+		if (objects.length > 0) {
+			buildHData(msg, "buffer/lines/line/line_data", fields, objects);
+		} else {
+			buildEmptyHData(msg);
+		}
+		return msg;
+	}
+
+
+	/**
+	 * Build lines HData (for history - single buffer, Lith style)
 	 * Uses data directly from IrssiClient.networks
 	 */
 	buildLinesHData(id: string, bufferPtr: bigint, count: number = 100): WeeChatMessage {
+		// 🚨 DEBUG: Log buildLinesHData call
+		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildLinesHData: id="${id}", bufferPtr=${bufferPtr}, count=${count}`);
+
 		const msg = new WeeChatMessage(id);
 
 		// bufferPtr is actually channel.id
@@ -423,11 +681,13 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const found = this.findChannel(channelId);
 
 		if (!found) {
+			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ Channel not found for bufferPtr=${bufferPtr}`);
 			buildEmptyHData(msg);
 			return msg;
 		}
 
 		const {network, channel} = found;
+		log.info(`${colors.cyan("[Node->WeeChat DEBUG]")} 📜 Building lines for ${channel.name} (${channel.messages.length} total messages, sending last ${count})`);
 
 		// Build line_data HData
 		const fields: HDataField[] = [
@@ -473,8 +733,10 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (objects.length > 0) {
 			buildHData(msg, "line_data", fields, objects);
+			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${objects.length} lines for ${channel.name}`);
 		} else {
 			buildEmptyHData(msg);
+			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send for ${channel.name}`);
 		}
 
 		return msg;
