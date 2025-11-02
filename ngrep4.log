@@ -1,0 +1,211 @@
+interface: en0 (192.168.176.0/255.255.255.0)
+filter: ( tcp port 9000 ) and ((ip || ip6) || (vlan && (ip || ip6)))
+####
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #4
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #6
+  ...Þ.....handleHandshakehtbstrstr........password_hash_algo....pbkdf2+sha512....password_hash_iterations....100000....nonce... CC1F48000509C0A775821A2977EC2FB2....totp....off....compression....off....escape_command
+  s....off                                                                                                                                                                                                              
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #8
+  init password_hash=pbkdf2+sha512:cc1f48000509c0a775821a2977ec2fb2d02e54103d853cbc:100000:14887859829f9dae65d2eafe0b20c03304557ecdca5a015ed8a452b7c5627caaf1bb724e653d097c968a4f4f4a84263827d87513dd6567b2a5f9631f49e8e
+  6bc.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines/last_line(-1)/data.(handleHotlistInit
+  ialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                                                                
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [A] #10
+  .........handleBufferInitializationhda....buffer...Knumber:int,name:str,short_name:str,hidden:int,title:str,local_variables:htb.....8690fc000........weechat....weechat.......2WeeChat 4.7.1 (C) 2003-2025 - https://w
+  eechat.org/strstr........plugin....core....name....weechat.8690fc600........server.IRCnet....IRCnet.......?IRC: irc.belwue.de/6667 (2001:7c0:701:6665:6666:6667:6668:6669)strstr........plugin....irc....name....serve
+  r.IRCnet....type....server....server....IRCnet....channel....IRCnet....charset_modifier....irc.IRCnet....nick....k3....tls_version....cleartext....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fd200.......
+  .server.IRCnet2....IRCnet2.......+IRC: irc.al/6667 (2001:41d0:701:1100::64e9)strstr........plugin....irc....name....server.IRCnet2....type....server....server....IRCnet2....channel....IRCnet2....charset_modifier...
+  .irc.IRCnet2....nick....k2....tls_version....cleartext....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fc900........fset....fset.........F141.bF/.F1345.bF | Filter: .F08relay.bF | Sort: .F16~name.bF | Key
+  (input): alt+space=toggle boolean, alt+'-'(-)=subtract 1 or set, alt+'+'(+)=add 1 or append, alt+f,alt+r(r)=reset, alt+f,alt+u(u)=unset, alt+enter(s)=set, alt+f,alt+n(n)=set new value, alt+f,alt+a(a)=append, alt+',
+  '=mark/unmark, shift+down=mark and move down, shift+up=move up and mark, ($)=refresh, ($$)=unmark/refresh, (m)=mark matching options, (u)=unmark matching options, a                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #11
+  lt+p(p)=toggle plugins desc, alt+v(v)=toggle help bar, ctrl+x(x)=switch format, (q)=close bufferstrstr........plugin....fset....name....fset....type....option....filter....relay.8690fcc00........IRCnet.#tahio....#t
+  ahio....ÿÿÿÿstrstr........plugin....irc....name....IRCnet.#tahio....type....channel....nick....k3....server....IRCnet....channel....#tahio....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fcf00........IRCn
+  et.#xxx....#xxx........jupikajej madafakastrstr........plugin....irc....name....IRCnet.#xxx....type....channel....nick....k3....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c....server....IRCnet....channel....#
+  xxx.8690fd500........IRCnet2.#irc.al....#irc.al....ÿÿÿÿstrstr........plugin....irc....name....IRCnet2.#irc.al....type....channel....nick....k2....server....IRCnet2....channel....#irc.al....host...*~k@2a02:2454:8577
+  :d300:bcc1:ff48:db37:bf4c.8690fd800........IRCnet.#irc.al....#irc.al....ÿÿÿÿstrstr........plugin....irc....name....IRCnet.#irc.al....type....channel....nick....k3....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf
+  4c....server....IRCnet....channel....#irc.al.8690fdb00........relay.list....relay.list........List of clients for relaystrstr........plugin....relay....name....relay.list....type....relay                           
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [A] #12
+  ...Ä.....handleFirstReceivedLinehda....buffer/lines/line/line_data...ébuffer:ptr,id:int,y:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,str_time:str,tags_count:int,tags_array:arr,displayed:chr,n
+  otify_level:chr,highlight:chr,refresh_needed:chr,prefix:str,prefix_length:int,message:str.....8690fc000.868c0e500.868509a20.868654d90.8690fc000....ÿÿÿÿ.1762044622..gÛ.1762044622..gÛ.....0201.03:.0250.03:.0222....st
+  r........relay_client...............Erelay: client .F131/weechat/192.168.176.29.01 connected/authenticated.8690fc600.868b6e440.868508a40.8685f83f0.8690fc600...6ÿÿÿÿ.1762043699..Ò».1762043699..Ò».....0201.03:.0234.0
+  3:.0259....str........irc_376....irc_numeric....nick_BelWue.DE....log3.........05--........End of MOTD command..8690fd200.8686882c0.868c62fa0.868641b90.8690fd200...Kÿÿÿÿ.1762044049..¿÷.1762044049..¿÷.....0201.03:.0
+  240.03:.0249....str........irc_318....irc_numeric....nick_IRC.al....log3.........05--.......!.28[.15k2.28] .End of WHOIS list..8690fc900.8685f6200.86856db60.868643020.8690fc900...,...,.1762044533..ø .1762044533..ø 
+  ÿÿÿÿ....str........ÿÿÿÿ.......Y.F00  .F@00185relay.port.weechat                            .F@00138integer  .F@001859000.8690fcc00.8685f66c0.86856ec00.8685f9650.8690fcc00....ÿÿÿÿ.1762043962..Rð.1762043962..Rð.....0
+  201.03:.0239.03:.0222....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......OChannel .13#tahio.: .1312. nicks .28(.133. ops, .130. voice                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #13
+  d, .139. regular.28).8690fcf00.8685f7240.86856c400.8685f9490.8690fcf00....ÿÿÿÿ.1762043990..n..1762043990..n......0201.03:.0239.03:.0250....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--...
+  ....NChannel .13#xxx.: .1349. nicks .28(.1348. ops, .130. voiced, .131. regular.28).8690fd500.868689e00.8685a6200.868641960.8690fd500....ÿÿÿÿ.1762044030..1I.1762044030..1I.....0201.03:.0240.03:.0230....str........i
+  rc_366....irc_numeric....nick_IRC.al....log3.........05--.......OChannel .13#irc.al.: .133. nicks .28(.130. ops, .130. voiced, .133. regular.28).8690fd800.86868a280.8685a6980.868643b10.8690fd800....ÿÿÿÿ.1762044096.
+  ..Z.1762044096...Z.....0201.03:.0241.03:.0236....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......NChannel .13#irc.al.: .132. nicks .28(.131. op, .130. voiced, .131. regular.28).8690fd
+  b00.86868ba00.868509a40.868654770.8690fdb00.........1762044622..i«.1762044622..i«ÿÿÿÿ....str........ÿÿÿÿ.......T.*16~00                           started on: Sun, 02 Nov 2025 01:50:21, ended on: -                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [A] #14
+  ...Ù.....handleHotlistInitializationhda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................
+  0.0.........handleNicklistInitializationhda....buffer/nicklist_item...Ngroup:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str...W.8690fc000.105e00e30..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fc600.868a
+  43f60..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd200.868a43240..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fc900.868a41b00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcc00.868a43a80..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcc00.868a43c00..........000|o....weecha
+  t.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.869301ea0..........kofany....bar_fg....@....lightgreen.8690fcc00.869302300..........oper....bar_fg....@....lightgreen.8690fcc00.869301d60..........yooz....bar_fg....@....lig
+  htgreen.8690fcc00.868a41d40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.868a43d20..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.8693024e0..........752OAAFCK....bar_fg.... .
+  ...lightblue.8690fcc00.869302120..........devl0z....bar_fg.... ....lightblue.8690fcc00.869301e00..........dominik....bar_fg.... ....lightblue.8690fcc00.869302350..........gorf....bar_fg.... ....lightblue.8690fcc00.
+  869301cc0..........iBot....bar_fg.... ....lightblue.8690fcc00.869301f40..........irssi_user....bar_fg.... ....lightblue.8690fcc00.869302080..........k3....bar_fg...                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [A] #15
+  . ....lightblue.8690fcc00.869302260..........moimoi....bar_fg.... ....lightblue.8690fcc00.8693021c0..........zxc....bar_fg.... ....lightblue.8690fcf00.868a41da0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcf00.868a43600........
+  ..000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.869302da0..........[r]uciu....bar_fg....@....lightgreen.8690fcf00.869300cd0..........[xXx]....bar_fg....@....lightgreen.8690fcf00.869303020..........`ruciu`
+  ....bar_fg....@....lightgreen.8690fcf00.869300b90..........biksa....bar_fg....@....lightgreen.8690fcf00.869301bd0..........d00g....bar_fg....@....lightgreen.8690fcf00.869302b20..........D1ng....bar_fg....@....light
+  green.8690fcf00.869300af0..........dnets....bar_fg....@....lightgreen.8690fcf00.869301c20..........doog....bar_fg....@....lightgreen.8690fcf00.869303160..........dupsko....bar_fg....@....lightgreen.8690fcf00.869300
+  960..........Dut....bar_fg....@....lightgreen.8690fcf00.869301360..........esiu....bar_fg....@....lightgreen.8690fcf00.869300870..........eston....bar_fg....@....lightgreen.8690fcf00.869301400..........figiel....ba
+  r_fg....@....lightgreen.8690fcf00.869301770..........fy....bar_fg....@....lightgreen.8690fcf00.869301680..........Fyrg....bar_fg....@....lightgreen.8690fcf00.869302d00..........gg....bar_fg....@....lightgreen.8690f
+  cf00.869302e40..........gge....bar_fg....@....lightgreen.8690fcf00.869301540..........gryf....bar_fg....@....lightgreen.8690fcf00.869302bc0..........het....bar_fg..                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [A] #16
+  ..@....lightgreen.8690fcf00.8693014a0..........Hunter....bar_fg....@....lightgreen.8690fcf00.869302800..........iksa....bar_fg....@....lightgreen.8690fcf00.869302ee0..........ImperatoR....bar_fg....@....lightgreen.
+  8690fcf00.869301ae0..........kofany....bar_fg....@....lightgreen.8690fcf00.869302a80..........kuta....bar_fg....@....lightgreen.8690fcf00.869301860..........legia....bar_fg....@....lightgreen.8690fcf00.869302940...
+  .......man....bar_fg....@....lightgreen.8690fcf00.869300fa0..........norweg....bar_fg....@....lightgreen.8690fcf00.869301a40..........openirc....bar_fg....@....lightgreen.8690fcf00.8693029e0..........patus....bar_f
+  g....@....lightgreen.8690fcf00.8693028a0..........ruciek....bar_fg....@....lightgreen.8690fcf00.869302f80..........ruciu....bar_fg....@....lightgreen.8690fcf00.869300d70..........Tomasz....bar_fg....@....lightgreen
+  .8690fcf00.869300c30..........tusk....bar_fg....@....lightgreen.8690fcf00.869300e60..........uciek....bar_fg....@....lightgreen.8690fcf00.8693030c0..........uicur....bar_fg....@....lightgreen.8690fcf00.8693019a0...
+  .......who....bar_fg....@....lightgreen.8690fcf00.8693010e0..........wiesiu....bar_fg....@....lightgreen.8690fcf00.8693012c0..........wlad....bar_fg....@....lightgreen.8690fcf00.8693016d0..........yooz....bar_fg...
+  .@....lightgreen.8690fcf00.869300aa0..........|at|....bar_fg....@....lightgreen.8690fcf00.869302c60..........|fi|....bar_fg....@....lightgreen.8690fcf00.869301180..                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [A] #17
+  ........|hu|....bar_fg....@....lightgreen.8690fcf00.869300f00..........|it|....bar_fg....@....lightgreen.8690fcf00.869301590..........|jp|....bar_fg....@....lightgreen.8690fcf00.869301900..........|nl|....bar_fg...
+  .@....lightgreen.8690fcf00.869301040..........|no|....bar_fg....@....lightgreen.8690fcf00.869301220..........|opn|....bar_fg....@....lightgreen.8690fcf00.869300e10..........|si|....bar_fg....@....lightgreen.8690fcf
+  00.868a43540..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.868a434e0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.8693023f0..........k3....bar_fg.... ....lightblue.8690fd500
+  .868a425e0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd500.868a432a0..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a423a0..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a42340........
+  ..999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.8693038e0..........k2....bar_fg.... ....lightblue.8690fd500.869303f70..........kofany....bar_fg.... ....lightblue.8690fd500.869303f20..........tuvok....ba
+  r_fg.... ....lightblue.8690fd800.868a42b20..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd800.868a42b80..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874140..........kofany....bar_fg....@....lightgreen.8690f
+  d800.868a42c40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.868a42ca0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.8698742                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #18
+  30..........k3....bar_fg.... ....lightblue.8690fdb00.868a42d00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ                                                                                                                              
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #19
+  .@....lightgreen.8690fcf00.869301590..........|jp|....bar_fg....@....lightgreen.8690fcf00.869301900..........|nl|....bar_fg....@....lightgreen.8690fcf00.869301040..........|no|....bar_fg....@....lightgreen.8690fcf0
+  0.869301220..........|opn|....bar_fg....@....lightgreen.8690fcf00.869300e10..........|si|....bar_fg....@....lightgreen.8690fcf00.868a43540..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.868a434e0.
+  .........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.8693023f0..........k3....bar_fg.... ....lightblue.8690fd500.868a425e0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd500.868a432a0..........000|o....weechat.color
+  .nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a423a0..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a42340..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.8693038e0..........k2....bar
+  _fg.... ....lightblue.8690fd500.869303f70..........kofany....bar_fg.... ....lightblue.8690fd500.869303f20..........tuvok....bar_fg.... ....lightblue.8690fd800.868a42b20..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd800.868a42b80
+  ..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874140..........kofany....bar_fg....@....lightgreen.8690fd800.868a42c40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.868a42ca
+  0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874230..........k3....bar_fg.... ....lightblue.8690fdb00.868a42d00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ                                                  
+#######
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #26
+  (handleHotlist;0) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #28
+  ...Í.....handleHotlist;0hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #30
+  (handleFetchLines;1) hdata buffer:0x8690fd500/own_lines/last_line(-26)/data.                                                                                                                                          
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #32
+  .........handleFetchLines;1hda....buffer/lines/line/line_data...ébuffer:ptr,id:int,y:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,str_time:str,tags_count:int,tags_array:arr,displayed:chr,notify
+  _level:chr,highlight:chr,refresh_needed:chr,prefix:str,prefix_length:int,message:str.....8690fd500.868689e00.8685a6200.868641960.8690fd500....ÿÿÿÿ.1762044030..1I.1762044030..1I.....0201.03:.0240.03:.0230....str....
+  ....irc_366....irc_numeric....nick_IRC.al....log3.........05--.......OChannel .13#irc.al.: .133. nicks .28(.130. ops, .130. voiced, .133. regular.28).8690fd500.868689e00.8685a61c0.8686418f0.8690fd500....ÿÿÿÿ.176204
+  4030..,[.1762044030..,[.....0201.03:.0240.03:.0230....str........irc_join....nick_k2.../host_~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c....log4.........07-->.......f.15k2.28 (.27k.28).28 (.27~k@2a02:2454:8577:d300:
+  bcc1:ff48:db37:bf4c.28).F05 has joined .13#irc.al.F05                                                                                                                                                                 
+#
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #33
+  input 0x8690fd500 /buffer set hotlist -1..                                                                                                                                                                            
+###
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #36
+  (2) ping 2.                                                                                                                                                                                                           
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #38
+  ........._pongstr....2                                                                                                                                                                                                
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #40
+  (handleHotlist;3) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #42
+  ...Í.....handleHotlist;3hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #44
+  (handleHotlist;4) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #46
+  ...Í.....handleHotlist;4hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #48
+  (5) ping 5.                                                                                                                                                                                                           
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #50
+  ........._pongstr....5                                                                                                                                                                                                
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #52
+  (handleHotlist;6) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #54
+  ...Í.....handleHotlist;6hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #56
+  (handleHotlist;7) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #58
+  ...Í.....handleHotlist;7hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #60
+  (handleFetchLines;8) hdata buffer:0x8690fcc00/own_lines/last_line(-26)/data.                                                                                                                                          
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #62
+  .........handleFetchLines;8hda....buffer/lines/line/line_data...ébuffer:ptr,id:int,y:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,str_time:str,tags_count:int,tags_array:arr,displayed:chr,notify
+  _level:chr,highlight:chr,refresh_needed:chr,prefix:str,prefix_length:int,message:str.....8690fcc00.8685f66c0.86856ec00.8685f9650.8690fcc00....ÿÿÿÿ.1762043962..Rð.1762043962..Rð.....0201.03:.0239.03:.0222....str....
+  ....irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......OChannel .13#tahio.: .1312. nicks .28(.133. ops, .130. voiced, .139. regular.28).8690fcc00.8685f66c0.86856ebe0.8685fb1e0.8690fcc00....ÿÿÿÿ.176
+  2043962..K0.1762043962..K0.....0201.03:.0239.03:.0222....str........irc_join....nick_k3.../host_~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c....log4.........07-->.......X.15k3.28 (.27~k@2a02:2454:8577:d300:bcc1:ff48:
+  db37:bf4c.28).F05 has joined .13#tahio.F05                                                                                                                                                                            
+#
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #63
+  input 0x8690fcc00 /buffer set hotlist -1..                                                                                                                                                                            
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #65
+  (9) ping 9.                                                                                                                                                                                                           
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #67
+  ........._pongstr....9                                                                                                                                                                                                
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #69
+  (handleHotlist;10) hdata hotlist:gui_hotlist(*).                                                                                                                                                                      
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #71
+  ...Î.....handleHotlist;10hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0        
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #73
+  (handleHotlist;11) hdata hotlist:gui_hotlist(*).                                                                                                                                                                      
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #75
+  ...Î.....handleHotlist;11hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0        
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #77
+  (12) ping 12.                                                                                                                                                                                                         
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #79
+  ........._pongstr....12                                                                                                                                                                                               
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #81
+  (handleHotlist;13) hdata hotlist:gui_hotlist(*).                                                                                                                                                                      
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #83
+  ...Î.....handleHotlist;13hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0        
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #85
+  (handleHotlist;14) hdata hotlist:gui_hotlist(*).                                                                                                                                                                      
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #87
+  ...Î.....handleHotlist;14hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0        
+##
+T 192.168.176.29:54282 -> 192.168.176.67:9000 [AP] #89
+  (15) ping 15.                                                                                                                                                                                                         
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #91
+  ........._pongstr....15                                                                                                                                                                                               
+####
+T 192.168.176.67:9000 -> 192.168.176.29:54282 [AP] #95
+  ...¡....._buffer_line_addedhda....line_data...¢buffer:ptr,id:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:chr,highlight:chr,tags_array:arr,prefix:str,message:str.....
+  868654e00.8690fc000.....1762044646...é.1762044646...é...str........relay_client.....04=!=...nrelay: reading data on socket for client .F131/weechat/192.168.176.29.01: error 22 (connection closed by peer)           
+###exit
+98 received, 48 matched

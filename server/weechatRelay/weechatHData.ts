@@ -17,7 +17,7 @@ import {WeeChatMessage, OBJ_HDATA, OBJ_INT, OBJ_LONG, OBJ_STRING, OBJ_POINTER, O
 
 export interface HDataField {
 	name: string;
-	type: "chr" | "int" | "lon" | "str" | "buf" | "ptr" | "tim" | "arr";
+	type: "chr" | "int" | "lon" | "str" | "buf" | "ptr" | "tim" | "arr" | "htb";
 	arrayType?: "int" | "str"; // For array types
 }
 
@@ -92,6 +92,9 @@ export function buildHData(
 					} else {
 						throw new Error(`Array field ${field.name} missing arrayType`);
 					}
+					break;
+				case "htb":
+					msg.addHashtable(value ?? null);
 					break;
 				default:
 					throw new Error(`Unsupported field type: ${field.type}`);

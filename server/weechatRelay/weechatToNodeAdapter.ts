@@ -1,0 +1,1159 @@
+/**
+ * WeeChat to Node Adapter
+ *
+ * Translates WeeChat Relay commands to Node (IrssiClient) commands.
+ *
+ * Key command mappings:
+ * - hdata buffer:gui_buffers(*) -> Send buffer list from IrssiClient.networks
+ * - hdata buffer:0xXXX/lines/last_line(-N)/data -> Send message history from Chan.messages
+ * - input 0xXXX /command -> Send IRC command via IrssiClient.handleInput()
+ * - input 0xXXX message -> Send IRC message via IrssiClient.handleInput()
+ * - sync * buffer,nicklist -> Subscribe to updates
+ */
+
+import {EventEmitter} from "events";
+import log from "../log";
+import colors from "chalk";
+import {WeeChatMessage, OBJ_STRING, OBJ_HDATA} from "./weechatProtocol";
+import {buildEmptyHData, stringToPointer} from "./weechatHData";
+import {IrssiClient} from "../irssiClient";
+import {NodeToWeeChatAdapter} from "./nodeToWeechatAdapter";
+import {WeeChatRelayClient} from "./weechatRelayClient";
+
+/**
+ * WeeChat to Node Adapter
+ *
+ * Handles WeeChat Relay commands from Lith clients and translates them to Node (IrssiClient) operations.
+ */
+export class WeeChatToNodeAdapter extends EventEmitter {
+	private irssiClient: IrssiClient;
+	private nodeAdapter: NodeToWeeChatAdapter;
+	private relayClient: WeeChatRelayClient;
+	private syncedBuffers: Set<bigint> = new Set();
+	private syncAll: boolean = true; // Default to true - sync all buffers automatically
+
+	constructor(
+		irssiClient: IrssiClient,
+		nodeAdapter: NodeToWeeChatAdapter,
+		relayClient: WeeChatRelayClient
+	) {
+		super();
+		this.irssiClient = irssiClient;
+		this.nodeAdapter = nodeAdapter;
+		this.relayClient = relayClient;
+
+		this.setupRelayHandlers();
+		this.setupNodeAdapterHandlers();
+
+		// Log that we're syncing all buffers by default
+		log.info(`${colors.green("[WeeChat->Node]")} ✅ Auto-syncing ALL buffers (syncAll=true by default)`);
+	}
+
+	/**
+	 * Setup handlers for relay client commands
+	 */
+	private setupRelayHandlers(): void {
+		this.relayClient.on("command", (data: {command: string; id: string; args: string}) => {
+			log.info(`${colors.cyan("[WeeChat->Node]")} Received command: ${data.command}, id: ${data.id}`);
+
+			switch (data.command) {
+				case "hdata":
+					this.handleHData(data.id, data.args);
+					break;
+				case "info":
+					this.handleInfo(data.id, data.args);
+					break;
+				case "infolist":
+					this.handleInfoList(data.id, data.args);
+					break;
+				case "nicklist":
+					this.handleNicklist(data.id, data.args);
+					break;
+				case "input":
+					this.handleInput(data.id, data.args);
+					break;
+				case "sync":
+					this.handleSync(data.id, data.args);
+					break;
+				case "desync":
+					this.handleDesync(data.id, data.args);
+					break;
+				case "ping":
+					// Ping is handled directly by WeeChatRelayClient
+					break;
+				case "test":
+					this.handleTest(data.id, data.args);
+					break;
+			}
+		});
+	}
+
+	/**
+	 * Setup handlers for Node adapter events (to forward to WeeChat client)
+	 * These are the same events that Vue frontend receives from IrssiClient
+	 */
+	private setupNodeAdapterHandlers(): void {
+		// buffer_opened: New channel opened
+		this.nodeAdapter.on("buffer_opened", (data: any) => {
+			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
+				this.sendBufferOpened(data);
+			}
+		});
+
+		// buffer_closing: Channel closed
+		this.nodeAdapter.on("buffer_closing", (data: any) => {
+			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
+				this.sendBufferClosed(data);
+			}
+		});
+
+		// buffer_line_added: New message
+		this.nodeAdapter.on("buffer_line_added", (data: any) => {
+			log.debug(`${colors.cyan("[WeeChat->Node]")} buffer_line_added: buffer=${data.bufferPtr}, syncAll=${this.syncAll}`);
+			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
+				// TODO: Update sendLineAdded to accept data object instead of (buffer, message)
+				// For now, extract buffer and msg from data
+				const buffer = {pointer: data.bufferPtr, fullName: `buffer_${data.channelId}`};
+				this.sendLineAdded(buffer, data.msg);
+			}
+		});
+
+		// nicklist_diff: Nicklist update (users join/part/mode change)
+		this.nodeAdapter.on("nicklist_diff", (data: any) => {
+			log.debug(`${colors.cyan("[WeeChat->Node]")} nicklist_diff: buffer=${data.bufferPtr}, users=${data.users.length}`);
+			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
+				this.sendNicklistDiff(data);
+			}
+		});
+
+		// nicklist_diff: Nicklist changed
+		this.nodeAdapter.on("nicklist_diff", (data: any) => {
+			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
+				this.sendNicklistDiff(data);
+			}
+		});
+
+		// buffer_title_changed: Topic changed
+		this.nodeAdapter.on("buffer_title_changed", (data: any) => {
+			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
+				this.sendBufferTitleChanged(data);
+			}
+		});
+
+		// hotlist_changed: Unread/highlight changed
+		this.nodeAdapter.on("hotlist_changed", (data: any) => {
+			// Hotlist is global, always send
+			this.sendHotlistChanged(data);
+		});
+	}
+
+	/**
+	 * Handle hdata command
+	 */
+	private handleHData(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} HData request: ${args}`);
+
+		// Parse hdata request
+		// Format: "buffer:gui_buffers(*) id,number,name,..."
+		// or: "buffer:0x12345/lines/last_line(-100)/data date,prefix,message,..."
+
+		const spaceIdx = args.indexOf(" ");
+		const path = spaceIdx > 0 ? args.substring(0, spaceIdx) : args;
+		const keys = spaceIdx > 0 ? args.substring(spaceIdx + 1) : "";
+
+		if (path.startsWith("buffer:gui_buffers")) {
+			// Request all buffers
+			const msg = this.nodeAdapter.buildBuffersHData(id);
+			this.relayClient.send(msg);
+		} else if (path.startsWith("hotlist:gui_hotlist")) {
+			// Request hotlist (unread/highlight tracking)
+			const msg = this.buildHotlistHData(id);
+			this.relayClient.send(msg);
+		} else if (path.includes("/lines/")) {
+			// Request message history
+			// Parse buffer pointer from path (e.g., "buffer:0x12345/lines/...")
+			const match = path.match(/buffer:0x([0-9a-f]+)/i);
+			if (match) {
+				const bufferPtr = BigInt("0x" + match[1]);
+
+				// Parse line count (e.g., "last_line(-100)")
+				let count = 100;
+				const countMatch = path.match(/last_line\((-?\d+)\)/);
+				if (countMatch) {
+					count = Math.abs(parseInt(countMatch[1], 10));
+				}
+
+				const msg = this.nodeAdapter.buildLinesHData(id, bufferPtr, count);
+				this.relayClient.send(msg);
+
+				// IMPORTANT: Also send nicklist for this buffer!
+				// Lith expects nicklist after opening a buffer (like Vue does)
+				log.info(`${colors.cyan("[WeeChat->Node]")} Sending nicklist for buffer ${bufferPtr} (after fetchLines)`);
+				this.sendNicklistForBuffer(bufferPtr);
+			} else {
+				// Invalid buffer pointer
+				const msg = new WeeChatMessage(id);
+				buildEmptyHData(msg);
+				this.relayClient.send(msg);
+			}
+		} else {
+			// Unknown hdata request
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Unknown hdata request: ${path}`);
+			const msg = new WeeChatMessage(id);
+			buildEmptyHData(msg);
+			this.relayClient.send(msg);
+		}
+	}
+
+	/**
+	 * Handle nicklist command
+	 * If args is empty, send nicklist for ALL buffers
+	 * If args has buffer pointer, send nicklist for that buffer only
+	 */
+	private handleNicklist(id: string, args: string): void {
+		log.info(`${colors.cyan("[WeeChat->Node]")} Nicklist request: "${args}"`);
+
+		// Parse buffer pointer (if provided)
+		const match = args.match(/0x([0-9a-f]+)/i);
+
+		if (!match) {
+			// No buffer specified - send nicklist for ALL buffers
+			log.info(`${colors.cyan("[WeeChat->Node]")} Sending nicklist for ALL buffers`);
+			this.sendNicklistForAllBuffers(id);
+			return;
+		}
+
+		// Send nicklist for specific buffer
+		const bufferPtr = BigInt("0x" + match[1]);
+		const buffer = this.nodeAdapter.getBufferByPointer(bufferPtr);
+
+		if (!buffer) {
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Buffer not found: ${bufferPtr}`);
+			const msg = new WeeChatMessage(id);
+			buildEmptyHData(msg);
+			this.relayClient.send(msg);
+			return;
+		}
+
+		// Get network and channel
+		const network = this.irssiClient.networks.find((n) => n.uuid === buffer.networkUuid);
+		if (!network) {
+			const msg = new WeeChatMessage(id);
+			buildEmptyHData(msg);
+			this.relayClient.send(msg);
+			return;
+		}
+
+		const channel = network.channels.find((c) => c.id === buffer.channelId);
+		if (!channel || buffer.type !== "channel") {
+			// No nicklist for non-channel buffers
+			const msg = new WeeChatMessage(id);
+			buildEmptyHData(msg);
+			this.relayClient.send(msg);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat->Node]")} Sending nicklist for buffer: ${buffer.fullName} (${channel.users.size} users)`);
+
+		// Build nicklist HData with groups
+		const msg = new WeeChatMessage(id);
+		this.buildNicklistWithGroups(msg, buffer, channel);
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send nicklist for a specific buffer (called after fetchLines)
+	 * This mimics Vue behavior: when opening a channel, send nicklist automatically
+	 */
+	private sendNicklistForBuffer(bufferPtr: bigint): void {
+		const buffer = this.nodeAdapter.getBufferByPointer(bufferPtr);
+		if (!buffer || !buffer.channel) {
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Buffer not found for nicklist: ${bufferPtr}`);
+			return;
+		}
+
+		const channel = buffer.channel;
+		if (buffer.type !== "channel" || channel.users.size === 0) {
+			log.debug(`${colors.cyan("[WeeChat->Node]")} No nicklist for buffer ${buffer.fullName} (not a channel or no users)`);
+			return;
+		}
+
+		log.info(`${colors.cyan("[WeeChat->Node]")} Sending nicklist for ${buffer.fullName} (${channel.users.size} users)`);
+
+		// Send as _nicklist_diff event (not a response to a command)
+		const msg = new WeeChatMessage("_nicklist_diff");
+		this.buildNicklistWithGroups(msg, buffer, channel);
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send nicklist for ALL buffers (called when Lith sends "nicklist" without args)
+	 */
+	private sendNicklistForAllBuffers(id: string): void {
+		const msg = new WeeChatMessage(id);
+		msg.addType(OBJ_HDATA);
+		msg.addString("buffer/nicklist_item");
+		msg.addString("group:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str");
+
+		// Collect all nicklist items from all channels
+		const allItems: any[] = [];
+
+		log.info(`${colors.cyan("[WeeChat->Node]")} Scanning ${this.irssiClient.networks.length} networks for nicklist`);
+
+		for (const network of this.irssiClient.networks) {
+			log.info(`${colors.cyan("[WeeChat->Node]")} Network ${network.name}: ${network.channels.length} channels`);
+			for (const channel of network.channels) {
+				log.info(`${colors.cyan("[WeeChat->Node]")} Channel ${channel.name}: type="${channel.type}", users=${channel.users.size}`);
+				if (channel.type !== "channel" || channel.users.size === 0) {
+					continue;
+				}
+
+				const bufferPtr = this.nodeAdapter.getBufferPointer(channel.id);
+				const users = Array.from(channel.users.values());
+
+				log.info(`${colors.cyan("[WeeChat->Node]")} Adding ${users.length} users from ${network.name}/${channel.name}`);
+
+				// Categorize users by mode
+				const ops: any[] = [];
+				const voices: any[] = [];
+				const regular: any[] = [];
+
+				for (const user of users) {
+					if (user.mode && user.mode.includes("@")) {
+						ops.push(user);
+					} else if (user.mode && user.mode.includes("+")) {
+						voices.push(user);
+					} else {
+						regular.push(user);
+					}
+				}
+
+				// Add root group for this buffer
+				allItems.push({
+					type: "group",
+					bufferPtr,
+					pointer: stringToPointer(`${bufferPtr}-group-root`),
+					group: 1,
+					visible: 0,
+					level: 0,
+					name: "root",
+					color: null,  // NULL for groups
+					prefix: null,  // NULL for groups
+					prefixColor: null,  // NULL for groups
+				});
+
+				// Add ops group + ops users
+				if (ops.length > 0) {
+					allItems.push({
+						type: "group",
+						bufferPtr,
+						pointer: stringToPointer(`${bufferPtr}-group-ops`),
+						group: 1,
+						visible: 1,
+						level: 1,
+						name: "000|o",
+						color: "weechat.color.nicklist_group",
+						prefix: null,
+						prefixColor: null,
+					});
+
+					for (const user of ops) {
+						allItems.push({
+							type: "user",
+							bufferPtr,
+							pointer: stringToPointer(`${bufferPtr}-${user.nick}`),
+							group: 0,
+							visible: 1,
+							level: 0,
+							name: user.nick,
+							color: "cyan",
+							prefix: "@",
+							prefixColor: "lightgreen",
+						});
+					}
+				}
+
+				// Add voices group + voice users
+				if (voices.length > 0) {
+					allItems.push({
+						type: "group",
+						bufferPtr,
+						pointer: stringToPointer(`${bufferPtr}-group-voices`),
+						group: 1,
+						visible: 1,
+						level: 1,
+						name: "001|v",
+						color: "weechat.color.nicklist_group",
+						prefix: null,
+						prefixColor: null,
+					});
+
+					for (const user of voices) {
+						allItems.push({
+							type: "user",
+							bufferPtr,
+							pointer: stringToPointer(`${bufferPtr}-${user.nick}`),
+							group: 0,
+							visible: 1,
+							level: 0,
+							name: user.nick,
+							color: "yellow",
+							prefix: "+",
+							prefixColor: "yellow",
+						});
+					}
+				}
+
+				// Add regular users group + regular users
+				if (regular.length > 0) {
+					allItems.push({
+						type: "group",
+						bufferPtr,
+						pointer: stringToPointer(`${bufferPtr}-group-users`),
+						group: 1,
+						visible: 1,
+						level: 1,
+						name: "999|...",
+						color: "weechat.color.nicklist_group",
+						prefix: null,
+						prefixColor: null,
+					});
+
+					for (const user of regular) {
+						allItems.push({
+							type: "user",
+							bufferPtr,
+							pointer: stringToPointer(`${bufferPtr}-${user.nick}`),
+							group: 0,
+							visible: 1,
+							level: 0,
+							name: user.nick,
+							color: "default",
+							prefix: " ",
+							prefixColor: "",
+						});
+					}
+				}
+			}
+		}
+
+		log.info(`${colors.cyan("[WeeChat->Node]")} Total nicklist items: ${allItems.length}`);
+
+		// Log first 3 items for debugging
+		if (allItems.length > 0) {
+			log.info(`${colors.cyan("[WeeChat->Node]")} First 3 items:`);
+			for (let i = 0; i < Math.min(3, allItems.length); i++) {
+				const item = allItems[i];
+				log.info(`${colors.cyan("[WeeChat->Node]")}   [${i}] type=${item.type}, bufferPtr=${item.bufferPtr}, pointer=${item.pointer}, group=${item.group}, visible=${item.visible}, level=${item.level}, name="${item.name}", color=${item.color}, prefix="${item.prefix}", prefixColor="${item.prefixColor}"`);
+			}
+		}
+
+		msg.addInt(allItems.length);
+
+		for (const item of allItems) {
+			msg.addPointer(item.bufferPtr);
+			msg.addPointer(item.pointer);
+			msg.addChar(item.group);
+			msg.addChar(item.visible);
+			msg.addInt(item.level);
+			msg.addString(item.name);
+			msg.addString(item.color);
+			msg.addString(item.prefix);
+			msg.addString(item.prefixColor);
+		}
+
+		const msgData = msg.build();
+		log.info(`${colors.cyan("[WeeChat->Node]")} Sending nicklist response: ${msgData.length} bytes, ${allItems.length} items`);
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Build nicklist with groups (WeeChat format)
+	 *
+	 * WeeChat nicklist structure:
+	 * - Root group (invisible, level 0)
+	 * - Ops group (visible, level 1, name "000|o")
+	 * - Voices group (visible, level 1, name "001|v")
+	 * - Users group (visible, level 1, name "999|...")
+	 * - Users in their respective groups
+	 */
+	private buildNicklistWithGroups(msg: WeeChatMessage, buffer: any, channel: any): void {
+		msg.addType(OBJ_HDATA);
+
+		// h-path: "buffer/nicklist_item"
+		msg.addString("buffer/nicklist_item");
+
+		// keys: "group:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str"
+		msg.addString("group:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str");
+
+		// Categorize users by mode
+		const users = channel.users || new Map();
+		const ops: any[] = [];
+		const voices: any[] = [];
+		const regular: any[] = [];
+
+		for (const user of users.values()) {
+			if (user.mode && user.mode.includes("@")) {
+				ops.push(user);
+			} else if (user.mode && user.mode.includes("+")) {
+				voices.push(user);
+			} else {
+				regular.push(user);
+			}
+		}
+
+		// Count total items: root + groups (with users) + users
+		let itemCount = 1; // root
+		if (ops.length > 0) itemCount += 1 + ops.length; // ops group + ops
+		if (voices.length > 0) itemCount += 1 + voices.length; // voices group + voices
+		if (regular.length > 0) itemCount += 1 + regular.length; // users group + users
+
+		msg.addInt(itemCount);
+
+		// Generate pointers for groups
+		const rootGroupPtr = stringToPointer(`${buffer.pointer}-group-root`);
+		const opsGroupPtr = stringToPointer(`${buffer.pointer}-group-ops`);
+		const voicesGroupPtr = stringToPointer(`${buffer.pointer}-group-voices`);
+		const usersGroupPtr = stringToPointer(`${buffer.pointer}-group-users`);
+
+		// 1. Root group (invisible, level 0)
+		msg.addPointer(buffer.pointer); // buffer pointer
+		msg.addPointer(rootGroupPtr); // item pointer
+		msg.addChar(1); // group
+		msg.addChar(0); // invisible
+		msg.addInt(0); // level
+		msg.addString("root");
+		msg.addString(null);  // color: NULL for groups
+		msg.addString(null);  // prefix: NULL for groups
+		msg.addString(null);  // prefix_color: NULL for groups
+
+		// 2. Ops group + ops users
+		if (ops.length > 0) {
+			// Ops group
+			msg.addPointer(buffer.pointer);
+			msg.addPointer(opsGroupPtr);
+			msg.addChar(1); // group
+			msg.addChar(1); // visible
+			msg.addInt(1); // level
+			msg.addString("000|o");
+			msg.addString("weechat.color.nicklist_group");
+			msg.addString(null);  // prefix: NULL for groups
+			msg.addString(null);  // prefix_color: NULL for groups
+
+			// Ops users
+			for (const user of ops) {
+				const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
+				msg.addPointer(buffer.pointer);
+				msg.addPointer(userPtr);
+				msg.addChar(0); // nick
+				msg.addChar(1); // visible
+				msg.addInt(0); // level
+				msg.addString(user.nick);
+				msg.addString("cyan"); // color for ops
+				msg.addString("@");
+				msg.addString("lightgreen");
+			}
+		}
+
+		// 3. Voices group + voice users
+		if (voices.length > 0) {
+			// Voices group
+			msg.addPointer(buffer.pointer);
+			msg.addPointer(voicesGroupPtr);
+			msg.addChar(1); // group
+			msg.addChar(1); // visible
+			msg.addInt(1); // level
+			msg.addString("001|v");
+			msg.addString("weechat.color.nicklist_group");
+			msg.addString(null);  // prefix: NULL for groups
+			msg.addString(null);  // prefix_color: NULL for groups
+
+			// Voice users
+			for (const user of voices) {
+				const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
+				msg.addPointer(buffer.pointer);
+				msg.addPointer(userPtr);
+				msg.addChar(0); // nick
+				msg.addChar(1); // visible
+				msg.addInt(0); // level
+				msg.addString(user.nick);
+				msg.addString("yellow"); // color for voices
+				msg.addString("+");
+				msg.addString("yellow");
+			}
+		}
+
+		// 4. Regular users group + regular users
+		if (regular.length > 0) {
+			// Users group
+			msg.addPointer(buffer.pointer);
+			msg.addPointer(usersGroupPtr);
+			msg.addChar(1); // group
+			msg.addChar(1); // visible
+			msg.addInt(1); // level
+			msg.addString("999|...");
+			msg.addString("weechat.color.nicklist_group");
+			msg.addString(null);  // prefix: NULL for groups
+			msg.addString(null);  // prefix_color: NULL for groups
+
+			// Regular users
+			for (const user of regular) {
+				const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
+				msg.addPointer(buffer.pointer);
+				msg.addPointer(userPtr);
+				msg.addChar(0); // nick
+				msg.addChar(1); // visible
+				msg.addInt(0); // level
+				msg.addString(user.nick);
+				msg.addString("default"); // color for regular users
+				msg.addString(" ");
+				msg.addString("");
+			}
+		}
+	}
+
+	/**
+	 * Handle info command
+	 */
+	private handleInfo(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Info request: ${args}`);
+
+		const msg = new WeeChatMessage(id);
+		msg.addType(OBJ_STRING);
+
+		// Handle common info requests
+		if (args === "version") {
+			msg.addString("nexuslounge-weechat-bridge 1.0.0");
+		} else {
+			msg.addString("");
+		}
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Handle infolist command
+	 */
+	private handleInfoList(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} InfoList request: ${args}`);
+
+		// For now, return empty infolist
+		const msg = new WeeChatMessage(id);
+		buildEmptyHData(msg);
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Handle input command (send message or command)
+	 * Translates WeeChat commands to Node/IRC commands
+	 */
+	private handleInput(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Input: ${args}`);
+
+		// Parse: "0x12345 /command" or "0x12345 message"
+		const spaceIdx = args.indexOf(" ");
+		if (spaceIdx < 0) {
+			return;
+		}
+
+		const bufferPtrStr = args.substring(0, spaceIdx);
+		const text = args.substring(spaceIdx + 1);
+
+		// Parse buffer pointer
+		const match = bufferPtrStr.match(/0x([0-9a-f]+)/i);
+		if (!match) {
+			return;
+		}
+
+		const bufferPtr = BigInt("0x" + match[1]);
+		const buffer = this.nodeAdapter.getBufferByPointer(bufferPtr);
+
+		if (!buffer) {
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Buffer not found: ${bufferPtrStr}`);
+			return;
+		}
+
+		// Find network and channel
+		const network = this.irssiClient.networks.find((n) => n.uuid === buffer.networkUuid);
+		if (!network) {
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Network not found: ${buffer.networkUuid}`);
+			return;
+		}
+
+		const channel = network.channels.find((c) => c.id === buffer.channelId);
+		if (!channel) {
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Channel not found: ${buffer.channelId}`);
+			return;
+		}
+
+		// Translate WeeChat commands to Node actions
+		if (text.startsWith("/buffer ")) {
+			this.handleBufferCommand(text, network, channel);
+			return;
+		}
+
+		// For IRC commands and messages, send to IrssiClient
+		// IrssiClient will handle IRC commands like /msg, /join, /part, etc.
+		this.irssiClient.handleInput(this.relayClient.getId(), {
+			target: channel.id,
+			text: text,
+		});
+	}
+
+	/**
+	 * Handle WeeChat /buffer commands
+	 * These are WeeChat-specific and need to be translated to Node actions
+	 */
+	private handleBufferCommand(text: string, network: any, channel: any): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Buffer command: ${text}`);
+
+		// /buffer set hotlist -1 → mark as read
+		if (text.includes("set hotlist -1") || text.includes("set unread")) {
+			log.info(`${colors.green("[WeeChat->Node]")} Mark as read: ${network.name}/${channel.name}`);
+			this.irssiClient.markAsRead(network.uuid, channel.name, false);
+			return;
+		}
+
+		// /buffer close → close channel (part)
+		if (text.includes("close")) {
+			log.info(`${colors.green("[WeeChat->Node]")} Close buffer: ${network.name}/${channel.name}`);
+			// Send /part command to IRC
+			this.irssiClient.handleInput(this.relayClient.getId(), {
+				target: channel.id,
+				text: `/part ${channel.name}`,
+			});
+			return;
+		}
+
+		// Other /buffer commands - ignore or log
+		log.warn(`${colors.yellow("[WeeChat->Node]")} Unsupported /buffer command: ${text}`);
+	}
+
+	/**
+	 * Handle sync command (subscribe to updates)
+	 */
+	private handleSync(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sync: ${args}`);
+
+		// Parse: "* buffer,nicklist" or "0x12345 buffer"
+		const parts = args.split(" ");
+		const target = parts[0];
+		const flags = parts.length > 1 ? parts[1].split(",") : [];
+
+		if (target === "*") {
+			// Sync all buffers
+			this.syncAll = true;
+			log.info(`${colors.green("[WeeChat->Node]")} ✅ Syncing ALL buffers (syncAll=true)`);
+		} else {
+			// Sync specific buffer
+			const match = target.match(/0x([0-9a-f]+)/i);
+			if (match) {
+				const bufferPtr = BigInt("0x" + match[1]);
+				this.syncedBuffers.add(bufferPtr);
+				log.info(`${colors.green("[WeeChat->Node]")} ✅ Syncing buffer: ${target}`);
+			}
+		}
+	}
+
+	/**
+	 * Handle desync command (unsubscribe from updates)
+	 */
+	private handleDesync(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Desync: ${args}`);
+
+		// Parse: "* buffer,nicklist" or "0x12345 buffer"
+		const parts = args.split(" ");
+		const target = parts[0];
+
+		if (target === "*") {
+			// Desync all buffers
+			this.syncAll = false;
+			this.syncedBuffers.clear();
+			log.info(`${colors.yellow("[WeeChat->Node]")} Desynced all buffers`);
+		} else {
+			// Desync specific buffer
+			const match = target.match(/0x([0-9a-f]+)/i);
+			if (match) {
+				const bufferPtr = BigInt("0x" + match[1]);
+				this.syncedBuffers.delete(bufferPtr);
+				log.info(`${colors.yellow("[WeeChat->Node]")} Desynced buffer: ${target}`);
+			}
+		}
+	}
+
+	/**
+	 * Handle test command
+	 */
+	private handleTest(id: string, args: string): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Test command - not needed with real Node (IrssiClient)`);
+		// We don't need test data, we have real erssi connection
+		const msg = new WeeChatMessage(id);
+		msg.addType(OBJ_STRING);
+		msg.addString("OK");
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send buffer opened event
+	 */
+	private sendBufferOpened(buffer: any): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending buffer opened: ${buffer.fullName}`);
+
+		const msg = new WeeChatMessage("_buffer_opened");
+		msg.addType(OBJ_HDATA);
+		msg.addString("buffer");
+		msg.addString("id:ptr,number:int,full_name:str,short_name:str,type:int,nicklist:int,title:str,local_variables:str,prev_buffer:ptr,next_buffer:ptr");
+		msg.addInt(1);
+
+		msg.addPointer(buffer.pointer);
+		msg.addPointer(buffer.pointer);
+		msg.addInt(buffer.number);
+		msg.addString(buffer.fullName);
+		msg.addString(buffer.shortName);
+		msg.addInt(0);
+		msg.addInt(buffer.type === "channel" ? 1 : 0);
+		msg.addString(buffer.title);
+
+		const localVarsStr = Object.entries(buffer.localVariables)
+			.map(([k, v]) => `${k}=${v}`)
+			.join(",");
+		msg.addString(localVarsStr);
+		msg.addPointer(0n);
+		msg.addPointer(0n);
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send buffer closed event
+	 */
+	private sendBufferClosed(buffer: any): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending buffer closed: ${buffer.fullName}`);
+
+		const msg = new WeeChatMessage("_buffer_closed");
+		msg.addType(OBJ_HDATA);
+		msg.addString("buffer");
+		msg.addString("id:ptr");
+		msg.addInt(1);
+		msg.addPointer(buffer.pointer);
+		msg.addPointer(buffer.pointer);
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send line added event
+	 * Format matches official WeeChat Relay protocol (full format)
+	 * This provides better compatibility with Lith features like smart filtering
+	 */
+	private sendLineAdded(buffer: any, message: any): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending line added: ${buffer.fullName}`);
+
+		const msg = new WeeChatMessage("_buffer_line_added");
+		msg.addType(OBJ_HDATA);
+		msg.addString("line_data");
+
+		// FULL WeeChat format (official protocol):
+		// buffer:ptr,id:ptr,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:int,highlight:chr,tags_array:arr,prefix:str,message:str
+		msg.addString("buffer:ptr,id:ptr,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:int,highlight:chr,tags_array:arr,prefix:str,message:str");
+		msg.addInt(1); // count: 1 line
+
+		// Generate pointers
+		const linePtr = stringToPointer(`${buffer.pointer}-${message.id || Date.now()}`);
+		const lineId = BigInt(message.id || Date.now());
+
+		// p-path pointer (1 pointer for line_data)
+		msg.addPointer(linePtr);
+
+		// Field 1: buffer:ptr
+		msg.addPointer(buffer.pointer);
+
+		// Field 2: id:ptr (unique line ID)
+		msg.addPointer(lineId);
+
+		// Calculate timestamps with microseconds
+		const timestampMs = message.time?.getTime() || Date.now();
+		const seconds = Math.floor(timestampMs / 1000);
+		const microseconds = (timestampMs % 1000) * 1000; // milliseconds to microseconds
+
+		// Field 3: date:tim
+		msg.addTime(seconds);
+
+		// Field 4: date_usec:int
+		msg.addInt(microseconds);
+
+		// Field 5: date_printed:tim
+		msg.addTime(seconds);
+
+		// Field 6: date_usec_printed:int
+		msg.addInt(microseconds);
+
+		// Field 7: displayed:chr (1 = yes, 0 = no)
+		msg.addChar(1);
+
+		// Field 8: notify_level:int
+		// 0 = low (join/part/quit), 1 = message, 2 = private, 3 = highlight
+		let notifyLevel = 1; // default: normal message
+		if (message.highlight) {
+			notifyLevel = 3; // highlight (mention)
+		} else if (message.type === "join" || message.type === "part" || message.type === "quit") {
+			notifyLevel = 0; // low (join/part/quit - for smart filtering)
+		}
+		msg.addInt(notifyLevel);
+
+		// Field 9: highlight:chr (1 = yes, 0 = no)
+		msg.addChar(message.highlight ? 1 : 0);
+
+		// Field 10: tags_array:arr (IRC message tags for filtering and styling)
+		const tags: string[] = [];
+		if (message.type === "message") {
+			tags.push("irc_privmsg");
+			if (!message.self) tags.push("notify_message");
+			tags.push("prefix_nick_white");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			if (message.self) tags.push("self_msg");
+			tags.push("log1");
+		} else if (message.type === "action") {
+			tags.push("irc_action");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log1");
+		} else if (message.type === "notice") {
+			tags.push("irc_notice");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log1");
+		} else if (message.type === "join") {
+			tags.push("irc_join");
+			tags.push("irc_smart_filter");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log4");
+		} else if (message.type === "part") {
+			tags.push("irc_part");
+			tags.push("irc_smart_filter");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log4");
+		} else if (message.type === "quit") {
+			tags.push("irc_quit");
+			tags.push("irc_smart_filter");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log4");
+		} else if (message.type === "nick") {
+			tags.push("irc_nick");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log1");
+		}
+
+		if (message.highlight) {
+			tags.push("notify_highlight");
+		}
+
+		msg.addArray("str", tags);
+
+		// Field 11: prefix:str (nickname or system prefix)
+		const prefix = message.from?.nick || "";
+		msg.addString(prefix);
+
+		// Field 12: message:str (message text)
+		msg.addString(message.text || "");
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send nicklist changed event
+	 */
+	private sendNicklistChanged(buffer: any, users: Map<string, any>): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending nicklist changed: ${buffer.fullName}`);
+
+		const msg = new WeeChatMessage("_nicklist_diff");
+		msg.addType(OBJ_HDATA);
+		msg.addString("nicklist_item");
+		msg.addString("buffer:ptr,_diff:chr,group:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str");
+
+		const userArray = Array.from(users.values());
+		msg.addInt(userArray.length);
+
+		for (const user of userArray) {
+			const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
+			msg.addPointer(userPtr);
+			msg.addPointer(buffer.pointer);
+			msg.addChar(43); // '+' = added
+			msg.addChar(0); // user
+			msg.addChar(1); // visible
+			msg.addInt(0); // level
+			msg.addString(user.nick);
+			msg.addString("default");
+
+			let prefix = "";
+			if (user.mode) {
+				if (user.mode.includes("o")) prefix = "@";
+				else if (user.mode.includes("v")) prefix = "+";
+			}
+			msg.addString(prefix);
+			msg.addString(prefix ? "lightgreen" : "default");
+		}
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send nicklist diff event
+	 * This is called when nicklist changes (users join/part/mode change)
+	 */
+	private sendNicklistDiff(data: any): void {
+		log.info(`${colors.cyan("[WeeChat->Node]")} Sending nicklist diff for buffer ${data.bufferPtr}`);
+
+		// Find buffer
+		const buffer = this.nodeAdapter.getBufferByPointer(data.bufferPtr);
+		if (!buffer || !buffer.channel) {
+			log.warn(`${colors.yellow("[WeeChat->Node]")} Buffer not found for nicklist diff`);
+			return;
+		}
+
+		const channel = buffer.channel;
+		const users = data.users || Array.from(channel.users.values());
+
+		log.info(`${colors.cyan("[WeeChat->Node]")} Nicklist: ${channel.name} has ${users.length} users`);
+		if (users.length > 0) {
+			log.info(`${colors.cyan("[WeeChat->Node]")} First 3 users: ${users.slice(0, 3).map((u: any) => `${u.nick}(${u.mode})`).join(", ")}`);
+		}
+
+		// Build nicklist_diff message
+		// Format: buffer/nicklist_item with _diff:chr for add/remove/update operations
+		const msg = new WeeChatMessage("_nicklist_diff");
+		msg.addType(OBJ_HDATA);
+		msg.addString("buffer/nicklist_item"); // h-path (buffer/nicklist_item)
+		msg.addString("_diff:chr,group:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str");
+
+		// For simplicity, send all users as "added" ('+')
+		// In a full implementation, we would track changes and send proper diff operations
+		msg.addInt(users.length);
+
+		for (const user of users) {
+			const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
+
+			// p-path: buffer pointer, then item pointer
+			msg.addPointer(buffer.pointer); // buffer pointer
+			msg.addPointer(userPtr);        // item pointer
+
+			msg.addChar(43); // '+' = added
+			msg.addChar(0); // nick (not group)
+			msg.addChar(1); // visible
+			msg.addInt(0); // level
+
+			msg.addString(user.nick);
+			msg.addString("default");
+
+			// Determine prefix based on mode
+			let prefix = " ";
+			let prefixColor = "";
+			if (user.mode) {
+				if (user.mode.includes("@")) {
+					prefix = "@";
+					prefixColor = "lightgreen";
+				} else if (user.mode.includes("+")) {
+					prefix = "+";
+					prefixColor = "yellow";
+				}
+			}
+			msg.addString(prefix);
+			msg.addString(prefixColor);
+		}
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send buffer title changed event
+	 * This is called when channel topic changes
+	 */
+	private sendBufferTitleChanged(data: any): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending buffer title changed for buffer ${data.bufferPtr}`);
+
+		const msg = new WeeChatMessage("_buffer_title_changed");
+		msg.addType(OBJ_HDATA);
+		msg.addString("buffer");
+		msg.addString("title:str");
+		msg.addInt(1);
+
+		msg.addPointer(data.bufferPtr);
+		msg.addPointer(data.bufferPtr);
+		msg.addString(data.topic || "");
+
+		this.relayClient.send(msg);
+	}
+
+	/**
+	 * Send hotlist changed event
+	 * Hotlist shows unread/highlight counters for all buffers
+	 */
+	private sendHotlistChanged(data: any): void {
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Sending hotlist update`);
+
+		// Build hotlist from all channels with unread/highlight
+		const msg = new WeeChatMessage("_buffer_line_added"); // Hotlist updates are triggered by line_added
+
+		// For now, we don't send a separate hotlist message
+		// Lith will track unread/highlight from the line_added messages
+		// In a full implementation, we would send a proper hotlist HData
+
+		// TODO: Implement proper hotlist HData response for "hdata hotlist:gui_hotlist(*)" command
+		log.debug(`${colors.cyan("[WeeChat->Node]")} Hotlist tracking via line_added messages (unread=${data.unread}, highlight=${data.highlight})`);
+	}
+
+	/**
+	 * Build hotlist HData (for hdata hotlist:gui_hotlist(*) command)
+	 * This is called when Lith requests the hotlist
+	 */
+	buildHotlistHData(id: string): WeeChatMessage {
+		const msg = new WeeChatMessage(id);
+		msg.addType(OBJ_HDATA);
+
+		// h-path: "hotlist"
+		msg.addString("hotlist");
+
+		// keys: "priority:int,time:tim,time_usec:int,buffer:ptr,count:arr"
+		msg.addString("priority:int,time:tim,time_usec:int,buffer:ptr,count:arr");
+
+		// Collect all buffers with unread/highlight
+		const hotlistItems: any[] = [];
+
+		for (const network of this.irssiClient.networks) {
+			for (const channel of network.channels) {
+				if (channel.unread > 0 || channel.highlight > 0) {
+					const bufferPtr = BigInt(channel.id);
+					const priority = channel.highlight > 0 ? 3 : 1; // 3=highlight, 1=message
+
+					hotlistItems.push({
+						pointer: bufferPtr,
+						priority,
+						time: Math.floor(Date.now() / 1000),
+						time_usec: 0,
+						buffer: bufferPtr,
+						count: [0, channel.unread || 0, 0, channel.highlight || 0], // [join/part, message, private, highlight]
+					});
+				}
+			}
+		}
+
+		msg.addInt(hotlistItems.length);
+
+		for (const item of hotlistItems) {
+			msg.addPointer(item.pointer);
+			msg.addPointer(item.pointer);
+			msg.addInt(item.priority);
+			msg.addTime(item.time);
+			msg.addInt(item.time_usec);
+			msg.addPointer(item.buffer);
+
+			// count array: [join/part, message, private, highlight]
+			msg.addType("arr");
+			msg.addString("int");
+			msg.addInt(4);
+			for (const count of item.count) {
+				msg.addInt(count);
+			}
+		}
+
+		return msg;
+	}
+}

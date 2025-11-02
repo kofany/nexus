@@ -132,7 +132,7 @@ export class IrssiClient {
 	// WeeChat Relay server (for Lith clients) - per user!
 	weechatRelayServer: any = null; // WeeChatRelayServer instance
 	weechatRelayPassword: string | null = null; // Decrypted WeeChat password (in memory)
-	weechatErssiAdapter: any = null; // ErssiToWeeChatAdapter instance (shared by all Lith clients)
+	weechatNodeAdapter: any = null; // NodeToWeeChatAdapter instance (shared by all Lith clients)
 
 	// Message storage (encrypted)
 	messageStorage: EncryptedMessageStorage | null = null;
@@ -1364,14 +1364,74 @@ export class IrssiClient {
 	}
 
 	/**
-	 * Broadcast event to all attached browsers
+	 * Broadcast event to all attached browsers AND WeeChat clients
 	 */
 	private broadcastToAllBrowsers<Ev extends keyof ServerToClientEvents>(
 		event: Ev,
 		...args: Parameters<ServerToClientEvents[Ev]>
 	): void {
+		// Broadcast to Vue browsers
 		for (const [socketId, session] of this.attachedBrowsers) {
 			session.socket.emit(event, ...args);
+		}
+
+		// Forward to WeeChat Relay (Lith clients)
+		if (this.weechatNodeAdapter) {
+			this.forwardEventToWeeChatAdapter(event, args);
+		}
+	}
+
+	/**
+	 * Forward event to WeeChat adapter
+	 */
+	private forwardEventToWeeChatAdapter(event: string, args: any[]): void {
+		const adapter = this.weechatNodeAdapter as any;
+		if (!adapter) return;
+
+		// Map IrssiClient events to NodeToWeeChatAdapter handlers
+		switch (event) {
+			case "msg":
+				if (adapter.handleMsgEvent) {
+					adapter.handleMsgEvent(args[0]);
+				}
+				break;
+			case "names":
+				if (adapter.handleNamesEvent) {
+					adapter.handleNamesEvent(args[0]);
+				}
+				break;
+			case "join":
+				if (adapter.handleJoinEvent) {
+					adapter.handleJoinEvent(args[0]);
+				}
+				break;
+			case "part":
+				if (adapter.handlePartEvent) {
+					adapter.handlePartEvent(args[0]);
+				}
+				break;
+			case "topic":
+				if (adapter.handleTopicEvent) {
+					adapter.handleTopicEvent(args[0]);
+				}
+				break;
+			case "activity_update":
+				if (adapter.handleActivityUpdateEvent) {
+					adapter.handleActivityUpdateEvent(args[0]);
+				}
+				break;
+			case "network":
+				// New network added - could trigger buffer_opened for server buffer
+				log.debug(`[IrssiClient] network event forwarded to WeeChat adapter`);
+				break;
+			case "network:status":
+				// Network status changed
+				log.debug(`[IrssiClient] network:status event forwarded to WeeChat adapter`);
+				break;
+			case "nick":
+				// Nick changed
+				log.debug(`[IrssiClient] nick event forwarded to WeeChat adapter`);
+				break;
 		}
 	}
 
@@ -1978,11 +2038,8 @@ export class IrssiClient {
 			this.markAsRead(network.uuid, channel.name, false); // fromIrssi=false
 		}
 
-		// Forward to WeeChat Relay (Lith clients)
-		if (this.weechatErssiAdapter && network && channel) {
-			// Emit event that adapter will catch
-			(this.weechatErssiAdapter as any).handleNewMessage(network, channel, msg);
-		}
+		// Note: WeeChat Relay (Lith clients) receive events via forwardEventToWeeChatAdapter()
+		// which is called from broadcastToAllBrowsers() above
 	}
 
 	private async handleChannelJoin(networkUuid: string, channel: Chan): Promise<void> {
@@ -2620,13 +2677,13 @@ export class IrssiClient {
 		// Import WeeChat Relay components
 		log.info(`${colors.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
 		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer");
-		const {ErssiToWeeChatAdapter} = await import("./weechatRelay/erssiToWeechatAdapter");
-		const {WeeChatToErssiAdapter} = await import("./weechatRelay/weechatToErssiAdapter");
+		const {NodeToWeeChatAdapter} = await import("./weechatRelay/nodeToWeechatAdapter");
+		const {WeeChatToNodeAdapter} = await import("./weechatRelay/weechatToNodeAdapter");
 
-		// Create shared ErssiToWeeChatAdapter (one per user, shared by all Lith clients)
-		if (!this.weechatErssiAdapter) {
-			log.info(`${colors.cyan("[WeeChat Relay]")} Creating ErssiToWeeChatAdapter...`);
-			this.weechatErssiAdapter = new ErssiToWeeChatAdapter(this);
+		// Create shared NodeToWeeChatAdapter (one per user, shared by all Lith clients)
+		if (!this.weechatNodeAdapter) {
+			log.info(`${colors.cyan("[WeeChat Relay]")} Creating NodeToWeeChatAdapter...`);
+			this.weechatNodeAdapter = new NodeToWeeChatAdapter(this);
 		}
 
 		// Create server
@@ -2656,9 +2713,9 @@ export class IrssiClient {
 				return;
 			}
 
-			// Use shared ErssiToWeeChatAdapter (one per user, shared by all Lith clients)
-			const erssiAdapter = this.weechatErssiAdapter;
-			const weechatAdapter = new WeeChatToErssiAdapter(this, erssiAdapter, relayClient);
+			// Use shared NodeToWeeChatAdapter (one per user, shared by all Lith clients)
+			const nodeAdapter = this.weechatNodeAdapter;
+			const weechatAdapter = new WeeChatToNodeAdapter(this, nodeAdapter, relayClient);
 
 			// Connect line_data events to THIS relayClient
 			const lineDataHandler = async (data: any) => {
@@ -2717,13 +2774,13 @@ export class IrssiClient {
 				}
 			};
 
-			erssiAdapter.on("line_data", lineDataHandler);
+			nodeAdapter.on("line_data", lineDataHandler);
 
 			// Store handler for cleanup
 			(relayClient as any)._lineDataHandler = lineDataHandler;
 
 			// Store adapters on the relay client for cleanup
-			(relayClient as any)._adapters = {erssiAdapter, weechatAdapter};
+			(relayClient as any)._adapters = {nodeAdapter, weechatAdapter};
 		});
 
 		this.weechatRelayServer.on("client:close", (clientId: string) => {
@@ -2734,7 +2791,7 @@ export class IrssiClient {
 			if (relayClient) {
 				// Remove line_data handler
 				if ((relayClient as any)._lineDataHandler) {
-					this.weechatErssiAdapter.removeListener("line_data", (relayClient as any)._lineDataHandler);
+					this.weechatNodeAdapter.removeListener("line_data", (relayClient as any)._lineDataHandler);
 					delete (relayClient as any)._lineDataHandler;
 				}
 

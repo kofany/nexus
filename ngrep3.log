@@ -1,0 +1,531 @@
+interface: en0 (192.168.176.0/255.255.255.0)
+filter: ( tcp port 9000 ) and ((ip || ip6) || (vlan && (ip || ip6)))
+######
+T 192.168.176.29:54161 -> 192.168.176.67:9000 [AP] #6
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54162 -> 192.168.176.67:9000 [AP] #12
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54163 -> 192.168.176.67:9000 [AP] #18
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54164 -> 192.168.176.67:9000 [AP] #24
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54165 -> 192.168.176.67:9000 [AP] #30
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54166 -> 192.168.176.67:9000 [AP] #36
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#########
+T 192.168.176.29:54167 -> 192.168.176.67:9000 [AP] #45
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#########
+T 192.168.176.29:54168 -> 192.168.176.67:9000 [AP] #54
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+##########
+T 192.168.176.29:54169 -> 192.168.176.67:9000 [AP] #64
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54170 -> 192.168.176.67:9000 [AP] #71
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54171 -> 192.168.176.67:9000 [AP] #77
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54172 -> 192.168.176.67:9000 [AP] #83
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54173 -> 192.168.176.67:9000 [AP] #89
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54174 -> 192.168.176.67:9000 [AP] #97
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54175 -> 192.168.176.67:9000 [AP] #104
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54176 -> 192.168.176.67:9000 [AP] #110
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54177 -> 192.168.176.67:9000 [AP] #116
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54178 -> 192.168.176.67:9000 [AP] #124
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54179 -> 192.168.176.67:9000 [AP] #131
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54180 -> 192.168.176.67:9000 [AP] #137
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54181 -> 192.168.176.67:9000 [AP] #143
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54182 -> 192.168.176.67:9000 [AP] #149
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54183 -> 192.168.176.67:9000 [AP] #155
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54184 -> 192.168.176.67:9000 [AP] #163
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54185 -> 192.168.176.67:9000 [AP] #170
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54186 -> 192.168.176.67:9000 [AP] #178
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54187 -> 192.168.176.67:9000 [AP] #185
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54188 -> 192.168.176.67:9000 [AP] #191
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54189 -> 192.168.176.67:9000 [AP] #197
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54190 -> 192.168.176.67:9000 [AP] #203
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54191 -> 192.168.176.67:9000 [AP] #209
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54192 -> 192.168.176.67:9000 [AP] #215
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#########
+T 192.168.176.29:54193 -> 192.168.176.67:9000 [AP] #224
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54194 -> 192.168.176.67:9000 [AP] #231
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54195 -> 192.168.176.67:9000 [AP] #237
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54196 -> 192.168.176.67:9000 [AP] #243
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54197 -> 192.168.176.67:9000 [AP] #251
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54198 -> 192.168.176.67:9000 [AP] #258
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54199 -> 192.168.176.67:9000 [AP] #264
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+##########
+T 192.168.176.29:54200 -> 192.168.176.67:9000 [AP] #274
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+##########
+T 192.168.176.29:54201 -> 192.168.176.67:9000 [AP] #284
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+##########
+T 192.168.176.29:54202 -> 192.168.176.67:9000 [AP] #294
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+####################################################
+T 192.168.176.29:54208 -> 192.168.176.67:9000 [AP] #346
+  init password=Pulinek1708,compression=off.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines
+  /last_line(-1)/data.(handleHotlistInitialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                          
+####################
+T 192.168.176.29:54210 -> 192.168.176.67:9000 [AP] #366
+  init password=Pulinek1708,compression=off.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines
+  /last_line(-1)/data.(handleHotlistInitialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                          
+##
+T 192.168.176.29:54210 -> 192.168.176.67:9000 [AP] #368
+  init password=Pulinek1708,compression=off.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines
+  /last_line(-1)/data.(handleHotlistInitialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                          
+#######
+T 192.168.176.29:54211 -> 192.168.176.67:9000 [AP] #375
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+############
+T 192.168.176.29:54212 -> 192.168.176.67:9000 [AFP] #387
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#####
+T 192.168.176.29:54213 -> 192.168.176.67:9000 [AP] #392
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54214 -> 192.168.176.67:9000 [AP] #398
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54215 -> 192.168.176.67:9000 [AP] #406
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54216 -> 192.168.176.67:9000 [AP] #413
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54217 -> 192.168.176.67:9000 [AP] #421
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#########
+T 192.168.176.29:54218 -> 192.168.176.67:9000 [AP] #430
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54219 -> 192.168.176.67:9000 [AP] #437
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54220 -> 192.168.176.67:9000 [AP] #443
+  GET /weechat HTTP/1.1..Host: 192.168.176.67:9000..Upgrade: websocket..Connection: Upgrade..Sec-WebSocket-Key: HGMR2VMDm7+ibBYSRGDeGQ==..Origin: weechat..Sec-WebSocket-Version: 13....                                
+######
+T 192.168.176.29:54221 -> 192.168.176.67:9000 [AP] #449
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+########
+T 192.168.176.29:54222 -> 192.168.176.67:9000 [AP] #457
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+##########
+T 192.168.176.29:54223 -> 192.168.176.67:9000 [AP] #467
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+##########
+T 192.168.176.29:54224 -> 192.168.176.67:9000 [AP] #477
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+#######
+T 192.168.176.29:54225 -> 192.168.176.67:9000 [AP] #484
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+######
+T 192.168.176.29:54226 -> 192.168.176.67:9000 [AP] #490
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+######
+T 192.168.176.29:54227 -> 192.168.176.67:9000 [AP] #496
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+######
+T 192.168.176.29:54228 -> 192.168.176.67:9000 [AP] #502
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+###
+T 192.168.176.29:54228 -> 192.168.176.67:9000 [AP] #505
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+####
+T 192.168.176.29:54229 -> 192.168.176.67:9000 [AP] #509
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+######
+T 192.168.176.29:54230 -> 192.168.176.67:9000 [AP] #515
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+######
+T 192.168.176.29:54231 -> 192.168.176.67:9000 [AP] #521
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=zlib.                                                                                                      
+############################################################
+T 192.168.176.29:54238 -> 192.168.176.67:9000 [AP] #581
+  init password=Pulinek1708,compression=off.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines
+  /last_line(-1)/data.(handleHotlistInitialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                          
+###
+T 192.168.176.29:54238 -> 192.168.176.67:9000 [AP] #584
+  init password=Pulinek1708,compression=off.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines
+  /last_line(-1)/data.(handleHotlistInitialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                          
+#######################################################
+T 192.168.176.29:54245 -> 192.168.176.67:9000 [AP] #639
+  init password=Pulinek1708,compression=off.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines
+  /last_line(-1)/data.(handleHotlistInitialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                          
+################################################################################################################################################
+T 192.168.176.29:54263 -> 192.168.176.67:9000 [AP] #783
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54264 -> 192.168.176.67:9000 [AP] #789
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54265 -> 192.168.176.67:9000 [AP] #795
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54266 -> 192.168.176.67:9000 [AP] #801
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54267 -> 192.168.176.67:9000 [AP] #807
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+###
+T 192.168.176.29:54267 -> 192.168.176.67:9000 [AP] #810
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+####
+T 192.168.176.29:54268 -> 192.168.176.67:9000 [AP] #814
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54269 -> 192.168.176.67:9000 [AP] #820
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54270 -> 192.168.176.67:9000 [AP] #826
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54271 -> 192.168.176.67:9000 [AP] #832
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54272 -> 192.168.176.67:9000 [AP] #838
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#########
+T 192.168.176.29:54273 -> 192.168.176.67:9000 [AP] #847
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54274 -> 192.168.176.67:9000 [AP] #854
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#########
+T 192.168.176.29:54275 -> 192.168.176.67:9000 [AP] #863
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54276 -> 192.168.176.67:9000 [AP] #870
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+########
+T 192.168.176.29:54277 -> 192.168.176.67:9000 [AP] #878
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+#######
+T 192.168.176.29:54278 -> 192.168.176.67:9000 [AP] #885
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54279 -> 192.168.176.67:9000 [AP] #891
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+######
+T 192.168.176.29:54280 -> 192.168.176.67:9000 [AP] #897
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #899
+  ...Þ.....handleHandshakehtbstrstr........password_hash_algo....pbkdf2+sha512....password_hash_iterations....100000....nonce... D46B2EAD6F29117A59E72FE1A1F0D457....totp....off....compression....off....escape_command
+  s....off                                                                                                                                                                                                              
+##
+T 192.168.176.29:54280 -> 192.168.176.67:9000 [AP] #901
+  init password_hash=pbkdf2+sha512:d46b2ead6f29117a59e72fe1a1f0d45795677599663e7252:100000:d692dc8dca756135eee6a72e39735cd136b0a7b01bff7d54c300900c285f2db1b8cbf8ec4b01f08b99dc8c33c7fab3fcc5795e476db0243c2c74927148367
+  409.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines/last_line(-1)/data.(handleHotlistInit
+  ialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                                                                
+###
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [A] #904
+  .........handleBufferInitializationhda....buffer...Knumber:int,name:str,short_name:str,hidden:int,title:str,local_variables:htb.....8690fc000........weechat....weechat.......2WeeChat 4.7.1 (C) 2003-2025 - https://w
+  eechat.org/strstr........plugin....core....name....weechat.8690fc600........server.IRCnet....IRCnet.......?IRC: irc.belwue.de/6667 (2001:7c0:701:6665:6666:6667:6668:6669)strstr........plugin....irc....name....serve
+  r.IRCnet....type....server....server....IRCnet....channel....IRCnet....charset_modifier....irc.IRCnet....nick....k3....tls_version....cleartext....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fd200.......
+  .server.IRCnet2....IRCnet2.......+IRC: irc.al/6667 (2001:41d0:701:1100::64e9)strstr........plugin....irc....name....server.IRCnet2....type....server....server....IRCnet2....channel....IRCnet2....charset_modifier...
+  .irc.IRCnet2....nick....k2....tls_version....cleartext....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fc900........fset....fset.........F141.bF/.F1345.bF | Filter: .F08relay.bF | Sort: .F16~name.bF | Key
+  (input): alt+space=toggle boolean, alt+'-'(-)=subtract 1 or set, alt+'+'(+)=add 1 or append, alt+f,alt+r(r)=reset, alt+f,alt+u(u)=unset, alt+enter(s)=set, alt+f,alt+n(n)=set new value, alt+f,alt+a(a)=append, alt+',
+  '=mark/unmark, shift+down=mark and move down, shift+up=move up and mark, ($)=refresh, ($$)=unmark/refresh, (m)=mark matching options, (u)=unmark matching options, a                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #905
+  lt+p(p)=toggle plugins desc, alt+v(v)=toggle help bar, ctrl+x(x)=switch format, (q)=close bufferstrstr........plugin....fset....name....fset....type....option....filter....relay.8690fcc00........IRCnet.#tahio....#t
+  ahio....ÿÿÿÿstrstr........plugin....irc....name....IRCnet.#tahio....type....channel....nick....k3....server....IRCnet....channel....#tahio....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fcf00........IRCn
+  et.#xxx....#xxx........jupikajej madafakastrstr........plugin....irc....name....IRCnet.#xxx....type....channel....nick....k3....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c....server....IRCnet....channel....#
+  xxx.8690fd500........IRCnet2.#irc.al....#irc.al....ÿÿÿÿstrstr........plugin....irc....name....IRCnet2.#irc.al....type....channel....nick....k2....server....IRCnet2....channel....#irc.al....host...*~k@2a02:2454:8577
+  :d300:bcc1:ff48:db37:bf4c.8690fd800........IRCnet.#irc.al....#irc.al....ÿÿÿÿstrstr........plugin....irc....name....IRCnet.#irc.al....type....channel....nick....k3....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf
+  4c....server....IRCnet....channel....#irc.al.8690fdb00........relay.list....relay.list........List of clients for relaystrstr........plugin....relay....name....relay.list....type....relay                           
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [A] #906
+  ...Ä.....handleFirstReceivedLinehda....buffer/lines/line/line_data...ébuffer:ptr,id:int,y:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,str_time:str,tags_count:int,tags_array:arr,displayed:chr,n
+  otify_level:chr,highlight:chr,refresh_needed:chr,prefix:str,prefix_length:int,message:str.....8690fc000.868c0e500.868509c20.868654a10.8690fc000....ÿÿÿÿ.1762044556..¡®.1762044556..¡®.....0201.03:.0249.03:.0216....st
+  r........relay_client...............Erelay: client .F131/weechat/192.168.176.29.01 connected/authenticated.8690fc600.868b6e440.868508a40.8685f83f0.8690fc600...6ÿÿÿÿ.1762043699..Ò».1762043699..Ò».....0201.03:.0234.0
+  3:.0259....str........irc_376....irc_numeric....nick_BelWue.DE....log3.........05--........End of MOTD command..8690fd200.8686882c0.868c62fa0.868641b90.8690fd200...Kÿÿÿÿ.1762044049..¿÷.1762044049..¿÷.....0201.03:.0
+  240.03:.0249....str........irc_318....irc_numeric....nick_IRC.al....log3.........05--.......!.28[.15k2.28] .End of WHOIS list..8690fc900.8685f6200.86856db60.868643020.8690fc900...,...,.1762044533..ø .1762044533..ø 
+  ÿÿÿÿ....str........ÿÿÿÿ.......Y.F00  .F@00185relay.port.weechat                            .F@00138integer  .F@001859000.8690fcc00.8685f66c0.86856ec00.8685f9650.8690fcc00....ÿÿÿÿ.1762043962..Rð.1762043962..Rð.....0
+  201.03:.0239.03:.0222....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......OChannel .13#tahio.: .1312. nicks .28(.133. ops, .130. voice                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #907
+  d, .139. regular.28).8690fcf00.8685f7240.86856c400.8685f9490.8690fcf00....ÿÿÿÿ.1762043990..n..1762043990..n......0201.03:.0239.03:.0250....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--...
+  ....NChannel .13#xxx.: .1349. nicks .28(.1348. ops, .130. voiced, .131. regular.28).8690fd500.868689e00.8685a6200.868641960.8690fd500....ÿÿÿÿ.1762044030..1I.1762044030..1I.....0201.03:.0240.03:.0230....str........i
+  rc_366....irc_numeric....nick_IRC.al....log3.........05--.......OChannel .13#irc.al.: .133. nicks .28(.130. ops, .130. voiced, .133. regular.28).8690fd800.86868a280.8685a6980.868643b10.8690fd800....ÿÿÿÿ.1762044096.
+  ..Z.1762044096...Z.....0201.03:.0241.03:.0236....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......NChannel .13#irc.al.: .132. nicks .28(.131. op, .130. voiced, .131. regular.28).8690fd
+  b00.86868ba00.868509c40.8686549a0.8690fdb00.........1762044556..£å.1762044556..£åÿÿÿÿ....str........ÿÿÿÿ.......T.*16~00                           started on: Sun, 02 Nov 2025 01:49:16, ended on: -                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [A] #908
+  ...Ù.....handleHotlistInitializationhda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................
+  0.0.........handleNicklistInitializationhda....buffer/nicklist_item...Ngroup:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str...W.8690fc000.105e00e30..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fc600.868a
+  43f60..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd200.868a43240..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fc900.868a41b00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcc00.868a43a80..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcc00.868a43c00..........000|o....weecha
+  t.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.869301ea0..........kofany....bar_fg....@....lightgreen.8690fcc00.869302300..........oper....bar_fg....@....lightgreen.8690fcc00.869301d60..........yooz....bar_fg....@....lig
+  htgreen.8690fcc00.868a41d40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.868a43d20..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.8693024e0..........752OAAFCK....bar_fg.... .
+  ...lightblue.8690fcc00.869302120..........devl0z....bar_fg.... ....lightblue.8690fcc00.869301e00..........dominik....bar_fg.... ....lightblue.8690fcc00.869302350..........gorf....bar_fg.... ....lightblue.8690fcc00.
+  869301cc0..........iBot....bar_fg.... ....lightblue.8690fcc00.869301f40..........irssi_user....bar_fg.... ....lightblue.8690fcc00.869302080..........k3....bar_fg...                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [A] #909
+  . ....lightblue.8690fcc00.869302260..........moimoi....bar_fg.... ....lightblue.8690fcc00.8693021c0..........zxc....bar_fg.... ....lightblue.8690fcf00.868a41da0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcf00.868a43600........
+  ..000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.869302da0..........[r]uciu....bar_fg....@....lightgreen.8690fcf00.869300cd0..........[xXx]....bar_fg....@....lightgreen.8690fcf00.869303020..........`ruciu`
+  ....bar_fg....@....lightgreen.8690fcf00.869300b90..........biksa....bar_fg....@....lightgreen.8690fcf00.869301bd0..........d00g....bar_fg....@....lightgreen.8690fcf00.869302b20..........D1ng....bar_fg....@....light
+  green.8690fcf00.869300af0..........dnets....bar_fg....@....lightgreen.8690fcf00.869301c20..........doog....bar_fg....@....lightgreen.8690fcf00.869303160..........dupsko....bar_fg....@....lightgreen.8690fcf00.869300
+  960..........Dut....bar_fg....@....lightgreen.8690fcf00.869301360..........esiu....bar_fg....@....lightgreen.8690fcf00.869300870..........eston....bar_fg....@....lightgreen.8690fcf00.869301400..........figiel....ba
+  r_fg....@....lightgreen.8690fcf00.869301770..........fy....bar_fg....@....lightgreen.8690fcf00.869301680..........Fyrg....bar_fg....@....lightgreen.8690fcf00.869302d00..........gg....bar_fg....@....lightgreen.8690f
+  cf00.869302e40..........gge....bar_fg....@....lightgreen.8690fcf00.869301540..........gryf....bar_fg....@....lightgreen.8690fcf00.869302bc0..........het....bar_fg..                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [A] #910
+  ..@....lightgreen.8690fcf00.8693014a0..........Hunter....bar_fg....@....lightgreen.8690fcf00.869302800..........iksa....bar_fg....@....lightgreen.8690fcf00.869302ee0..........ImperatoR....bar_fg....@....lightgreen.
+  8690fcf00.869301ae0..........kofany....bar_fg....@....lightgreen.8690fcf00.869302a80..........kuta....bar_fg....@....lightgreen.8690fcf00.869301860..........legia....bar_fg....@....lightgreen.8690fcf00.869302940...
+  .......man....bar_fg....@....lightgreen.8690fcf00.869300fa0..........norweg....bar_fg....@....lightgreen.8690fcf00.869301a40..........openirc....bar_fg....@....lightgreen.8690fcf00.8693029e0..........patus....bar_f
+  g....@....lightgreen.8690fcf00.8693028a0..........ruciek....bar_fg....@....lightgreen.8690fcf00.869302f80..........ruciu....bar_fg....@....lightgreen.8690fcf00.869300d70..........Tomasz....bar_fg....@....lightgreen
+  .8690fcf00.869300c30..........tusk....bar_fg....@....lightgreen.8690fcf00.869300e60..........uciek....bar_fg....@....lightgreen.8690fcf00.8693030c0..........uicur....bar_fg....@....lightgreen.8690fcf00.8693019a0...
+  .......who....bar_fg....@....lightgreen.8690fcf00.8693010e0..........wiesiu....bar_fg....@....lightgreen.8690fcf00.8693012c0..........wlad....bar_fg....@....lightgreen.8690fcf00.8693016d0..........yooz....bar_fg...
+  .@....lightgreen.8690fcf00.869300aa0..........|at|....bar_fg....@....lightgreen.8690fcf00.869302c60..........|fi|....bar_fg....@....lightgreen.8690fcf00.869301180..                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [A] #911
+  ........|hu|....bar_fg....@....lightgreen.8690fcf00.869300f00..........|it|....bar_fg....@....lightgreen.8690fcf00.869301590..........|jp|....bar_fg....@....lightgreen.8690fcf00.869301900..........|nl|....bar_fg...
+  .@....lightgreen.8690fcf00.869301040..........|no|....bar_fg....@....lightgreen.8690fcf00.869301220..........|opn|....bar_fg....@....lightgreen.8690fcf00.869300e10..........|si|....bar_fg....@....lightgreen.8690fcf
+  00.868a43540..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.868a434e0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.8693023f0..........k3....bar_fg.... ....lightblue.8690fd500
+  .868a425e0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd500.868a432a0..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a423a0..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a42340........
+  ..999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.8693038e0..........k2....bar_fg.... ....lightblue.8690fd500.869303f70..........kofany....bar_fg.... ....lightblue.8690fd500.869303f20..........tuvok....ba
+  r_fg.... ....lightblue.8690fd800.868a42b20..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd800.868a42b80..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874140..........kofany....bar_fg....@....lightgreen.8690f
+  d800.868a42c40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.868a42ca0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.8698742                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #912
+  30..........k3....bar_fg.... ....lightblue.8690fdb00.868a42d00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ                                                                                                                              
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #913
+  .@....lightgreen.8690fcf00.869301590..........|jp|....bar_fg....@....lightgreen.8690fcf00.869301900..........|nl|....bar_fg....@....lightgreen.8690fcf00.869301040..........|no|....bar_fg....@....lightgreen.8690fcf0
+  0.869301220..........|opn|....bar_fg....@....lightgreen.8690fcf00.869300e10..........|si|....bar_fg....@....lightgreen.8690fcf00.868a43540..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.868a434e0.
+  .........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.8693023f0..........k3....bar_fg.... ....lightblue.8690fd500.868a425e0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd500.868a432a0..........000|o....weechat.color
+  .nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a423a0..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a42340..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.8693038e0..........k2....bar
+  _fg.... ....lightblue.8690fd500.869303f70..........kofany....bar_fg.... ....lightblue.8690fd500.869303f20..........tuvok....bar_fg.... ....lightblue.8690fd800.868a42b20..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd800.868a42b80
+  ..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874140..........kofany....bar_fg....@....lightgreen.8690fd800.868a42c40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.868a42ca
+  0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874230..........k3....bar_fg.... ....lightblue.8690fdb00.868a42d00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ                                                  
+########
+T 192.168.176.29:54280 -> 192.168.176.67:9000 [AP] #921
+  (handleHotlist;0) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #923
+  ...Í.....handleHotlist;0hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+######
+T 192.168.176.67:9000 -> 192.168.176.29:54280 [AP] #929
+  ...¡....._buffer_line_addedhda....line_data...¢buffer:ptr,id:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:chr,highlight:chr,tags_array:arr,prefix:str,message:str.....
+  868654a80.8690fc000.....1762044560..Ýq.1762044560..Ýq...str........relay_client.....04=!=...nrelay: reading data on socket for client .F131/weechat/192.168.176.29.01: error 22 (connection closed by peer)           
+####
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #933
+  (handleHandshake) handshake password_hash_algo=plain:sha256:sha512:pbkdf2+sha256:pbkdf2+sha512,compression=off.                                                                                                       
+###
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #936
+  ...Þ.....handleHandshakehtbstrstr........password_hash_algo....pbkdf2+sha512....password_hash_iterations....100000....nonce... 2B1E397EA8A3FF10E4ABB5BC9EEACDA2....totp....off....compression....off....escape_command
+  s....off                                                                                                                                                                                                              
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #938
+  init password_hash=pbkdf2+sha512:2b1e397ea8a3ff10e4abb5bc9eeacda23b8723e063bdcfb7:100000:410b117de1e9d4fdf9df7242ff11c59f96e333a4d05a75a045c082338b114012ac3bd7d32e0b4441c5096937cd319c15cee1442919995472370abe7b6e3a4
+  16e.(handleBufferInitialization) hdata buffer:gui_buffers(*) number,name,short_name,hidden,title,local_variables.(handleFirstReceivedLine) hdata buffer:gui_buffers(*)/own_lines/last_line(-1)/data.(handleHotlistInit
+  ialization) hdata hotlist:gui_hotlist(*).sync.(handleNicklistInitialization) nicklist.                                                                                                                                
+###
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [A] #941
+  .........handleBufferInitializationhda....buffer...Knumber:int,name:str,short_name:str,hidden:int,title:str,local_variables:htb.....8690fc000........weechat....weechat.......2WeeChat 4.7.1 (C) 2003-2025 - https://w
+  eechat.org/strstr........plugin....core....name....weechat.8690fc600........server.IRCnet....IRCnet.......?IRC: irc.belwue.de/6667 (2001:7c0:701:6665:6666:6667:6668:6669)strstr........plugin....irc....name....serve
+  r.IRCnet....type....server....server....IRCnet....channel....IRCnet....charset_modifier....irc.IRCnet....nick....k3....tls_version....cleartext....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fd200.......
+  .server.IRCnet2....IRCnet2.......+IRC: irc.al/6667 (2001:41d0:701:1100::64e9)strstr........plugin....irc....name....server.IRCnet2....type....server....server....IRCnet2....channel....IRCnet2....charset_modifier...
+  .irc.IRCnet2....nick....k2....tls_version....cleartext....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fc900........fset....fset.........F141.bF/.F1345.bF | Filter: .F08relay.bF | Sort: .F16~name.bF | Key
+  (input): alt+space=toggle boolean, alt+'-'(-)=subtract 1 or set, alt+'+'(+)=add 1 or append, alt+f,alt+r(r)=reset, alt+f,alt+u(u)=unset, alt+enter(s)=set, alt+f,alt+n(n)=set new value, alt+f,alt+a(a)=append, alt+',
+  '=mark/unmark, shift+down=mark and move down, shift+up=move up and mark, ($)=refresh, ($$)=unmark/refresh, (m)=mark matching options, (u)=unmark matching options, a                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #942
+  lt+p(p)=toggle plugins desc, alt+v(v)=toggle help bar, ctrl+x(x)=switch format, (q)=close bufferstrstr........plugin....fset....name....fset....type....option....filter....relay.8690fcc00........IRCnet.#tahio....#t
+  ahio....ÿÿÿÿstrstr........plugin....irc....name....IRCnet.#tahio....type....channel....nick....k3....server....IRCnet....channel....#tahio....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c.8690fcf00........IRCn
+  et.#xxx....#xxx........jupikajej madafakastrstr........plugin....irc....name....IRCnet.#xxx....type....channel....nick....k3....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf4c....server....IRCnet....channel....#
+  xxx.8690fd500........IRCnet2.#irc.al....#irc.al....ÿÿÿÿstrstr........plugin....irc....name....IRCnet2.#irc.al....type....channel....nick....k2....server....IRCnet2....channel....#irc.al....host...*~k@2a02:2454:8577
+  :d300:bcc1:ff48:db37:bf4c.8690fd800........IRCnet.#irc.al....#irc.al....ÿÿÿÿstrstr........plugin....irc....name....IRCnet.#irc.al....type....channel....nick....k3....host...*~k@2a02:2454:8577:d300:bcc1:ff48:db37:bf
+  4c....server....IRCnet....channel....#irc.al.8690fdb00........relay.list....relay.list........List of clients for relaystrstr........plugin....relay....name....relay.list....type....relay                           
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [A] #943
+  ...Ü.....handleFirstReceivedLinehda....buffer/lines/line/line_data...ébuffer:ptr,id:int,y:int,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,str_time:str,tags_count:int,tags_array:arr,displayed:chr,n
+  otify_level:chr,highlight:chr,refresh_needed:chr,prefix:str,prefix_length:int,message:str.....8690fc000.868c0e500.868509ae0.868654d20.8690fc000....ÿÿÿÿ.1762044560..¶..1762044560..¶......0201.03:.0249.03:.0220....st
+  r........relay_client...............Erelay: client .F132/weechat/192.168.176.29.01 connected/authenticated.8690fc600.868b6e440.868508a40.8685f83f0.8690fc600...6ÿÿÿÿ.1762043699..Ò».1762043699..Ò».....0201.03:.0234.0
+  3:.0259....str........irc_376....irc_numeric....nick_BelWue.DE....log3.........05--........End of MOTD command..8690fd200.8686882c0.868c62fa0.868641b90.8690fd200...Kÿÿÿÿ.1762044049..¿÷.1762044049..¿÷.....0201.03:.0
+  240.03:.0249....str........irc_318....irc_numeric....nick_IRC.al....log3.........05--.......!.28[.15k2.28] .End of WHOIS list..8690fc900.8685f6200.86856db60.868643020.8690fc900...,...,.1762044533..ø .1762044533..ø 
+  ÿÿÿÿ....str........ÿÿÿÿ.......Y.F00  .F@00185relay.port.weechat                            .F@00138integer  .F@001859000.8690fcc00.8685f66c0.86856ec00.8685f9650.8690fcc00....ÿÿÿÿ.1762043962..Rð.1762043962..Rð.....0
+  201.03:.0239.03:.0222....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......OChannel .13#tahio.: .1312. nicks .28(.133. ops, .130. voice                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #944
+  d, .139. regular.28).8690fcf00.8685f7240.86856c400.8685f9490.8690fcf00....ÿÿÿÿ.1762043990..n..1762043990..n......0201.03:.0239.03:.0250....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--...
+  ....NChannel .13#xxx.: .1349. nicks .28(.1348. ops, .130. voiced, .131. regular.28).8690fd500.868689e00.8685a6200.868641960.8690fd500....ÿÿÿÿ.1762044030..1I.1762044030..1I.....0201.03:.0240.03:.0230....str........i
+  rc_366....irc_numeric....nick_IRC.al....log3.........05--.......OChannel .13#irc.al.: .133. nicks .28(.130. ops, .130. voiced, .133. regular.28).8690fd800.86868a280.8685a6980.868643b10.8690fd800....ÿÿÿÿ.1762044096.
+  ..Z.1762044096...Z.....0201.03:.0241.03:.0236....str........irc_366....irc_numeric....nick_BelWue.DE....log3.........05--.......NChannel .13#irc.al.: .132. nicks .28(.131. op, .130. voiced, .131. regular.28).8690fd
+  b00.86868ba00.868509b00.868654cb0.8690fdb00.........1762044560..¸..1762044560..¸.ÿÿÿÿ....str........ÿÿÿÿ.......l.*00~00                           started on: Sun, 02 Nov 2025 01:49:16, ended on: Sun, 02 Nov 2025 01
+  :49:20                                                                                                                                                                                                                
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [A] #945
+  ...Ù.....handleHotlistInitializationhda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................
+  0.0.........handleNicklistInitializationhda....buffer/nicklist_item...Ngroup:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str...W.8690fc000.105e00e30..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fc600.868a
+  43f60..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd200.868a43240..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fc900.868a41b00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcc00.868a43a80..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcc00.868a43c00..........000|o....weecha
+  t.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.869301ea0..........kofany....bar_fg....@....lightgreen.8690fcc00.869302300..........oper....bar_fg....@....lightgreen.8690fcc00.869301d60..........yooz....bar_fg....@....lig
+  htgreen.8690fcc00.868a41d40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.868a43d20..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcc00.8693024e0..........752OAAFCK....bar_fg.... .
+  ...lightblue.8690fcc00.869302120..........devl0z....bar_fg.... ....lightblue.8690fcc00.869301e00..........dominik....bar_fg.... ....lightblue.8690fcc00.869302350..........gorf....bar_fg.... ....lightblue.8690fcc00.
+  869301cc0..........iBot....bar_fg.... ....lightblue.8690fcc00.869301f40..........irssi_user....bar_fg.... ....lightblue.8690fcc00.869302080..........k3....bar_fg...                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [A] #946
+  . ....lightblue.8690fcc00.869302260..........moimoi....bar_fg.... ....lightblue.8690fcc00.8693021c0..........zxc....bar_fg.... ....lightblue.8690fcf00.868a41da0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fcf00.868a43600........
+  ..000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.869302da0..........[r]uciu....bar_fg....@....lightgreen.8690fcf00.869300cd0..........[xXx]....bar_fg....@....lightgreen.8690fcf00.869303020..........`ruciu`
+  ....bar_fg....@....lightgreen.8690fcf00.869300b90..........biksa....bar_fg....@....lightgreen.8690fcf00.869301bd0..........d00g....bar_fg....@....lightgreen.8690fcf00.869302b20..........D1ng....bar_fg....@....light
+  green.8690fcf00.869300af0..........dnets....bar_fg....@....lightgreen.8690fcf00.869301c20..........doog....bar_fg....@....lightgreen.8690fcf00.869303160..........dupsko....bar_fg....@....lightgreen.8690fcf00.869300
+  960..........Dut....bar_fg....@....lightgreen.8690fcf00.869301360..........esiu....bar_fg....@....lightgreen.8690fcf00.869300870..........eston....bar_fg....@....lightgreen.8690fcf00.869301400..........figiel....ba
+  r_fg....@....lightgreen.8690fcf00.869301770..........fy....bar_fg....@....lightgreen.8690fcf00.869301680..........Fyrg....bar_fg....@....lightgreen.8690fcf00.869302d00..........gg....bar_fg....@....lightgreen.8690f
+  cf00.869302e40..........gge....bar_fg....@....lightgreen.8690fcf00.869301540..........gryf....bar_fg....@....lightgreen.8690fcf00.869302bc0..........het....bar_fg..                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [A] #947
+  ..@....lightgreen.8690fcf00.8693014a0..........Hunter....bar_fg....@....lightgreen.8690fcf00.869302800..........iksa....bar_fg....@....lightgreen.8690fcf00.869302ee0..........ImperatoR....bar_fg....@....lightgreen.
+  8690fcf00.869301ae0..........kofany....bar_fg....@....lightgreen.8690fcf00.869302a80..........kuta....bar_fg....@....lightgreen.8690fcf00.869301860..........legia....bar_fg....@....lightgreen.8690fcf00.869302940...
+  .......man....bar_fg....@....lightgreen.8690fcf00.869300fa0..........norweg....bar_fg....@....lightgreen.8690fcf00.869301a40..........openirc....bar_fg....@....lightgreen.8690fcf00.8693029e0..........patus....bar_f
+  g....@....lightgreen.8690fcf00.8693028a0..........ruciek....bar_fg....@....lightgreen.8690fcf00.869302f80..........ruciu....bar_fg....@....lightgreen.8690fcf00.869300d70..........Tomasz....bar_fg....@....lightgreen
+  .8690fcf00.869300c30..........tusk....bar_fg....@....lightgreen.8690fcf00.869300e60..........uciek....bar_fg....@....lightgreen.8690fcf00.8693030c0..........uicur....bar_fg....@....lightgreen.8690fcf00.8693019a0...
+  .......who....bar_fg....@....lightgreen.8690fcf00.8693010e0..........wiesiu....bar_fg....@....lightgreen.8690fcf00.8693012c0..........wlad....bar_fg....@....lightgreen.8690fcf00.8693016d0..........yooz....bar_fg...
+  .@....lightgreen.8690fcf00.869300aa0..........|at|....bar_fg....@....lightgreen.8690fcf00.869302c60..........|fi|....bar_fg....@....lightgreen.8690fcf00.869301180..                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [A] #948
+  ........|hu|....bar_fg....@....lightgreen.8690fcf00.869300f00..........|it|....bar_fg....@....lightgreen.8690fcf00.869301590..........|jp|....bar_fg....@....lightgreen.8690fcf00.869301900..........|nl|....bar_fg...
+  .@....lightgreen.8690fcf00.869301040..........|no|....bar_fg....@....lightgreen.8690fcf00.869301220..........|opn|....bar_fg....@....lightgreen.8690fcf00.869300e10..........|si|....bar_fg....@....lightgreen.8690fcf
+  00.868a43540..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.868a434e0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.8693023f0..........k3....bar_fg.... ....lightblue.8690fd500
+  .868a425e0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd500.868a432a0..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a423a0..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a42340........
+  ..999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.8693038e0..........k2....bar_fg.... ....lightblue.8690fd500.869303f70..........kofany....bar_fg.... ....lightblue.8690fd500.869303f20..........tuvok....ba
+  r_fg.... ....lightblue.8690fd800.868a42b20..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd800.868a42b80..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874140..........kofany....bar_fg....@....lightgreen.8690f
+  d800.868a42c40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.868a42ca0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.8698742                                                  
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #949
+  30..........k3....bar_fg.... ....lightblue.8690fdb00.868a42d00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ                                                                                                                              
+#
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #950
+  .@....lightgreen.8690fcf00.869301590..........|jp|....bar_fg....@....lightgreen.8690fcf00.869301900..........|nl|....bar_fg....@....lightgreen.8690fcf00.869301040..........|no|....bar_fg....@....lightgreen.8690fcf0
+  0.869301220..........|opn|....bar_fg....@....lightgreen.8690fcf00.869300e10..........|si|....bar_fg....@....lightgreen.8690fcf00.868a43540..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.868a434e0.
+  .........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fcf00.8693023f0..........k3....bar_fg.... ....lightblue.8690fd500.868a425e0..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd500.868a432a0..........000|o....weechat.color
+  .nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a423a0..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.868a42340..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd500.8693038e0..........k2....bar
+  _fg.... ....lightblue.8690fd500.869303f70..........kofany....bar_fg.... ....lightblue.8690fd500.869303f20..........tuvok....bar_fg.... ....lightblue.8690fd800.868a42b20..........rootÿÿÿÿÿÿÿÿÿÿÿÿ.8690fd800.868a42b80
+  ..........000|o....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874140..........kofany....bar_fg....@....lightgreen.8690fd800.868a42c40..........001|v....weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.868a42ca
+  0..........999|.......weechat.color.nicklist_groupÿÿÿÿÿÿÿÿ.8690fd800.869874230..........k3....bar_fg.... ....lightblue.8690fdb00.868a42d00..........rootÿÿÿÿÿÿÿÿÿÿÿÿ                                                  
+#########
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #959
+  (handleHotlist;1) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #961
+  ...Í.....handleHotlist;1hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #963
+  (2) ping 2.(handleHotlist;3) hdata hotlist:gui_hotlist(*).                                                                                                                                                            
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #965
+  ........._pongstr....2                                                                                                                                                                                                
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #967
+  ...Í.....handleHotlist;3hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #969
+  (handleHotlist;4) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #971
+  ...Í.....handleHotlist;4hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #973
+  (5) ping 5.(handleHotlist;6) hdata hotlist:gui_hotlist(*).                                                                                                                                                            
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #975
+  ........._pongstr....5                                                                                                                                                                                                
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #977
+  ...Í.....handleHotlist;6hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #979
+  (handleHotlist;7) hdata hotlist:gui_hotlist(*).                                                                                                                                                                       
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #981
+  ...Í.....handleHotlist;7hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #983
+  (8) ping 8.(handleHotlist;9) hdata hotlist:gui_hotlist(*).                                                                                                                                                            
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #985
+  ........._pongstr....8                                                                                                                                                                                                
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #987
+  ...Í.....handleHotlist;9hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0         
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #989
+  (handleHotlist;10) hdata hotlist:gui_hotlist(*).                                                                                                                                                                      
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #991
+  ...Î.....handleHotlist;10hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0        
+##
+T 192.168.176.29:54281 -> 192.168.176.67:9000 [AP] #993
+  (11) ping 11.(handleHotlist;12) hdata hotlist:gui_hotlist(*).                                                                                                                                                         
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #995
+  ........._pongstr....11                                                                                                                                                                                               
+##
+T 192.168.176.67:9000 -> 192.168.176.29:54281 [AP] #997
+  ...Î.....handleHotlist;12hda....hotlist...Zpriority:int,time:tim,time_usec:lon,buffer:ptr,count:arr,prev_hotlist:ptr,next_hotlist:ptr.....869026340.....1762044556.827890.8690fc000int.....................0.0        
+#exit
+998 received, 137 matched
