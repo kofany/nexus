@@ -940,6 +940,11 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			tags.push("irc_nick");
 			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
 			tags.push("log1");
+		} else if (message.type === "kick") {
+			tags.push("irc_kick");
+			tags.push("irc_smart_filter");
+			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
+			tags.push("log4");
 		}
 
 		if (message.highlight) {
@@ -953,7 +958,13 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		msg.addString(prefix);
 
 		// Field 12: message:str (message text)
-		msg.addString(message.text || "");
+		// For kick: format as "has kicked TARGET (reason)"
+		let messageText = message.text || "";
+		if (message.type === "kick" && message.target?.nick) {
+			const reason = message.text || "no reason";
+			messageText = `has kicked ${message.target.nick} (${reason})`;
+		}
+		msg.addString(messageText);
 
 		this.relayClient.send(msg);
 	}
@@ -1024,10 +1035,31 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		msg.addString("buffer/nicklist_item"); // h-path (buffer/nicklist_item)
 		msg.addString("_diff:chr,group:chr,visible:chr,level:int,name:str,color:str,prefix:str,prefix_color:str");
 
-		// For simplicity, send all users as "added" ('+')
-		// In a full implementation, we would track changes and send proper diff operations
-		msg.addInt(users.length);
+		// Send: first remove all old users, then add new ones
+		// This ensures Lith clears the nicklist before adding updated users
+		// Count: users.length * 2 (remove + add for each user)
+		msg.addInt(users.length * 2);
 
+		// First, send remove operations for all users
+		for (const user of users) {
+			const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
+
+			// p-path: buffer pointer, then item pointer
+			msg.addPointer(buffer.pointer); // buffer pointer
+			msg.addPointer(userPtr);        // item pointer
+
+			msg.addChar(45); // '-' = removed
+			msg.addChar(0); // nick (not group)
+			msg.addChar(1); // visible
+			msg.addInt(0); // level
+
+			msg.addString(user.nick);
+			msg.addString("default");
+			msg.addString(" "); // prefix
+			msg.addString(""); // prefix_color
+		}
+
+		// Then, send add operations for all users with updated data
 		for (const user of users) {
 			const userPtr = stringToPointer(`${buffer.pointer}-${user.nick}`);
 

@@ -440,11 +440,15 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	}
 
 	/**
-	 * Find channel by buffer pointer (which is actually channel.id)
+	 * Find channel by buffer pointer
+	 * Reverses the pointer calculation: channelId = (bufferPtr - BASE_ADDRESS) / 0x1000
 	 * Returns buffer-like object for compatibility with old code
 	 */
 	getBufferByPointer(bufferPtr: bigint): any | null {
-		const channelId = Number(bufferPtr);
+		// Reverse the pointer calculation
+		const BASE_ADDRESS = 0x8690000000n;
+		const channelId = Number((bufferPtr - BASE_ADDRESS) / 0x1000n);
+
 		const found = this.findChannel(channelId);
 
 		if (!found) {
