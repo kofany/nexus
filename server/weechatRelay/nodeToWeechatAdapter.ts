@@ -71,6 +71,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	}
 
 	/**
+	 * Convert buffer pointer back to channel ID (reverse of getBufferPointer)
+	 */
+	public getChannelIdFromPointer(bufferPtr: bigint): number {
+		const BASE_ADDRESS = 0x8690000000n;
+		return Number((bufferPtr - BASE_ADDRESS) / 0x1000n);
+	}
+
+	/**
 	 * Find network and channel by channel ID
 	 */
 	private findChannel(channelId: number): {network: NetworkData; channel: Chan} | null {
@@ -656,12 +664,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * Build per-buffer lines HData (weechat-android ONLY)
 	 * Request: buffer:0x12345/own_lines/last_line(-100)/data id,date,displayed,prefix,message,highlight,notify,tags_array
 	 *
+	 * CRITICAL: Loads from encrypted storage (like Lith)!
+	 *
 	 * Response format (EXACT per spec):
 	 * - HPath: buffer/own_lines/last_line/data (4 LEVELS!)
 	 * - P-path: [buffer_ptr, own_lines_ptr, last_line_ptr, data_ptr] (4 pointers)
 	 * - Fields: id,date,displayed,prefix,message,highlight,notify,tags_array (8 fields, EXACT order!)
 	 */
-	buildPerBufferLinesHData(id: string, bufferPtr: bigint, count: number, requestedKeys: string): WeeChatMessage {
+	async buildPerBufferLinesHData(id: string, bufferPtr: bigint, count: number, requestedKeys: string): Promise<WeeChatMessage> {
 		log.info(`${colors.magenta("[Node->WeeChat]")} 📄 Building per-buffer lines HData: buffer=${bufferPtr}, count=${count}, keys="${requestedKeys}"`);
 
 		const msg = new WeeChatMessage(id);
@@ -675,17 +685,29 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			return msg;
 		}
 
-		// Find channel
-		const channelId = Number(bufferPtr);
+		// Find channel (convert bufferPtr back to channelId)
+		const channelId = this.getChannelIdFromPointer(bufferPtr);
 		const found = this.findChannel(channelId);
 
 		if (!found) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ Channel not found for bufferPtr=${bufferPtr}`);
+			log.error(`${colors.red("[Node->WeeChat]")} ❌ Channel not found: bufferPtr=${bufferPtr}, channelId=${channelId}`);
 			buildEmptyHData(msg);
 			return msg;
 		}
 
 		const {network, channel} = found;
+
+		// CRITICAL FIX: Load messages from storage (like Lith does)!
+		let messages: any[] = [];
+
+		if (this.irssiClient.messageStorage) {
+			log.info(`${colors.cyan("[Node->WeeChat]")} 📜 Loading ${count} messages from storage for ${channel.name}...`);
+			messages = await this.irssiClient.messageStorage.getLastMessages(network.uuid, channel.name, count);
+			log.info(`${colors.green("[Node->WeeChat]")} ✅ Loaded ${messages.length} messages from storage`);
+		} else {
+			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`);
+			messages = channel.messages.slice(-count);
+		}
 
 		// Build HData header (EXACT order per spec!)
 		const fields: HDataField[] = [
@@ -700,7 +722,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		];
 
 		const objects: HDataObject[] = [];
-		const messages = channel.messages.slice(-count);
+		// messages already loaded from storage above
 
 		// Generate pointers (4 levels!)
 		const ownLinesPtr = stringToPointer(`${bufferPtr}-own_lines`);

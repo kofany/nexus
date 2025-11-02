@@ -248,7 +248,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 				}
 
 				log.info(`${colors.cyan("[WeeChat->Node]")} 📄 PER-BUFFER LINES request: buffer=${bufferPtr}, count=${count}, keys="${keys}"`);
-				const msg = this.nodeAdapter.buildPerBufferLinesHData(id, bufferPtr, count, keys);
+				const msg = await this.nodeAdapter.buildPerBufferLinesHData(id, bufferPtr, count, keys);
 				this.relayClient.send(msg);
 			} else {
 				const msg = new WeeChatMessage(id);
