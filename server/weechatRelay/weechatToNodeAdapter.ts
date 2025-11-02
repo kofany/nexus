@@ -32,6 +32,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	private syncedBuffers: Set<bigint> = new Set();
 	private syncAll: boolean = true; // Default to true - sync all buffers automatically
 	private eventHandlers: Map<string, (...args: any[]) => void> = new Map(); // Track handlers for cleanup
+	private clientUsesHDataHistory: boolean = false; // Detect if client is weechat-android (uses bulk HData requests)
 
 	constructor(
 		irssiClient: IrssiClient,
@@ -198,16 +199,64 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		const path = spaceIdx > 0 ? args.substring(0, spaceIdx) : args;
 		const keys = spaceIdx > 0 ? args.substring(spaceIdx + 1) : "";
 
-		if (path.startsWith("buffer:gui_buffers")) {
-			// Request all buffers
+		// DETECT weechat-android: uses bulk HData requests with specific fields
+		// Example: "buffer:gui_buffers(*)/own_lines/last_line(-25)/data id,buffer,displayed"
+		if (path.includes("/own_lines/last_line") && keys.includes("id,buffer,displayed")) {
+			this.clientUsesHDataHistory = true;
+			log.info(`${colors.yellow("[WeeChat->Node]")} 🔍 Detected weechat-android client (bulk HData request)`);
+		}
+
+		if (path.startsWith("buffer:gui_buffers") && path.includes("/own_lines/last_line") && path.includes("/data")) {
+			// BULK LINES REQUEST (weechat-android ONLY)
+			// Example: "buffer:gui_buffers(*)/own_lines/last_line(-25)/data id,buffer,displayed"
+			// Parse line count
+			let count = 25;
+			const countMatch = path.match(/last_line\((-?\d+)\)/);
+			if (countMatch) {
+				count = Math.abs(parseInt(countMatch[1], 10));
+			}
+
+			log.info(`${colors.cyan("[WeeChat->Node]")} 📦 BULK LINES request: ${count} lines, keys="${keys}"`);
+			const msg = this.nodeAdapter.buildBulkLinesHData(id, count, keys);
+			this.relayClient.send(msg);
+		} else if (path.startsWith("buffer:gui_buffers") && path.includes("/own_lines/last_read_line")) {
+			// LAST READ LINES REQUEST (weechat-android ONLY)
+			// Example: "buffer:gui_buffers(*)/own_lines/last_read_line/data id,buffer"
+			log.info(`${colors.cyan("[WeeChat->Node]")} 📖 LAST READ LINES request, keys="${keys}"`);
+			const msg = this.nodeAdapter.buildLastReadLinesHData(id, keys);
+			this.relayClient.send(msg);
+		} else if (path.startsWith("buffer:gui_buffers")) {
+			// Request all buffers (Lith - list only, no lines)
 			const msg = this.nodeAdapter.buildBuffersHData(id);
 			this.relayClient.send(msg);
 		} else if (path.startsWith("hotlist:gui_hotlist")) {
 			// Request hotlist (unread/highlight tracking)
 			const msg = this.buildHotlistHData(id);
 			this.relayClient.send(msg);
+		} else if (path.includes("/own_lines/last_line") && path.match(/buffer:0x[0-9a-f]+/i)) {
+			// PER-BUFFER LINES REQUEST (weechat-android ONLY)
+			// Example: "buffer:0x12345/own_lines/last_line(-100)/data id,date,displayed,prefix,message,highlight,notify,tags_array"
+			const match = path.match(/buffer:0x([0-9a-f]+)/i);
+			if (match) {
+				const bufferPtr = BigInt("0x" + match[1]);
+
+				// Parse line count
+				let count = 100;
+				const countMatch = path.match(/last_line\((-?\d+)\)/);
+				if (countMatch) {
+					count = Math.abs(parseInt(countMatch[1], 10));
+				}
+
+				log.info(`${colors.cyan("[WeeChat->Node]")} 📄 PER-BUFFER LINES request: buffer=${bufferPtr}, count=${count}, keys="${keys}"`);
+				const msg = this.nodeAdapter.buildPerBufferLinesHData(id, bufferPtr, count, keys);
+				this.relayClient.send(msg);
+			} else {
+				const msg = new WeeChatMessage(id);
+				buildEmptyHData(msg);
+				this.relayClient.send(msg);
+			}
 		} else if (path.includes("/lines/")) {
-			// Request message history
+			// Request message history (Lith ONLY)
 			// Parse buffer pointer from path (e.g., "buffer:0x12345/lines/...")
 			const match = path.match(/buffer:0x([0-9a-f]+)/i);
 			if (match) {
@@ -801,9 +850,14 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			this.syncAll = true;
 			log.info(`${colors.green("[WeeChat->Node]")} ✅ Syncing ALL buffers (syncAll=true)`);
 
-			// Load message history for all buffers (like Vue frontend gets in init event)
-			log.info(`${colors.cyan("[WeeChat->Node]")} Loading message history from encrypted storage...`);
-			await this.nodeAdapter.loadAllMessages();
+			// Load message history for all buffers (ONLY for Lith, NOT for weechat-android)
+			// Weechat-android gets history through HData requests (last_lines), not through _buffer_line_added events
+			if (!this.clientUsesHDataHistory) {
+				log.info(`${colors.cyan("[WeeChat->Node]")} Loading message history from encrypted storage (Lith)...`);
+				await this.nodeAdapter.loadAllMessages();
+			} else {
+				log.info(`${colors.yellow("[WeeChat->Node]")} Skipping loadAllMessages() for weechat-android (uses HData instead)`);
+			}
 		} else {
 			// Sync specific buffer
 			const match = target.match(/0x([0-9a-f]+)/i);
@@ -1021,14 +1075,42 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		msg.addType(OBJ_HDATA);
 		msg.addString("line_data");
 
-		// FULL WeeChat format (official protocol):
-		// buffer:ptr,id:ptr,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:int,highlight:chr,tags_array:arr,prefix:str,message:str
-		msg.addString("buffer:ptr,id:ptr,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:int,highlight:chr,tags_array:arr,prefix:str,message:str");
+		// Format depends on client type:
+		// - Weechat-android (clientUsesHDataHistory=true): id,date,displayed,prefix,message,highlight,notify,tags_array
+		// - Lith (default): full WeeChat format with all fields
+		const isWeechatAndroid = this.clientUsesHDataHistory;
+
+		let header: string;
+		if (isWeechatAndroid) {
+			// Weechat-android format (from Spec.kt:173-174)
+			header = "buffer:ptr,id:int,date:tim,displayed:chr,prefix:str,message:str,highlight:chr,notify:int,tags_array:arr";
+		} else {
+			// Lith format (full WeeChat protocol)
+			header = "buffer:ptr,id:ptr,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:int,highlight:chr,tags_array:arr,prefix:str,message:str";
+		}
+		msg.addString(header);
 		msg.addInt(1); // count: 1 line
 
-		// Generate pointers
+		// Generate pointers / IDs
 		const linePtr = stringToPointer(`${buffer.pointer}-${message.id || Date.now()}`);
-		const lineId = BigInt(message.id || Date.now());
+		const lineIdPtr = BigInt(message.id || Date.now());
+		const lineIdInt = (() => {
+			const raw = typeof message.id === "string" ? parseInt(message.id.split("-")[0], 10) : Number(Date.now());
+			return Number.isFinite(raw) ? Math.abs(raw % 2147483647) : Math.floor(Date.now() % 2147483647);
+		})();
+
+		// Calculate timestamps
+		const timestampMs = message.time?.getTime() || Date.now();
+		const seconds = Math.floor(timestampMs / 1000);
+		const microseconds = (timestampMs % 1000) * 1000;
+
+		// Calculate notify level
+		let notifyLevel = 1; // default: normal message
+		if (message.highlight) {
+			notifyLevel = 3; // highlight (mention)
+		} else if (message.type === "join" || message.type === "part" || message.type === "quit") {
+			notifyLevel = 0; // low (join/part/quit - for smart filtering)
+		}
 
 		// p-path pointer (1 pointer for line_data)
 		msg.addPointer(linePtr);
@@ -1036,43 +1118,45 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		// Field 1: buffer:ptr
 		msg.addPointer(buffer.pointer);
 
-		// Field 2: id:ptr (unique line ID)
-		msg.addPointer(lineId);
-
-		// Calculate timestamps with microseconds
-		const timestampMs = message.time?.getTime() || Date.now();
-		const seconds = Math.floor(timestampMs / 1000);
-		const microseconds = (timestampMs % 1000) * 1000; // milliseconds to microseconds
+		// Field 2: id (int for weechat-android, ptr for Lith)
+		if (isWeechatAndroid) {
+			msg.addInt(lineIdInt);
+		} else {
+			msg.addPointer(lineIdPtr);
+		}
 
 		// Field 3: date:tim
 		msg.addTime(seconds);
 
-		// Field 4: date_usec:int
-		msg.addInt(microseconds);
-
-		// Field 5: date_printed:tim
-		msg.addTime(seconds);
-
-		// Field 6: date_usec_printed:int
-		msg.addInt(microseconds);
-
-		// Field 7: displayed:chr (1 = yes, 0 = no)
-		msg.addChar(1);
-
-		// Field 8: notify_level:int
-		// 0 = low (join/part/quit), 1 = message, 2 = private, 3 = highlight
-		let notifyLevel = 1; // default: normal message
-		if (message.highlight) {
-			notifyLevel = 3; // highlight (mention)
-		} else if (message.type === "join" || message.type === "part" || message.type === "quit") {
-			notifyLevel = 0; // low (join/part/quit - for smart filtering)
+		if (isWeechatAndroid) {
+			// Weechat-android: displayed, prefix, message, highlight, notify, tags_array
+			msg.addChar(1); // displayed
+		} else {
+			// Lith: date_usec, date_printed, date_usec_printed, displayed
+			msg.addInt(microseconds); // date_usec
+			msg.addTime(seconds); // date_printed
+			msg.addInt(microseconds); // date_usec_printed
+			msg.addChar(1); // displayed
+			msg.addInt(notifyLevel); // notify_level
 		}
-		msg.addInt(notifyLevel);
 
-		// Field 9: highlight:chr (1 = yes, 0 = no)
-		msg.addChar(message.highlight ? 1 : 0);
+		// Build prefix and message (needed for both formats)
+		const nick = message.from?.nick || "";
+		let prefix = "";
+		let messageText = message.text || "";
 
-		// Field 10: tags_array:arr (IRC message tags for filtering and styling)
+		if (nick) {
+			const nickColor = this.getNickColor(nick);
+			if (message.highlight) {
+				prefix = this.formatWithColor(nick, "red", true);
+			} else if (message.self) {
+				prefix = this.formatWithColor(nick, "cyan", true);
+			} else {
+				prefix = this.formatWithColor(nick, nickColor, true);
+			}
+		}
+
+		// Build tags array
 		const tags: string[] = [];
 		if (message.type === "message") {
 			tags.push("irc_privmsg");
@@ -1114,70 +1198,29 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
 			tags.push("log4");
 		}
-
 		if (message.highlight) {
 			tags.push("notify_highlight");
 		}
 
-		msg.addArray("str", tags);
-
-		// Field 11: prefix:str (nickname or system prefix with color)
-		const nick = message.from?.nick || "";
-		let prefix = "";
-
-		if (nick) {
-			// Get nick color (hash-based, same as Vue)
-			const nickColor = this.getNickColor(nick);
-
-			// Format prefix with color and bold
-			// For normal messages: colored bold nick
-			// For highlights: use different color (red/orange)
-			if (message.highlight) {
-				prefix = this.formatWithColor(nick, "red", true);
-			} else if (message.self) {
-				// Own messages: use cyan/blue
-				prefix = this.formatWithColor(nick, "cyan", true);
-			} else {
-				// Other users: use hash-based color
-				prefix = this.formatWithColor(nick, nickColor, true);
-			}
+		// Now send fields in correct order based on client type
+		if (isWeechatAndroid) {
+			// Weechat-android: buffer,id,date,displayed,prefix,message,highlight,notify,tags_array
+			// (buffer, id, date, displayed already sent above)
+			msg.addString(prefix); // prefix
+			msg.addString(messageText); // message
+			msg.addChar(message.highlight ? 1 : 0); // highlight
+			msg.addInt(notifyLevel); // notify
+			msg.addArray("str", tags); // tags_array
+		} else {
+			// Lith: buffer,id,date,date_usec,date_printed,date_usec_printed,displayed,notify_level,highlight,tags_array,prefix,message
+			// (buffer, id, date, date_usec, date_printed, date_usec_printed, displayed, notify_level already sent above)
+			msg.addChar(message.highlight ? 1 : 0); // highlight
+			msg.addArray("str", tags); // tags_array
+			msg.addString(prefix); // prefix
+			msg.addString(messageText); // message
 		}
 
-		msg.addString(prefix);
 
-		// Field 12: message:str (message text with formatting)
-		// Format messages according to WeeChat protocol
-		let messageText = message.text || "";
-
-		// Add color to message text based on type
-		if (message.type === "kick" && message.target?.nick) {
-			const reason = message.text || "no reason";
-			const targetNick = this.formatWithColor(message.target.nick, this.getNickColor(message.target.nick), true);
-			messageText = `has kicked ${targetNick} (${reason})`;
-		} else if (message.type === "join") {
-			// JOIN: "has joined #channel" (green)
-			messageText = this.formatWithColor(`has joined ${buffer.channelName || ""}`, "green");
-		} else if (message.type === "part") {
-			// PART: "has left #channel (reason)" (yellow)
-			const reason = message.text;
-			const text = reason
-				? `has left ${buffer.channelName || ""} (${reason})`
-				: `has left ${buffer.channelName || ""}`;
-			messageText = this.formatWithColor(text, "yellow");
-		} else if (message.type === "quit") {
-			// QUIT: "has quit (reason)" (red)
-			const reason = message.text;
-			const text = reason ? `has quit (${reason})` : `has quit`;
-			messageText = this.formatWithColor(text, "red");
-		} else if (message.highlight) {
-			// Highlighted messages: use bold + red/orange
-			messageText = this.formatWithColor(messageText, "red", true);
-		} else if (message.self) {
-			// Own messages: use default color (no special formatting)
-			// messageText stays as is
-		}
-
-		msg.addString(messageText);
 
 			log.debug(`${colors.cyan("[WeeChat->Node]")} Sending _buffer_line_added: prefix="${prefix}", message="${messageText.substring(0, 50)}..."`);
 			this.relayClient.send(msg);

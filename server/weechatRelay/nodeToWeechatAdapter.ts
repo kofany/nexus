@@ -498,13 +498,13 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 					continue; // Skip empty buffers
 				}
 
-				// Generate pointers for hpath: buffer/lines/line/line_data
-				// We need 4 pointers: buffer, lines, line, line_data
-				const linesPtr = generatePointer(); // Pointer to lines container
+				// Generate pointers for hpath: buffer/own_lines/last_line/data (EXACT per spec!)
+				// We need 4 pointers: buffer, own_lines, last_line, data
+				const ownLinesPtr = stringToPointer(`${bufferPtr}-own_lines`);
 
 				for (const m of messages) {
-					const linePtr = generatePointer(); // Pointer to line
-					const lineDataPtr = generatePointer(); // Pointer to line_data
+					const lastLinePtr = stringToPointer(`${bufferPtr}-last_line-${m.id || Date.now()}`);
+					const dataPtr = stringToPointer(`${bufferPtr}-data-${m.id || Date.now()}`);
 					const timestamp = Math.floor(m.time.getTime() / 1000);
 
 					// Build values object with ONLY requested fields
@@ -552,9 +552,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 					}
 
 					objects.push({
-						// IMPORTANT: Number of pointers MUST match number of elements in hpath!
-						// hpath = "buffer/lines/line/line_data" → 4 pointers
-						pointers: [bufferPtr, linesPtr, linePtr, lineDataPtr],
+						// CRITICAL: Number of pointers MUST match HPath levels!
+						// HPath = "buffer/own_lines/last_line/data" → 4 pointers (EXACT per spec!)
+						pointers: [bufferPtr, ownLinesPtr, lastLinePtr, dataPtr],
 						values,
 					});
 					totalLines++;
@@ -563,10 +563,10 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		if (objects.length > 0) {
-			// IMPORTANT: hpath must match the request format!
+			// CRITICAL: hpath MUST match the request format EXACTLY!
 			// Weechat-android requests: buffer:gui_buffers(*)/own_lines/last_line(-N)/data
-			// So hpath should be: buffer/lines/line/line_data (same as buildLinesHData)
-			buildHData(msg, "buffer/lines/line/line_data", fields, objects);
+			// So hpath MUST be: buffer/own_lines/last_line/data (NOT buffer/lines/line/line_data!)
+			buildHData(msg, "buffer/own_lines/last_line/data", fields, objects);
 			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${totalLines} lines for ${this.irssiClient.networks.reduce((sum, n) => sum + n.channels.length - 1, 0)} buffers`);
 		} else {
 			buildEmptyHData(msg);
@@ -575,6 +575,179 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		return msg;
 	}
+
+
+	/**
+	 * Build last read lines HData (weechat-android ONLY)
+	 * Request: buffer:gui_buffers(*)/own_lines/last_read_line/data id,buffer
+	 *
+	 * Response format (EXACT per spec):
+	 * - HPath: buffer/own_lines/last_read_line/data (4 LEVELS!)
+	 * - P-path: [buffer_ptr, own_lines_ptr, last_read_line_ptr, data_ptr] (4 pointers)
+	 * - Fields: id:int, buffer:ptr (ONLY 2 fields, EXACT order!)
+	 */
+	buildLastReadLinesHData(id: string, requestedKeys: string): WeeChatMessage {
+		log.info(`${colors.magenta("[Node->WeeChat]")} 📖 Building last read lines HData, keys="${requestedKeys}"`);
+
+		const msg = new WeeChatMessage(id);
+		const keys = requestedKeys.split(",").map(k => k.trim());
+
+		// Validate keys (MUST be exactly: id,buffer)
+		if (keys.length !== 2 || keys[0] !== "id" || keys[1] !== "buffer") {
+			log.error(`${colors.red("[Node->WeeChat]")} ❌ Invalid keys for last_read_lines: "${requestedKeys}" (expected: "id,buffer")`);
+			buildEmptyHData(msg);
+			return msg;
+		}
+
+		// Build HData header
+		const fields: HDataField[] = [
+			{name: "id", type: "int"},      // WeeChat >= 4.4.0
+			{name: "buffer", type: "ptr"},
+		];
+
+		const objects: HDataObject[] = [];
+
+		// For each buffer, add last read line (if exists)
+		for (const network of this.irssiClient.networks) {
+			for (const channel of network.channels) {
+				if (channel.id === 0) continue; // Skip network buffer
+
+				const bufferPtr = BigInt(channel.id);
+
+				// Get last read line from unread markers
+				const unreadMarker = this.irssiClient.unreadMarkers.get(`${network.uuid}/${channel.name}`);
+				if (!unreadMarker || unreadMarker.lastReadTime === 0) continue;
+
+				// Generate line ID from last read timestamp
+				const lineIdInt = Math.abs(unreadMarker.lastReadTime % 2147483647);
+
+				if (lineIdInt === 0) continue; // Skip if no valid line ID
+
+				// Generate pointers (4 levels!)
+				const ownLinesPtr = stringToPointer(`${bufferPtr}-own_lines`);
+				const lastReadLinePtr = stringToPointer(`${bufferPtr}-last_read_line-${lineIdInt}`);
+				const dataPtr = stringToPointer(`${bufferPtr}-data-${lineIdInt}`);
+
+				const values: Record<string, any> = {
+					id: lineIdInt,
+					buffer: bufferPtr,
+				};
+
+				objects.push({
+					pointers: [bufferPtr, ownLinesPtr, lastReadLinePtr, dataPtr], // 4 pointers!
+					values,
+				});
+			}
+		}
+
+		if (objects.length > 0) {
+			// CRITICAL: HPath MUST be 4 levels!
+			buildHData(msg, "buffer/own_lines/last_read_line/data", fields, objects);
+			log.info(`${colors.green("[Node->WeeChat]")} ✅ Built ${objects.length} last read lines`);
+		} else {
+			buildEmptyHData(msg);
+			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No last read lines to send`);
+		}
+
+		return msg;
+	}
+
+	/**
+	 * Build per-buffer lines HData (weechat-android ONLY)
+	 * Request: buffer:0x12345/own_lines/last_line(-100)/data id,date,displayed,prefix,message,highlight,notify,tags_array
+	 *
+	 * Response format (EXACT per spec):
+	 * - HPath: buffer/own_lines/last_line/data (4 LEVELS!)
+	 * - P-path: [buffer_ptr, own_lines_ptr, last_line_ptr, data_ptr] (4 pointers)
+	 * - Fields: id,date,displayed,prefix,message,highlight,notify,tags_array (8 fields, EXACT order!)
+	 */
+	buildPerBufferLinesHData(id: string, bufferPtr: bigint, count: number, requestedKeys: string): WeeChatMessage {
+		log.info(`${colors.magenta("[Node->WeeChat]")} 📄 Building per-buffer lines HData: buffer=${bufferPtr}, count=${count}, keys="${requestedKeys}"`);
+
+		const msg = new WeeChatMessage(id);
+		const keys = requestedKeys.split(",").map(k => k.trim());
+
+		// Validate keys (MUST be exactly: id,date,displayed,prefix,message,highlight,notify,tags_array)
+		const expectedKeys = ["id", "date", "displayed", "prefix", "message", "highlight", "notify", "tags_array"];
+		if (keys.length !== 8 || !keys.every((k, i) => k === expectedKeys[i])) {
+			log.error(`${colors.red("[Node->WeeChat]")} ❌ Invalid keys for per-buffer lines: "${requestedKeys}" (expected: "${expectedKeys.join(",")}")`);
+			buildEmptyHData(msg);
+			return msg;
+		}
+
+		// Find channel
+		const channelId = Number(bufferPtr);
+		const found = this.findChannel(channelId);
+
+		if (!found) {
+			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ Channel not found for bufferPtr=${bufferPtr}`);
+			buildEmptyHData(msg);
+			return msg;
+		}
+
+		const {network, channel} = found;
+
+		// Build HData header (EXACT order per spec!)
+		const fields: HDataField[] = [
+			{name: "id", type: "int"},          // WeeChat >= 4.4.0
+			{name: "date", type: "tim"},
+			{name: "displayed", type: "chr"},
+			{name: "prefix", type: "str"},
+			{name: "message", type: "str"},
+			{name: "highlight", type: "chr"},
+			{name: "notify", type: "int"},      // NOT notify_level!
+			{name: "tags_array", type: "arr", arrayType: "str"},
+		];
+
+		const objects: HDataObject[] = [];
+		const messages = channel.messages.slice(-count);
+
+		// Generate pointers (4 levels!)
+		const ownLinesPtr = stringToPointer(`${bufferPtr}-own_lines`);
+
+		for (const m of messages) {
+			const lineIdInt = (() => {
+				const id: string | number = m.id || Date.now();
+				const raw = typeof id === "string" ? parseInt((id as string).split("-")[0], 10) : Number(id);
+				return Number.isFinite(raw) ? Math.abs(raw % 2147483647) : Math.floor(Date.now() % 2147483647);
+			})();
+
+			const lastLinePtr = stringToPointer(`${bufferPtr}-last_line-${lineIdInt}`);
+			const dataPtr = stringToPointer(`${bufferPtr}-data-${lineIdInt}`);
+
+			const timestamp = Math.floor(m.time.getTime() / 1000);
+			const notifyLevel = m.highlight ? 3 : (m.type === "join" || m.type === "part" || m.type === "quit" ? 0 : 1);
+
+			// Build values (EXACT order per spec!)
+			const values: Record<string, any> = {
+				id: lineIdInt,
+				date: timestamp,
+				displayed: 1,
+				prefix: m.from?.nick || "",
+				message: m.text || "",
+				highlight: m.highlight ? 1 : 0,
+				notify: notifyLevel,
+				tags_array: this.buildMessageTags(m),
+			};
+
+			objects.push({
+				pointers: [bufferPtr, ownLinesPtr, lastLinePtr, dataPtr], // 4 pointers!
+				values,
+			});
+		}
+
+		if (objects.length > 0) {
+			// CRITICAL: HPath MUST be 4 levels!
+			buildHData(msg, "buffer/own_lines/last_line/data", fields, objects);
+			log.info(`${colors.green("[Node->WeeChat]")} ✅ Built ${objects.length} lines for buffer ${bufferPtr}`);
+		} else {
+			buildEmptyHData(msg);
+			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No messages for buffer ${bufferPtr}`);
+		}
+
+		return msg;
+	}
+
 
 	/**
 	 * Build lines HData for a single buffer with requested keys (weechat-android style)
