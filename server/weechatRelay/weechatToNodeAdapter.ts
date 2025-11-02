@@ -14,7 +14,7 @@
 import {EventEmitter} from "events";
 import log from "../log";
 import colors from "chalk";
-import {WeeChatMessage, OBJ_STRING, OBJ_HDATA} from "./weechatProtocol";
+import {WeeChatMessage, OBJ_STRING, OBJ_HDATA, OBJ_INFO} from "./weechatProtocol";
 import {buildEmptyHData, stringToPointer} from "./weechatHData";
 import {IrssiClient} from "../irssiClient";
 import {NodeToWeeChatAdapter} from "./nodeToWeechatAdapter";
@@ -649,13 +649,18 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		log.debug(`${colors.cyan("[WeeChat->Node]")} Info request: ${args}`);
 
 		const msg = new WeeChatMessage(id);
-		msg.addType(OBJ_STRING);
+		msg.addType(OBJ_INFO);
 
 		// Handle common info requests
 		if (args === "version") {
-			msg.addString("nexuslounge-weechat-bridge 1.0.0");
+			msg.addInfo("version", "nexuslounge-weechat-bridge 1.0.0");
+		} else if (args === "version_number") {
+			// WeeChat version number format: 0x04020000 (4.2.0) = 67239936 decimal
+			// We emulate WeeChat 4.2.0 for maximum compatibility
+			// NOTE: Must be decimal string, not hex! Kotlin's toLong() doesn't support 0x prefix
+			msg.addInfo("version_number", "67239936");
 		} else {
-			msg.addString("");
+			msg.addInfo(args, "");
 		}
 
 		this.relayClient.send(msg);

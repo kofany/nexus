@@ -199,6 +199,15 @@ export class WeeChatMessage {
 	}
 
 	/**
+	 * Add info (name + value)
+	 * Format: inf <name:string> <value:string>
+	 */
+	addInfo(name: string, value: string): void {
+		this.addString(name);
+		this.addString(value);
+	}
+
+	/**
 	 * Add array (type + count + values)
 	 */
 	addArray(type: string, values: any[]): void {

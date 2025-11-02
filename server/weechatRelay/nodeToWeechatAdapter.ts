@@ -251,7 +251,10 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 	/**
 	 * Load message history for a buffer from encrypted storage
-	 * Emits buffer_line_added events for each message
+	 * Emits buffer_line_added events for each message (for Lith)
+	 *
+	 * NOTE: This is ONLY called for Lith-style clients that DON'T request history via HData!
+	 * Weechat-android requests history via HData, so this is skipped to avoid infinite loop.
 	 */
 	async loadMessagesForBuffer(bufferPtr: bigint, networkUuid: string, channelName: string): Promise<void> {
 		if (!this.irssiClient.messageStorage) {
@@ -271,7 +274,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 			log.info(`${colors.cyan("[Node->WeeChat]")} Loaded ${messages.length} messages for ${channelName}`);
 
-			// Emit buffer_line_added for each message
+			// Emit buffer_line_added for each message (for Lith)
 			for (const msg of messages) {
 				// Assign ID to message (same as IrssiClient does)
 				msg.id = this.irssiClient.nextMessageId();

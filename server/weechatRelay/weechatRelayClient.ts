@@ -332,14 +332,26 @@ export class WeeChatRelayClient extends EventEmitter {
 		// Send handshake response
 		const msg = new WeeChatMessage(id || "handshake");
 		msg.addType(OBJ_HASHTABLE);
-		msg.addHashtable({
+		const handshakeResponse = {
 			password_hash_algo: selectedAlgo,
 			password_hash_iterations: (this.config.passwordHashIterations || 100000).toString(),
 			compression: this.compression ? "zlib" : "off",
 			nonce: this.nonce,
-		});
+		};
+		msg.addHashtable(handshakeResponse);
 
-		this.send(msg);
+		log.info(`${colors.green("[WeeChat Relay Client]")} Sending handshake response: ${JSON.stringify(handshakeResponse)}`);
+
+		// IMPORTANT: Handshake response MUST be sent WITHOUT compression!
+		// Compression is enabled AFTER handshake response is sent.
+		// See: https://weechat.org/files/doc/devel/weechat_relay_protocol.en.html#command_handshake
+		const data = msg.build(false); // Force no compression for handshake
+		if (this.socket instanceof WebSocket) {
+			this.socket.send(data);
+		} else {
+			this.socket.write(data);
+		}
+
 		this.handshakeDone = true;
 	}
 
