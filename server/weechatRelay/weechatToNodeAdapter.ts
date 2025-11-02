@@ -1140,19 +1140,25 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			msg.addInt(notifyLevel); // notify_level
 		}
 
-		// Build prefix and message (needed for both formats)
+		// Build prefix and message using nodeAdapter's formatter
+		const formatted = this.nodeAdapter.formatMessageForWeechat(message);
 		const nick = message.from?.nick || "";
-		let prefix = "";
-		let messageText = message.text || "";
 
-		if (nick) {
-			const nickColor = this.getNickColor(nick);
-			if (message.highlight) {
-				prefix = this.formatWithColor(nick, "red", true);
-			} else if (message.self) {
-				prefix = this.formatWithColor(nick, "cyan", true);
-			} else {
-				prefix = this.formatWithColor(nick, nickColor, true);
+		// Apply color formatting to prefix (for normal messages)
+		let prefix = formatted.prefix;
+		let messageText = formatted.message;
+
+		// Only apply nick colors for normal messages (not for JOIN/PART/etc)
+		if (message.type === "message" || message.type === "action" || message.type === "notice") {
+			if (nick) {
+				const nickColor = this.getNickColor(nick);
+				if (message.highlight) {
+					prefix = this.formatWithColor(nick, "red", true);
+				} else if (message.self) {
+					prefix = this.formatWithColor(nick, "cyan", true);
+				} else {
+					prefix = this.formatWithColor(nick, nickColor, true);
+				}
 			}
 		}
 

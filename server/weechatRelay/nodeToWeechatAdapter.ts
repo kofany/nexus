@@ -704,9 +704,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			log.info(`${colors.cyan("[Node->WeeChat]")} 📜 Loading ${count} messages from storage for ${channel.name}...`);
 			messages = await this.irssiClient.messageStorage.getLastMessages(network.uuid, channel.name, count);
 			log.info(`${colors.green("[Node->WeeChat]")} ✅ Loaded ${messages.length} messages from storage`);
+
+			// CRITICAL: Weechat-android expects messages in REVERSE order (newest first)!
+			// See WEECHAT_ANDROID_PROTOCOL.md line 423: obj.forEachReversed
+			messages = messages.reverse();
+			log.debug(`${colors.cyan("[Node->WeeChat]")} 🔄 Reversed messages for weechat-android (newest first)`);
 		} else {
 			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`);
-			messages = channel.messages.slice(-count);
+			messages = channel.messages.slice(-count).reverse(); // Also reverse for consistency
 		}
 
 		// Build HData header (EXACT order per spec!)
@@ -740,13 +745,16 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			const timestamp = Math.floor(m.time.getTime() / 1000);
 			const notifyLevel = m.highlight ? 3 : (m.type === "join" || m.type === "part" || m.type === "quit" ? 0 : 1);
 
+			// Format message text based on type (like Vue does)
+			const {prefix, message} = this.formatMessageForWeechat(m);
+
 			// Build values (EXACT order per spec!)
 			const values: Record<string, any> = {
 				id: lineIdInt,
 				date: timestamp,
 				displayed: 1,
-				prefix: m.from?.nick || "",
-				message: m.text || "",
+				prefix,
+				message,
 				highlight: m.highlight ? 1 : 0,
 				notify: notifyLevel,
 				tags_array: this.buildMessageTags(m),
@@ -920,6 +928,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			const linePtr = generatePointer();
 			const timestamp = Math.floor(m.time.getTime() / 1000);
 
+			// Format message text based on type (like Vue does)
+			const {prefix, message} = this.formatMessageForWeechat(m);
+
 			objects.push({
 				pointers: [linePtr],
 				values: {
@@ -933,8 +944,8 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 					notify_level: m.highlight ? 3 : 1,
 					highlight: m.highlight ? 1 : 0,
 					tags_array: this.buildMessageTags(m),
-					prefix: m.from?.nick || "",
-					message: m.text,
+					prefix,
+					message,
 				},
 			});
 		}
@@ -992,6 +1003,81 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		return tags;
+	}
+
+	/**
+	 * Format message for WeeChat clients (like Vue does)
+	 * Returns {prefix, message} formatted for JOIN/PART/QUIT/KICK/MODE etc.
+	 */
+	public formatMessageForWeechat(msg: Msg): {prefix: string; message: string} {
+		const nick = msg.from?.nick || "";
+		const hostmask = msg.hostmask || "";
+
+		switch (msg.type) {
+			case "join":
+				return {
+					prefix: "-->",
+					message: `${nick} (${hostmask}) has joined the channel`,
+				};
+
+			case "part":
+				return {
+					prefix: "<--",
+					message: `${nick} (${hostmask}) has left the channel${msg.text ? ` (${msg.text})` : ""}`,
+				};
+
+			case "quit":
+				return {
+					prefix: "<--",
+					message: `${nick} (${hostmask}) has quit${msg.text ? ` (${msg.text})` : ""}`,
+				};
+
+			case "kick":
+				return {
+					prefix: "<--",
+					message: `${msg.target?.nick || "?"} was kicked by ${nick}${msg.text ? ` (${msg.text})` : ""}`,
+				};
+
+			case "mode":
+			case "mode_channel":
+				return {
+					prefix: "--",
+					message: `${nick} sets mode ${msg.text || ""}`,
+				};
+
+			case "nick":
+				return {
+					prefix: "--",
+					message: `${nick} is now known as ${msg.new_nick || msg.text || "?"}`,
+				};
+
+			case "topic":
+				return {
+					prefix: "--",
+					message: nick
+						? `${nick} has changed the topic to: ${msg.text || ""}`
+						: `The topic is: ${msg.text || ""}`,
+				};
+
+			case "action":
+				return {
+					prefix: "*",
+					message: `${nick} ${msg.text || ""}`,
+				};
+
+			case "notice":
+				return {
+					prefix: `-${nick}-`,
+					message: msg.text || "",
+				};
+
+			case "message":
+			default:
+				return {
+					prefix: nick,
+					message: msg.text || "",
+				};
+		}
 	}
 
 	/**
