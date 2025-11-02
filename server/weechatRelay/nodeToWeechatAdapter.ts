@@ -669,8 +669,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	/**
 	 * Build lines HData (for history - single buffer, Lith style)
 	 * Uses data directly from IrssiClient.networks
+	 * CRITICAL FIX: Now async - loads from DB if channel.messages is empty
 	 */
-	buildLinesHData(id: string, bufferPtr: bigint, count: number = 100): WeeChatMessage {
+	async buildLinesHData(id: string, bufferPtr: bigint, count: number = 100): Promise<WeeChatMessage> {
 		// 🚨 DEBUG: Log buildLinesHData call
 		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildLinesHData: id="${id}", bufferPtr=${bufferPtr}, count=${count}`);
 
@@ -687,7 +688,19 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		const {network, channel} = found;
-		log.info(`${colors.cyan("[Node->WeeChat DEBUG]")} 📜 Building lines for ${channel.name} (${channel.messages.length} total messages, sending last ${count})`);
+
+		// CRITICAL FIX: Load messages DIRECTLY from storage (not from channel.messages)!
+		// channel.messages contains only real-time messages, history is in encrypted storage
+		let messages: any[] = [];
+
+		if (this.irssiClient.messageStorage) {
+			log.info(`${colors.cyan("[Node->WeeChat DEBUG]")} 📜 Loading ${count} messages from storage for ${channel.name}...`);
+			messages = await this.irssiClient.messageStorage.getLastMessages(network.uuid, channel.name, count);
+			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Loaded ${messages.length} messages from storage`);
+		} else {
+			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`);
+			messages = channel.messages.slice(-count);
+		}
 
 		// Build line_data HData
 		const fields: HDataField[] = [
@@ -706,7 +719,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		];
 
 		const objects: HDataObject[] = [];
-		const messages = channel.messages.slice(-count);
+		// messages already loaded from storage above
 
 		for (const m of messages) {
 			const linePtr = generatePointer();

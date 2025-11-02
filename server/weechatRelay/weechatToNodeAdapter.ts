@@ -187,7 +187,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	/**
 	 * Handle hdata command
 	 */
-	private handleHData(id: string, args: string): void {
+	private async handleHData(id: string, args: string): Promise<void> {
 		log.debug(`${colors.cyan("[WeeChat->Node]")} HData request: ${args}`);
 
 		// Parse hdata request
@@ -220,7 +220,8 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 					count = Math.abs(parseInt(countMatch[1], 10));
 				}
 
-				const msg = this.nodeAdapter.buildLinesHData(id, bufferPtr, count);
+				// CRITICAL FIX: buildLinesHData is now async (loads from DB if needed)
+				const msg = await this.nodeAdapter.buildLinesHData(id, bufferPtr, count);
 				this.relayClient.send(msg);
 
 				// IMPORTANT: Also send nicklist for this buffer!
