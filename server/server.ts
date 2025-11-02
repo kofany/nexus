@@ -1234,6 +1234,8 @@ function initializeIrssiClient(
 		socket.emit("commands", inputs.getCommands());
 
 		// Start WeeChat Relay server (if enabled and not already running)
+		// NOTE: This is a fallback - normally WeeChat Relay is started after erssi sync in handleInit()
+		// This ensures it starts even if user enables WeeChat Relay in Settings after login
 		if (client.config.weechatRelay?.enabled && !client.weechatRelayServer) {
 			client.startWeeChatRelay().catch((error) => {
 				log.error(`Failed to start WeeChat Relay for user ${colors.bold(client.name)}: ${error}`);

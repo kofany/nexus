@@ -99,10 +99,27 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			bufferPtr,
 			networkUuid: network.uuid,
 			channelId: data.chan,
+			channelName: channel.name,
 			msg: data.msg,
 			unread: data.unread,
 			highlight: data.highlight,
 		});
+
+		// IMPORTANT: For JOIN/KICK/PART/QUIT messages, also send nicklist_diff!
+		// Vue updates nicklist locally in updateUserList(), but Lith expects _nicklist_diff from server
+		// The user has already been added/removed from channel.users by FeWebAdapter before this event
+		if (data.msg.type === "join" || data.msg.type === "kick" || data.msg.type === "part" || data.msg.type === "quit") {
+			log.info(`${colors.cyan("[Node->WeeChat]")} ${data.msg.type.toUpperCase()} detected - sending nicklist_diff for ${channel.name}`);
+
+			// Send updated nicklist (user already added/removed by FeWebAdapter)
+			const users = Array.from(channel.users.values());
+			this.emit("nicklist_diff", {
+				bufferPtr,
+				networkUuid: network.uuid,
+				channelId: data.chan,
+				users: users,
+			});
+		}
 	}
 
 	/**
@@ -225,6 +242,73 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			unread: data.unread,
 			highlight: data.highlight,
 		});
+	}
+
+	/**
+	 * Load message history for a buffer from encrypted storage
+	 * Emits buffer_line_added events for each message
+	 */
+	async loadMessagesForBuffer(bufferPtr: bigint, networkUuid: string, channelName: string): Promise<void> {
+		if (!this.irssiClient.messageStorage) {
+			log.warn(`${colors.yellow("[Node->WeeChat]")} No message storage available, skipping history load`);
+			return;
+		}
+
+		try {
+			log.info(`${colors.cyan("[Node->WeeChat]")} Loading message history for ${channelName} (${networkUuid})`);
+
+			// Load last 100 messages from encrypted storage
+			const messages = await this.irssiClient.messageStorage.getLastMessages(
+				networkUuid,
+				channelName,
+				100
+			);
+
+			log.info(`${colors.cyan("[Node->WeeChat]")} Loaded ${messages.length} messages for ${channelName}`);
+
+			// Emit buffer_line_added for each message
+			for (const msg of messages) {
+				// Assign ID to message (same as IrssiClient does)
+				msg.id = this.irssiClient.nextMessageId();
+
+				// Emit buffer_line_added event
+				this.emit("buffer_line_added", {
+					bufferPtr,
+					networkUuid,
+					channelId: 0, // Not used for history
+					channelName,
+					msg,
+					unread: 0,
+					highlight: 0,
+				});
+			}
+
+			log.info(`${colors.green("[Node->WeeChat]")} ✅ Sent ${messages.length} history messages for ${channelName}`);
+		} catch (error) {
+			log.error(`${colors.red("[Node->WeeChat]")} Failed to load messages for ${channelName}: ${error}`);
+		}
+	}
+
+	/**
+	 * Load message history for all buffers
+	 * Called after sync to send initial message history to Lith
+	 */
+	async loadAllMessages(): Promise<void> {
+		log.info(`${colors.cyan("[Node->WeeChat]")} Loading message history for all buffers...`);
+
+		for (const network of this.irssiClient.networks) {
+			for (const channel of network.channels) {
+				// Skip lobby
+				if (channel.type === ChanType.LOBBY) {
+					continue;
+				}
+
+				const bufferPtr = this.getBufferPointer(channel.id);
+				await this.loadMessagesForBuffer(bufferPtr, network.uuid, channel.name);
+			}
+		}
+
+		log.info(`${colors.green("[Node->WeeChat]")} ✅ Finished loading message history for all buffers`);
 	}
 
 	/**

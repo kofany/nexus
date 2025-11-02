@@ -138,7 +138,8 @@ export class IrssiClient {
 	messageStorage: EncryptedMessageStorage | null = null;
 
 	// Unread markers (activity tracking) - in-memory only!
-	private unreadMarkers: Map<string, UnreadMarker> = new Map();
+	// Public for WeeChat Relay to build hotlist
+	public unreadMarkers: Map<string, UnreadMarker> = new Map();
 
 	// Active window in irssi (network:channel) - for proper activity tracking
 	// When user switches windows in irssi, this gets updated
@@ -265,17 +266,11 @@ export class IrssiClient {
 		// Step 4: Connect to irssi fe-web (ASYNCHRONOUSLY - don't block login!)
 		// Don't await - let it connect in background
 		// If it fails, user can still use The Lounge UI and fix config in Settings
+		// WeeChat Relay will be started automatically after erssi sync (in handleInit)
 		this.connectToIrssi().catch((error) => {
 			log.error(`Failed to connect to irssi for user ${colors.bold(this.name)}: ${error}`);
 			// Don't throw - user is already logged in to The Lounge
 		});
-
-		// Step 5: Start WeeChat Relay server (if enabled)
-		if (this.config.weechatRelay?.enabled) {
-			this.startWeeChatRelay().catch((error) => {
-				log.error(`Failed to start WeeChat Relay for user ${colors.bold(this.name)}: ${error}`);
-			});
-		}
 
 		log.info(`User ${colors.bold(this.name)} logged in successfully`);
 	}
@@ -1584,8 +1579,9 @@ export class IrssiClient {
 
 	/**
 	 * Get marker key for Map lookup (network:channel lowercase)
+	 * Public for WeeChat Relay to access unread markers
 	 */
-	private getMarkerKey(network: string, channel: string): string {
+	public getMarkerKey(network: string, channel: string): string {
 		return `${network}:${channel.toLowerCase()}`;
 	}
 
@@ -2380,6 +2376,15 @@ export class IrssiClient {
 			this.config.networkUuidMap = Object.fromEntries(uuidMap);
 			this.manager.saveUser(this as any); // IrssiClient is compatible with Client interface
 			log.info(`[IrssiClient] Saved ${uuidMap.size} network UUIDs to config for persistence`);
+		}
+
+		// Start WeeChat Relay server (if enabled and not already running)
+		// This allows Lith to connect immediately after erssi sync, without waiting for Vue frontend
+		if (this.config.weechatRelay?.enabled && !this.weechatRelayServer) {
+			log.info(`[IrssiClient] Starting WeeChat Relay after erssi sync...`);
+			this.startWeeChatRelay().catch((error) => {
+				log.error(`Failed to start WeeChat Relay for user ${colors.bold(this.name)}: ${error}`);
+			});
 		}
 
 		log.info(`[IrssiClient] ⏰ TIMING: handleInit() COMPLETED`);

@@ -144,6 +144,7 @@ export class WeeChatRelayClient extends EventEmitter {
 			args = line.substring(spaceIdx + 1).trim();
 		} else {
 			cmd = line;
+			args = ""; // Explicitly set empty args for commands without arguments
 		}
 
 		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed: cmd="${cmd}", id="${msgID}", args="${args}"`);
