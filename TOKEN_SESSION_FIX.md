@@ -3,6 +3,7 @@
 ## Problem
 
 Po zalogowaniu do The Lounge, gdy irssi websocket był niedostępny:
+
 - ✅ `user` trafiał do localStorage (w SignIn.vue)
 - ❌ `token` NIE trafiał do localStorage
 - ❌ Po odświeżeniu strony trzeba było logować się ponownie
@@ -36,14 +37,14 @@ socket.on("init", async function (data) {
 
 ```typescript
 // server/server.ts - initializeIrssiClient():
-client.attachBrowser(socket, openChannel);  // Wysyła init BEZ tokenu
-socket.emit("token", newToken);  // Osobny event (nie działa!)
+client.attachBrowser(socket, openChannel); // Wysyła init BEZ tokenu
+socket.emit("token", newToken); // Osobny event (nie działa!)
 
 // server/irssiClient.ts - attachBrowser():
 socket.emit("init", {
-    networks: [],
-    active: -1,
-    // BRAK TOKEN!
+  networks: [],
+  active: -1,
+  // BRAK TOKEN!
 });
 ```
 
@@ -56,25 +57,27 @@ Handler `socket.on("token")` istniał, ale był ignorowany przez klienta gdy prz
 ### Zmiany:
 
 #### 1. server/server.ts - initializeIrssiClient():
+
 ```typescript
 const continueInit = (tokenToSend?: string) => {
-    // Przekaż token do attachBrowser
-    client.attachBrowser(socket, openChannel, tokenToSend);
-    socket.emit("commands", inputs.getCommands());
+  // Przekaż token do attachBrowser
+  client.attachBrowser(socket, openChannel, tokenToSend);
+  socket.emit("commands", inputs.getCommands());
 };
 
 if (!Config.values.public) {
-    client.generateToken((newToken) => {
-        const tokenHash = client.calculateTokenHash(newToken);
-        client.updateSession(tokenHash, getClientIp(socket), socket.request);
-        continueInit(newToken);  // Przekaż token
-    });
+  client.generateToken((newToken) => {
+    const tokenHash = client.calculateTokenHash(newToken);
+    client.updateSession(tokenHash, getClientIp(socket), socket.request);
+    continueInit(newToken); // Przekaż token
+  });
 } else {
-    continueInit();
+  continueInit();
 }
 ```
 
 #### 2. server/irssiClient.ts - attachBrowser():
+
 ```typescript
 attachBrowser(socket: Socket, openChannel: number = -1, token?: string): void {
     // ...
@@ -91,6 +94,7 @@ attachBrowser(socket: Socket, openChannel: number = -1, token?: string): void {
 ```
 
 #### 3. server/irssiClient.ts - sendInitialState():
+
 ```typescript
 private async sendInitialState(socket: Socket, token?: string): Promise<void> {
     // ...
@@ -103,19 +107,20 @@ private async sendInitialState(socket: Socket, token?: string): Promise<void> {
 ```
 
 #### 4. client/js/socket-events/init.ts:
+
 ```typescript
 socket.on("init", async function (data) {
-    console.log("[INIT] Received init event");
-    console.log("[INIT] data.token present:", !!data.token);
-    
-    // ZAPISZ TOKEN (The Lounge auth, niezależnie od irssi)
-    if (data.token) {
-        storage.set("token", data.token);
-        console.log("[INIT] Token saved to localStorage");
-    }
-    
-    store.commit("networks", mergeNetworkData(data.networks));
-    // ...
+  console.log("[INIT] Received init event");
+  console.log("[INIT] data.token present:", !!data.token);
+
+  // ZAPISZ TOKEN (The Lounge auth, niezależnie od irssi)
+  if (data.token) {
+    storage.set("token", data.token);
+    console.log("[INIT] Token saved to localStorage");
+  }
+
+  store.commit("networks", mergeNetworkData(data.networks));
+  // ...
 });
 ```
 
@@ -142,8 +147,8 @@ npm start
    ```
 3. Sprawdź localStorage:
    ```javascript
-   localStorage.getItem('user')   // "kfn"
-   localStorage.getItem('token')  // długi hex string (128 znaków)
+   localStorage.getItem("user"); // "kfn"
+   localStorage.getItem("token"); // długi hex string (128 znaków)
    ```
 4. Odśwież stronę (F5) - **NIE wymaga ponownego logowania!**
 
@@ -162,10 +167,10 @@ npm start
 - Format zgodny z oryginalnym The Lounge
 - Fast auth działa bez względu na stan irssi websocket
 
-
 ## Problem
 
 Po zalogowaniu do The Lounge, gdy irssi websocket był niedostępny:
+
 - ✅ `user` trafiał do localStorage
 - ❌ `token` NIE trafiał do localStorage
 - ❌ Po odświeżeniu strony trzeba było logować się ponownie
@@ -216,27 +221,27 @@ Event `token` był wysyłany w callback'u, **PO** wysłaniu `init`.
 
 ```typescript
 // PRZED:
-client.attachBrowser(socket, openChannel);  // wysyła init
+client.attachBrowser(socket, openChannel); // wysyła init
 socket.emit("commands", inputs.getCommands());
 client.generateToken((newToken) => {
-    socket.emit("token", newToken);  // Za późno!
+  socket.emit("token", newToken); // Za późno!
 });
 
 // PO:
 const continueInit = () => {
-    client.attachBrowser(socket, openChannel);
-    socket.emit("commands", inputs.getCommands());
+  client.attachBrowser(socket, openChannel);
+  socket.emit("commands", inputs.getCommands());
 };
 
 if (!Config.values.public) {
-    client.generateToken((newToken) => {
-        const tokenHash = client.calculateTokenHash(newToken);
-        client.updateSession(tokenHash, getClientIp(socket), socket.request);
-        socket.emit("token", newToken);  // Najpierw token
-        continueInit();                  // Potem init
-    });
+  client.generateToken((newToken) => {
+    const tokenHash = client.calculateTokenHash(newToken);
+    client.updateSession(tokenHash, getClientIp(socket), socket.request);
+    socket.emit("token", newToken); // Najpierw token
+    continueInit(); // Potem init
+  });
 } else {
-    continueInit();
+  continueInit();
 }
 ```
 
@@ -287,8 +292,8 @@ KLIENT:
 
 ```javascript
 // Sprawdź localStorage:
-localStorage.getItem('user')   // powinien być username
-localStorage.getItem('token')  // powinien być długi hex string
+localStorage.getItem("user"); // powinien być username
+localStorage.getItem("token"); // powinien być długi hex string
 
 // Logi diagnostyczne:
 // [TOKEN] Received token from server, saving to localStorage

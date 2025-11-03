@@ -104,10 +104,7 @@ export class FeWebEncryption {
 		const cipher = crypto.createCipheriv("aes-256-gcm", this.key, iv);
 
 		// Encrypt plaintext
-		const encrypted = Buffer.concat([
-			cipher.update(plaintext, "utf8"),
-			cipher.final(),
-		]);
+		const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
 
 		// Get authentication tag
 		const tag = cipher.getAuthTag();
@@ -141,10 +138,7 @@ export class FeWebEncryption {
 			decipher.setAuthTag(tag);
 
 			// Decrypt and verify auth tag
-			const plaintext = Buffer.concat([
-				decipher.update(ciphertext),
-				decipher.final(),
-			]);
+			const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
 			// Decode to string
 			return plaintext.toString("utf8");
@@ -177,4 +171,3 @@ export class FeWebEncryption {
 		await this.deriveKey();
 	}
 }
-

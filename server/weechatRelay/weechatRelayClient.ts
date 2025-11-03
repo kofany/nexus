@@ -1,6 +1,6 @@
 /**
  * WeeChat Relay Client Handler
- * 
+ *
  * Handles a single client connection (TCP or WebSocket).
  * Manages authentication, command parsing, and message sending.
  */
@@ -86,7 +86,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 * Handle incoming data
 	 */
 	private handleData(data: Buffer): void {
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Received data from ${this.id}, length: ${data.length}`);
+		log.info(
+			`${colors.cyan("[WeeChat Relay Client]")} Received data from ${this.id}, length: ${
+				data.length
+			}`
+		);
 
 		// Append to buffer
 		this.buffer = Buffer.concat([this.buffer, data]);
@@ -94,9 +98,9 @@ export class WeeChatRelayClient extends EventEmitter {
 		// WeeChat Relay uses TEXT protocol (line-based)
 		// Parse lines ending with \n
 		let newlineIndex: number;
-		while ((newlineIndex = this.buffer.indexOf('\n')) !== -1) {
+		while ((newlineIndex = this.buffer.indexOf("\n")) !== -1) {
 			// Extract line (without \n)
-			const line = this.buffer.slice(0, newlineIndex).toString('utf8').trim();
+			const line = this.buffer.slice(0, newlineIndex).toString("utf8").trim();
 			this.buffer = this.buffer.slice(newlineIndex + 1);
 
 			if (line.length === 0) {
@@ -147,7 +151,11 @@ export class WeeChatRelayClient extends EventEmitter {
 			args = ""; // Explicitly set empty args for commands without arguments
 		}
 
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed: cmd="${cmd}", id="${msgID}", args="${args}"`);
+		log.info(
+			`${colors.cyan(
+				"[WeeChat Relay Client]"
+			)} Parsed: cmd="${cmd}", id="${msgID}", args="${args}"`
+		);
 
 		// Handle command
 		switch (cmd.toLowerCase()) {
@@ -182,7 +190,9 @@ export class WeeChatRelayClient extends EventEmitter {
 				this.handlePing(msgID, args);
 				break;
 			case "quit":
-				log.info(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} requested quit`);
+				log.info(
+					`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} requested quit`
+				);
 				this.close();
 				break;
 			default:
@@ -194,16 +204,18 @@ export class WeeChatRelayClient extends EventEmitter {
 	 * Handle parsed message
 	 */
 	private handleMessage(data: Buffer): void {
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsing message from ${this.id}, data length: ${data.length}`);
+		log.info(
+			`${colors.cyan("[WeeChat Relay Client]")} Parsing message from ${
+				this.id
+			}, data length: ${data.length}`
+		);
 
 		const parser = new WeeChatParser(data);
 
 		// Read message ID
 		const messageId = parser.readString() || "";
 
-		log.info(
-			`${colors.cyan("[WeeChat Relay Client]")} Message from ${this.id}: ${messageId}`
-		);
+		log.info(`${colors.cyan("[WeeChat Relay Client]")} Message from ${this.id}: ${messageId}`);
 
 		// Parse command (format: "(id) command args" or "command args")
 		let command = "";
@@ -233,7 +245,11 @@ export class WeeChatRelayClient extends EventEmitter {
 			}
 		}
 
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed command: "${command}", id: "${commandId}", args: "${args}"`);
+		log.info(
+			`${colors.cyan(
+				"[WeeChat Relay Client]"
+			)} Parsed command: "${command}", id: "${commandId}", args: "${args}"`
+		);
 
 		// Handle command
 		switch (command.toLowerCase()) {
@@ -278,7 +294,9 @@ export class WeeChatRelayClient extends EventEmitter {
 				break;
 			default:
 				log.warn(
-					`${colors.yellow("[WeeChat Relay Client]")} Unknown command from ${this.id}: ${command}`
+					`${colors.yellow("[WeeChat Relay Client]")} Unknown command from ${
+						this.id
+					}: ${command}`
 				);
 		}
 	}
@@ -340,7 +358,11 @@ export class WeeChatRelayClient extends EventEmitter {
 		};
 		msg.addHashtable(handshakeResponse);
 
-		log.info(`${colors.green("[WeeChat Relay Client]")} Sending handshake response: ${JSON.stringify(handshakeResponse)}`);
+		log.info(
+			`${colors.green("[WeeChat Relay Client]")} Sending handshake response: ${JSON.stringify(
+				handshakeResponse
+			)}`
+		);
 
 		// IMPORTANT: Handshake response MUST be sent WITHOUT compression!
 		// Compression is enabled AFTER handshake response is sent.
@@ -373,7 +395,9 @@ export class WeeChatRelayClient extends EventEmitter {
 			}
 		}
 
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Parsed options: ${JSON.stringify(options)}`);
+		log.info(
+			`${colors.cyan("[WeeChat Relay Client]")} Parsed options: ${JSON.stringify(options)}`
+		);
 
 		// Check compression (IMPORTANT: Must be set BEFORE authentication!)
 		if (options.compression) {
@@ -383,7 +407,11 @@ export class WeeChatRelayClient extends EventEmitter {
 				log.info(`${colors.green("[WeeChat Relay Client]")} Compression enabled: zlib`);
 			} else {
 				this.compression = false;
-				log.info(`${colors.yellow("[WeeChat Relay Client]")} Compression disabled (requested: ${options.compression}, config: ${this.config.compression})`);
+				log.info(
+					`${colors.yellow("[WeeChat Relay Client]")} Compression disabled (requested: ${
+						options.compression
+					}, config: ${this.config.compression})`
+				);
 			}
 		}
 
@@ -391,7 +419,11 @@ export class WeeChatRelayClient extends EventEmitter {
 		let passwordOk = false;
 		const expectedPassword = this.config.password || "";
 
-		log.info(`${colors.cyan("[WeeChat Relay Client]")} Expected password length: ${expectedPassword.length}`);
+		log.info(
+			`${colors.cyan("[WeeChat Relay Client]")} Expected password length: ${
+				expectedPassword.length
+			}`
+		);
 
 		if (options.password) {
 			// Plain text password
@@ -400,11 +432,17 @@ export class WeeChatRelayClient extends EventEmitter {
 			log.info(`${colors.cyan("[WeeChat Relay Client]")} Password match: ${passwordOk}`);
 		} else if (options.password_hash) {
 			// Hashed password
-			log.info(`${colors.cyan("[WeeChat Relay Client]")} Using hashed password: ${options.password_hash}`);
+			log.info(
+				`${colors.cyan("[WeeChat Relay Client]")} Using hashed password: ${
+					options.password_hash
+				}`
+			);
 			passwordOk = this.verifyPasswordHash(options.password_hash, expectedPassword);
 			log.info(`${colors.cyan("[WeeChat Relay Client]")} Hash verification: ${passwordOk}`);
 		} else {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} No password or password_hash provided!`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} No password or password_hash provided!`
+			);
 		}
 
 		if (passwordOk) {
@@ -414,10 +452,16 @@ export class WeeChatRelayClient extends EventEmitter {
 			// Extract username from options if provided, otherwise use default
 			this.username = options.username || options.user || "default";
 
-			log.info(`${colors.green("[WeeChat Relay Client]")} Client ${this.id} authenticated as ${this.username}`);
+			log.info(
+				`${colors.green("[WeeChat Relay Client]")} Client ${this.id} authenticated as ${
+					this.username
+				}`
+			);
 			this.emit("authenticated", this.username);
 		} else {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} authentication failed`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} authentication failed`
+			);
 			this.close();
 		}
 	}
@@ -427,7 +471,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleHData(id: string, args: string): void {
 		if (!this.authenticated) {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for hdata`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} Client ${
+					this.id
+				} not authenticated for hdata`
+			);
 			return;
 		}
 
@@ -440,7 +488,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleInput(id: string, args: string): void {
 		if (!this.authenticated) {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for input`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} Client ${
+					this.id
+				} not authenticated for input`
+			);
 			return;
 		}
 
@@ -453,7 +505,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleSync(id: string, args: string): void {
 		if (!this.authenticated) {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for sync`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} Client ${
+					this.id
+				} not authenticated for sync`
+			);
 			return;
 		}
 
@@ -466,7 +522,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleDesync(id: string, args: string): void {
 		if (!this.authenticated) {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for desync`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} Client ${
+					this.id
+				} not authenticated for desync`
+			);
 			return;
 		}
 
@@ -479,7 +539,11 @@ export class WeeChatRelayClient extends EventEmitter {
 	 */
 	private handleNicklist(id: string, args: string): void {
 		if (!this.authenticated) {
-			log.warn(`${colors.yellow("[WeeChat Relay Client]")} Client ${this.id} not authenticated for nicklist`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay Client]")} Client ${
+					this.id
+				} not authenticated for nicklist`
+			);
 			return;
 		}
 
@@ -513,7 +577,11 @@ export class WeeChatRelayClient extends EventEmitter {
 					.update(expectedPassword)
 					.digest("hex");
 
-				log.info(`${colors.cyan("[WeeChat Relay Client]")} SHA computed: ${computed}, received: ${receivedHash}`);
+				log.info(
+					`${colors.cyan(
+						"[WeeChat Relay Client]"
+					)} SHA computed: ${computed}, received: ${receivedHash}`
+				);
 				return computed === receivedHash;
 			} else if (algo.startsWith("pbkdf2")) {
 				// Format: "pbkdf2+sha512:salt:iterations:hash" or "pbkdf2:sha256:salt:iterations:hash"
@@ -536,7 +604,11 @@ export class WeeChatRelayClient extends EventEmitter {
 					receivedHash = parts[4];
 				}
 
-				log.info(`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 params: algo=${hashAlgo}, salt=${salt}, iterations=${iterations}`);
+				log.info(
+					`${colors.cyan(
+						"[WeeChat Relay Client]"
+					)} PBKDF2 params: algo=${hashAlgo}, salt=${salt}, iterations=${iterations}`
+				);
 
 				const keylen = hashAlgo === "sha512" ? 64 : 32;
 				const computed = crypto
@@ -550,7 +622,9 @@ export class WeeChatRelayClient extends EventEmitter {
 					.toString("hex");
 
 				log.info(`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 computed: ${computed}`);
-				log.info(`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 received: ${receivedHash}`);
+				log.info(
+					`${colors.cyan("[WeeChat Relay Client]")} PBKDF2 received: ${receivedHash}`
+				);
 				return computed === receivedHash;
 			}
 		} catch (err) {
@@ -644,4 +718,3 @@ export class WeeChatRelayClient extends EventEmitter {
 		return this.username;
 	}
 }
-

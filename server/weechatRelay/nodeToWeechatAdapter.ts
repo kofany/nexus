@@ -28,7 +28,14 @@ import {EventEmitter} from "events";
 import log from "../log";
 import colors from "chalk";
 import {WeeChatMessage, OBJ_HDATA, OBJ_STRING} from "./weechatProtocol";
-import {buildHData, buildEmptyHData, HDataField, HDataObject, stringToPointer, generatePointer} from "./weechatHData";
+import {
+	buildHData,
+	buildEmptyHData,
+	HDataField,
+	HDataObject,
+	stringToPointer,
+	generatePointer,
+} from "./weechatHData";
 import {IrssiClient} from "../irssiClient";
 import {NetworkData} from "../feWebClient/feWebAdapter";
 import Chan from "../models/chan";
@@ -54,7 +61,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// Default is 10, so allow up to 50 clients (300 listeners)
 		this.setMaxListeners(300);
 
-		log.info(`${colors.cyan("[Node->WeeChat]")} Adapter initialized for user ${irssiClient.name}`);
+		log.info(
+			`${colors.cyan("[Node->WeeChat]")} Adapter initialized for user ${irssiClient.name}`
+		);
 	}
 
 	/**
@@ -98,14 +107,18 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	public handleMsgEvent(data: {chan: number; msg: Msg; unread: number; highlight: number}): void {
 		const found = this.findChannel(data.chan);
 		if (!found) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for msg event`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for msg event`
+			);
 			return;
 		}
 
 		const {network, channel} = found;
 		const bufferPtr = this.getBufferPointer(data.chan);
 
-		log.debug(`${colors.cyan("[Node->WeeChat]")} msg event: ${channel.name} on ${network.name}`);
+		log.debug(
+			`${colors.cyan("[Node->WeeChat]")} msg event: ${channel.name} on ${network.name}`
+		);
 
 		// Emit _buffer_line_added event for WeeChat clients
 		this.emit("buffer_line_added", {
@@ -121,8 +134,19 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// IMPORTANT: For JOIN/KICK/PART/QUIT messages, also send nicklist_diff!
 		// Vue updates nicklist locally in updateUserList(), but Lith expects _nicklist_diff from server
 		// The user has already been added/removed from channel.users by FeWebAdapter before this event
-		if (data.msg.type === "join" || data.msg.type === "kick" || data.msg.type === "part" || data.msg.type === "quit") {
-			log.info(`${colors.cyan("[Node->WeeChat]")} ${data.msg.type.toUpperCase()} detected - sending nicklist_diff for ${channel.name}`);
+		if (
+			data.msg.type === "join" ||
+			data.msg.type === "kick" ||
+			data.msg.type === "part" ||
+			data.msg.type === "quit"
+		) {
+			log.info(
+				`${colors.cyan(
+					"[Node->WeeChat]"
+				)} ${data.msg.type.toUpperCase()} detected - sending nicklist_diff for ${
+					channel.name
+				}`
+			);
 
 			// Send updated nicklist (user already added/removed by FeWebAdapter)
 			const users = Array.from(channel.users.values());
@@ -142,14 +166,20 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	public handleNamesEvent(data: {id: number; users: User[]}): void {
 		const found = this.findChannel(data.id);
 		if (!found) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} Channel ${data.id} not found for names event`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat]")} Channel ${data.id} not found for names event`
+			);
 			return;
 		}
 
 		const {network, channel} = found;
 		const bufferPtr = this.getBufferPointer(data.id);
 
-		log.debug(`${colors.cyan("[Node->WeeChat]")} names event: ${channel.name} (${data.users.length} users)`);
+		log.debug(
+			`${colors.cyan("[Node->WeeChat]")} names event: ${channel.name} (${
+				data.users.length
+			} users)`
+		);
 
 		// Emit nicklist_diff event for WeeChat clients
 		this.emit("nicklist_diff", {
@@ -164,22 +194,37 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * Handle 'join' event from IrssiClient
 	 * This is called when a new channel is opened (same event that Vue receives)
 	 */
-	public handleJoinEvent(data: {network: string; chan: any; index: number; shouldOpen: boolean}): void {
+	public handleJoinEvent(data: {
+		network: string;
+		chan: any;
+		index: number;
+		shouldOpen: boolean;
+	}): void {
 		const network = this.irssiClient.networks.find((n) => n.uuid === data.network);
 		if (!network) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} Network ${data.network} not found for join event`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat]")} Network ${
+					data.network
+				} not found for join event`
+			);
 			return;
 		}
 
 		const channel = network.channels.find((c) => c.id === data.chan.id);
 		if (!channel) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan.id} not found for join event`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat]")} Channel ${
+					data.chan.id
+				} not found for join event`
+			);
 			return;
 		}
 
 		const bufferPtr = this.getBufferPointer(data.chan.id);
 
-		log.info(`${colors.cyan("[Node->WeeChat]")} join event: ${channel.name} on ${network.name}`);
+		log.info(
+			`${colors.cyan("[Node->WeeChat]")} join event: ${channel.name} on ${network.name}`
+		);
 
 		// Emit buffer_opened event for WeeChat clients
 		this.emit("buffer_opened", {
@@ -213,7 +258,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	public handleTopicEvent(data: {chan: number; topic: string}): void {
 		const found = this.findChannel(data.chan);
 		if (!found) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for topic event`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for topic event`
+			);
 			return;
 		}
 
@@ -235,17 +282,29 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * Handle 'activity_update' event from IrssiClient
 	 * This is called when unread/highlight counters change (same event that Vue receives)
 	 */
-	public handleActivityUpdateEvent(data: {chan: number; unread: number; highlight: number}): void {
+	public handleActivityUpdateEvent(data: {
+		chan: number;
+		unread: number;
+		highlight: number;
+	}): void {
 		const found = this.findChannel(data.chan);
 		if (!found) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for activity_update event`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat]")} Channel ${
+					data.chan
+				} not found for activity_update event`
+			);
 			return;
 		}
 
 		const {network, channel} = found;
 		const bufferPtr = this.getBufferPointer(data.chan);
 
-		log.debug(`${colors.cyan("[Node->WeeChat]")} activity_update: ${channel.name} (unread=${data.unread}, highlight=${data.highlight})`);
+		log.debug(
+			`${colors.cyan("[Node->WeeChat]")} activity_update: ${channel.name} (unread=${
+				data.unread
+			}, highlight=${data.highlight})`
+		);
 
 		// Emit hotlist_changed event for WeeChat clients
 		this.emit("hotlist_changed", {
@@ -264,14 +323,26 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * NOTE: This is ONLY called for Lith-style clients that DON'T request history via HData!
 	 * Weechat-android requests history via HData, so this is skipped to avoid infinite loop.
 	 */
-	async loadMessagesForBuffer(bufferPtr: bigint, networkUuid: string, channelName: string): Promise<void> {
+	async loadMessagesForBuffer(
+		bufferPtr: bigint,
+		networkUuid: string,
+		channelName: string
+	): Promise<void> {
 		if (!this.irssiClient.messageStorage) {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} No message storage available, skipping history load`);
+			log.warn(
+				`${colors.yellow(
+					"[Node->WeeChat]"
+				)} No message storage available, skipping history load`
+			);
 			return;
 		}
 
 		try {
-			log.info(`${colors.cyan("[Node->WeeChat]")} Loading message history for ${channelName} (${networkUuid})`);
+			log.info(
+				`${colors.cyan(
+					"[Node->WeeChat]"
+				)} Loading message history for ${channelName} (${networkUuid})`
+			);
 
 			// Load last 100 messages from encrypted storage
 			const messages = await this.irssiClient.messageStorage.getLastMessages(
@@ -280,7 +351,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				100
 			);
 
-			log.info(`${colors.cyan("[Node->WeeChat]")} Loaded ${messages.length} messages for ${channelName}`);
+			log.info(
+				`${colors.cyan("[Node->WeeChat]")} Loaded ${
+					messages.length
+				} messages for ${channelName}`
+			);
 
 			// Emit buffer_line_added for each message (for Lith)
 			for (const msg of messages) {
@@ -299,9 +374,17 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				});
 			}
 
-			log.info(`${colors.green("[Node->WeeChat]")} ✅ Sent ${messages.length} history messages for ${channelName}`);
+			log.info(
+				`${colors.green("[Node->WeeChat]")} ✅ Sent ${
+					messages.length
+				} history messages for ${channelName}`
+			);
 		} catch (error) {
-			log.error(`${colors.red("[Node->WeeChat]")} Failed to load messages for ${channelName}: ${error}`);
+			log.error(
+				`${colors.red(
+					"[Node->WeeChat]"
+				)} Failed to load messages for ${channelName}: ${error}`
+			);
 		}
 	}
 
@@ -324,7 +407,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			}
 		}
 
-		log.info(`${colors.green("[Node->WeeChat]")} ✅ Finished loading message history for all buffers`);
+		log.info(
+			`${colors.green("[Node->WeeChat]")} ✅ Finished loading message history for all buffers`
+		);
 	}
 
 	/**
@@ -411,11 +496,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// Set prev/next pointers
 		for (let i = 0; i < objects.length; i++) {
 			objects[i].values.prev_buffer = i > 0 ? objects[i - 1].pointers[0] : 0n;
-			objects[i].values.next_buffer = i < objects.length - 1 ? objects[i + 1].pointers[0] : 0n;
+			objects[i].values.next_buffer =
+				i < objects.length - 1 ? objects[i + 1].pointers[0] : 0n;
 		}
 
 		if (objects.length > 0) {
-			log.info(`${colors.cyan("[Node->WeeChat]")} Sending ${objects.length} buffers in HData`);
+			log.info(
+				`${colors.cyan("[Node->WeeChat]")} Sending ${objects.length} buffers in HData`
+			);
 			buildHData(msg, "buffer", fields, objects);
 		} else {
 			log.warn(`${colors.yellow("[Node->WeeChat]")} No buffers to send!`);
@@ -431,7 +519,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * Format: buffer:gui_buffers(*)/own_lines/last_line(-N)/data id,buffer,displayed
 	 */
 	buildBulkLinesHData(id: string, count: number = 25, keys: string = ""): WeeChatMessage {
-		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildBulkLinesHData: id="${id}", count=${count}, keys="${keys}"`);
+		log.warn(
+			`${colors.magenta(
+				"[Node->WeeChat DEBUG]"
+			)} 📜 buildBulkLinesHData: id="${id}", count=${count}, keys="${keys}"`
+		);
 
 		const msg = new WeeChatMessage(id);
 
@@ -439,8 +531,10 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// Weechat-android requests: "id,buffer,displayed" (3 fields)
 		// Lith requests: all fields
 		// Parse requested keys
-		const requestedKeys = keys ? keys.split(",").map(k => k.trim()) : [];
-		log.info(`${colors.cyan("[Node->WeeChat DEBUG]")} Requested keys: ${requestedKeys.join(", ")}`);
+		const requestedKeys = keys ? keys.split(",").map((k) => k.trim()) : [];
+		log.info(
+			`${colors.cyan("[Node->WeeChat DEBUG]")} Requested keys: ${requestedKeys.join(", ")}`
+		);
 
 		// Build fields based on requested keys
 		// If no keys specified, send all fields (Lith style)
@@ -448,20 +542,34 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		const typeForKey = (k: string): HDataField => {
 			switch (k) {
-				case "buffer": return {name: "buffer", type: "ptr"};
-				case "id":     return {name: "id", type: "int"}; // WeeChat >=4.4 uses int; android handles both
-				case "date":   return {name: "date", type: "tim"};
-				case "date_usec": return {name: "date_usec", type: "int"};
-				case "date_printed": return {name: "date_printed", type: "tim"};
-				case "date_usec_printed": return {name: "date_usec_printed", type: "int"};
-				case "displayed": return {name: "displayed", type: "chr"};
-				case "notify_level": return {name: "notify_level", type: "int"};
-				case "notify": return {name: "notify", type: "int"};
-				case "highlight": return {name: "highlight", type: "chr"};
-				case "tags_array": return {name: "tags_array", type: "arr", arrayType: "str"};
-				case "prefix": return {name: "prefix", type: "str"};
-				case "message": return {name: "message", type: "str"};
-				default: return {name: k as any, type: "str"};
+				case "buffer":
+					return {name: "buffer", type: "ptr"};
+				case "id":
+					return {name: "id", type: "int"}; // WeeChat >=4.4 uses int; android handles both
+				case "date":
+					return {name: "date", type: "tim"};
+				case "date_usec":
+					return {name: "date_usec", type: "int"};
+				case "date_printed":
+					return {name: "date_printed", type: "tim"};
+				case "date_usec_printed":
+					return {name: "date_usec_printed", type: "int"};
+				case "displayed":
+					return {name: "displayed", type: "chr"};
+				case "notify_level":
+					return {name: "notify_level", type: "int"};
+				case "notify":
+					return {name: "notify", type: "int"};
+				case "highlight":
+					return {name: "highlight", type: "chr"};
+				case "tags_array":
+					return {name: "tags_array", type: "arr", arrayType: "str"};
+				case "prefix":
+					return {name: "prefix", type: "str"};
+				case "message":
+					return {name: "message", type: "str"};
+				default:
+					return {name: k as any, type: "str"};
 			}
 		};
 
@@ -511,7 +619,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				const ownLinesPtr = stringToPointer(`${bufferPtr}-own_lines`);
 
 				for (const m of messages) {
-					const lastLinePtr = stringToPointer(`${bufferPtr}-last_line-${m.id || Date.now()}`);
+					const lastLinePtr = stringToPointer(
+						`${bufferPtr}-last_line-${m.id || Date.now()}`
+					);
 					const dataPtr = stringToPointer(`${bufferPtr}-data-${m.id || Date.now()}`);
 					const timestamp = Math.floor(m.time.getTime() / 1000);
 
@@ -575,7 +685,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			// Weechat-android requests: buffer:gui_buffers(*)/own_lines/last_line(-N)/data
 			// So hpath MUST be: buffer/own_lines/last_line/data (NOT buffer/lines/line/line_data!)
 			buildHData(msg, "buffer/own_lines/last_line/data", fields, objects);
-			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${totalLines} lines for ${this.irssiClient.networks.reduce((sum, n) => sum + n.channels.length - 1, 0)} buffers`);
+			log.info(
+				`${colors.green(
+					"[Node->WeeChat DEBUG]"
+				)} ✅ Built ${totalLines} lines for ${this.irssiClient.networks.reduce(
+					(sum, n) => sum + n.channels.length - 1,
+					0
+				)} buffers`
+			);
 		} else {
 			buildEmptyHData(msg);
 			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send (bulk)`);
@@ -583,7 +700,6 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		return msg;
 	}
-
 
 	/**
 	 * Build last read lines HData (weechat-android ONLY)
@@ -595,21 +711,29 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * - Fields: id:int, buffer:ptr (ONLY 2 fields, EXACT order!)
 	 */
 	buildLastReadLinesHData(id: string, requestedKeys: string): WeeChatMessage {
-		log.info(`${colors.magenta("[Node->WeeChat]")} 📖 Building last read lines HData, keys="${requestedKeys}"`);
+		log.info(
+			`${colors.magenta(
+				"[Node->WeeChat]"
+			)} 📖 Building last read lines HData, keys="${requestedKeys}"`
+		);
 
 		const msg = new WeeChatMessage(id);
-		const keys = requestedKeys.split(",").map(k => k.trim());
+		const keys = requestedKeys.split(",").map((k) => k.trim());
 
 		// Validate keys (MUST be exactly: id,buffer)
 		if (keys.length !== 2 || keys[0] !== "id" || keys[1] !== "buffer") {
-			log.error(`${colors.red("[Node->WeeChat]")} ❌ Invalid keys for last_read_lines: "${requestedKeys}" (expected: "id,buffer")`);
+			log.error(
+				`${colors.red(
+					"[Node->WeeChat]"
+				)} ❌ Invalid keys for last_read_lines: "${requestedKeys}" (expected: "id,buffer")`
+			);
 			buildEmptyHData(msg);
 			return msg;
 		}
 
 		// Build HData header
 		const fields: HDataField[] = [
-			{name: "id", type: "int"},      // WeeChat >= 4.4.0
+			{name: "id", type: "int"}, // WeeChat >= 4.4.0
 			{name: "buffer", type: "ptr"},
 		];
 
@@ -623,7 +747,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				const bufferPtr = BigInt(channel.id);
 
 				// Get last read line from unread markers
-				const unreadMarker = this.irssiClient.unreadMarkers.get(`${network.uuid}/${channel.name}`);
+				const unreadMarker = this.irssiClient.unreadMarkers.get(
+					`${network.uuid}/${channel.name}`
+				);
 				if (!unreadMarker || unreadMarker.lastReadTime === 0) continue;
 
 				// Generate line ID from last read timestamp
@@ -651,7 +777,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		if (objects.length > 0) {
 			// CRITICAL: HPath MUST be 4 levels!
 			buildHData(msg, "buffer/own_lines/last_read_line/data", fields, objects);
-			log.info(`${colors.green("[Node->WeeChat]")} ✅ Built ${objects.length} last read lines`);
+			log.info(
+				`${colors.green("[Node->WeeChat]")} ✅ Built ${objects.length} last read lines`
+			);
 		} else {
 			buildEmptyHData(msg);
 			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No last read lines to send`);
@@ -671,20 +799,45 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * - P-path: [buffer_ptr, own_lines_ptr, last_line_ptr, data_ptr] (4 pointers)
 	 * - Fields: id,date,displayed,prefix,message,highlight,notify,tags_array (8 fields, EXACT order!)
 	 */
-	async buildPerBufferLinesHData(id: string, bufferPtr: bigint, count: number, requestedKeys: string): Promise<WeeChatMessage> {
-		log.info(`${colors.magenta("[Node->WeeChat]")} 📄 Building per-buffer lines HData: buffer=${bufferPtr}, count=${count}, keys="${requestedKeys}"`);
+	async buildPerBufferLinesHData(
+		id: string,
+		bufferPtr: bigint,
+		count: number,
+		requestedKeys: string
+	): Promise<WeeChatMessage> {
+		log.info(
+			`${colors.magenta(
+				"[Node->WeeChat]"
+			)} 📄 Building per-buffer lines HData: buffer=${bufferPtr}, count=${count}, keys="${requestedKeys}"`
+		);
 
 		const msg = new WeeChatMessage(id);
 
 		// Default keys if not specified (Lith sends empty keys!)
-		const expectedKeys = ["id", "date", "displayed", "prefix", "message", "highlight", "notify", "tags_array"];
-		const keys = requestedKeys.trim() === ""
-			? expectedKeys
-			: requestedKeys.split(",").map(k => k.trim());
+		const expectedKeys = [
+			"id",
+			"date",
+			"displayed",
+			"prefix",
+			"message",
+			"highlight",
+			"notify",
+			"tags_array",
+		];
+		const keys =
+			requestedKeys.trim() === ""
+				? expectedKeys
+				: requestedKeys.split(",").map((k) => k.trim());
 
 		// Validate keys (MUST be exactly: id,date,displayed,prefix,message,highlight,notify,tags_array)
 		if (keys.length !== 8 || !keys.every((k, i) => k === expectedKeys[i])) {
-			log.error(`${colors.red("[Node->WeeChat]")} ❌ Invalid keys for per-buffer lines: "${requestedKeys}" (expected: "${expectedKeys.join(",")}")`);
+			log.error(
+				`${colors.red(
+					"[Node->WeeChat]"
+				)} ❌ Invalid keys for per-buffer lines: "${requestedKeys}" (expected: "${expectedKeys.join(
+					","
+				)}")`
+			);
 			buildEmptyHData(msg);
 			return msg;
 		}
@@ -694,7 +847,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const found = this.findChannel(channelId);
 
 		if (!found) {
-			log.error(`${colors.red("[Node->WeeChat]")} ❌ Channel not found: bufferPtr=${bufferPtr}, channelId=${channelId}`);
+			log.error(
+				`${colors.red(
+					"[Node->WeeChat]"
+				)} ❌ Channel not found: bufferPtr=${bufferPtr}, channelId=${channelId}`
+			);
 			buildEmptyHData(msg);
 			return msg;
 		}
@@ -705,28 +862,48 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		let messages: any[] = [];
 
 		if (this.irssiClient.messageStorage) {
-			log.info(`${colors.cyan("[Node->WeeChat]")} 📜 Loading ${count} messages from storage for ${channel.name}...`);
-			messages = await this.irssiClient.messageStorage.getLastMessages(network.uuid, channel.name, count);
-			log.info(`${colors.green("[Node->WeeChat]")} ✅ Loaded ${messages.length} messages from storage`);
+			log.info(
+				`${colors.cyan("[Node->WeeChat]")} 📜 Loading ${count} messages from storage for ${
+					channel.name
+				}...`
+			);
+			messages = await this.irssiClient.messageStorage.getLastMessages(
+				network.uuid,
+				channel.name,
+				count
+			);
+			log.info(
+				`${colors.green("[Node->WeeChat]")} ✅ Loaded ${
+					messages.length
+				} messages from storage`
+			);
 
 			// CRITICAL: Weechat-android expects messages in REVERSE order (newest first)!
 			// See WEECHAT_ANDROID_PROTOCOL.md line 423: obj.forEachReversed
 			messages = messages.reverse();
-			log.debug(`${colors.cyan("[Node->WeeChat]")} 🔄 Reversed messages for weechat-android (newest first)`);
+			log.debug(
+				`${colors.cyan(
+					"[Node->WeeChat]"
+				)} 🔄 Reversed messages for weechat-android (newest first)`
+			);
 		} else {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`);
+			log.warn(
+				`${colors.yellow(
+					"[Node->WeeChat]"
+				)} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`
+			);
 			messages = channel.messages.slice(-count).reverse(); // Also reverse for consistency
 		}
 
 		// Build HData header (EXACT order per spec!)
 		const fields: HDataField[] = [
-			{name: "id", type: "int"},          // WeeChat >= 4.4.0
+			{name: "id", type: "int"}, // WeeChat >= 4.4.0
 			{name: "date", type: "tim"},
 			{name: "displayed", type: "chr"},
 			{name: "prefix", type: "str"},
 			{name: "message", type: "str"},
 			{name: "highlight", type: "chr"},
-			{name: "notify", type: "int"},      // NOT notify_level!
+			{name: "notify", type: "int"}, // NOT notify_level!
 			{name: "tags_array", type: "arr", arrayType: "str"},
 		];
 
@@ -739,15 +916,24 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		for (const m of messages) {
 			const lineIdInt = (() => {
 				const id: string | number = m.id || Date.now();
-				const raw = typeof id === "string" ? parseInt((id as string).split("-")[0], 10) : Number(id);
-				return Number.isFinite(raw) ? Math.abs(raw % 2147483647) : Math.floor(Date.now() % 2147483647);
+				const raw =
+					typeof id === "string"
+						? parseInt((id as string).split("-")[0], 10)
+						: Number(id);
+				return Number.isFinite(raw)
+					? Math.abs(raw % 2147483647)
+					: Math.floor(Date.now() % 2147483647);
 			})();
 
 			const lastLinePtr = stringToPointer(`${bufferPtr}-last_line-${lineIdInt}`);
 			const dataPtr = stringToPointer(`${bufferPtr}-data-${lineIdInt}`);
 
 			const timestamp = Math.floor(m.time.getTime() / 1000);
-			const notifyLevel = m.highlight ? 3 : (m.type === "join" || m.type === "part" || m.type === "quit" ? 0 : 1);
+			const notifyLevel = m.highlight
+				? 3
+				: m.type === "join" || m.type === "part" || m.type === "quit"
+				? 0
+				: 1;
 
 			// Format message text based on type (like Vue does)
 			const {prefix, message} = this.formatMessageForWeechat(m);
@@ -773,7 +959,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		if (objects.length > 0) {
 			// CRITICAL: HPath MUST be 4 levels!
 			buildHData(msg, "buffer/own_lines/last_line/data", fields, objects);
-			log.info(`${colors.green("[Node->WeeChat]")} ✅ Built ${objects.length} lines for buffer ${bufferPtr}`);
+			log.info(
+				`${colors.green("[Node->WeeChat]")} ✅ Built ${
+					objects.length
+				} lines for buffer ${bufferPtr}`
+			);
 		} else {
 			buildEmptyHData(msg);
 			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No messages for buffer ${bufferPtr}`);
@@ -782,13 +972,23 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		return msg;
 	}
 
-
 	/**
 	 * Build lines HData for a single buffer with requested keys (weechat-android style)
 	 * Example request keys: "id,date,displayed,prefix,message,highlight,notify,tags_array"
 	 */
-	buildBufferOwnLinesHData(id: string, bufferPtr: bigint, count: number = 100, keys: string = ""): WeeChatMessage {
-		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildBufferOwnLinesHData: id="${id}", bufferPtr=${bufferPtr.toString(16)}, count=${count}, keys="${keys}"`);
+	buildBufferOwnLinesHData(
+		id: string,
+		bufferPtr: bigint,
+		count: number = 100,
+		keys: string = ""
+	): WeeChatMessage {
+		log.warn(
+			`${colors.magenta(
+				"[Node->WeeChat DEBUG]"
+			)} 📜 buildBufferOwnLinesHData: id="${id}", bufferPtr=${bufferPtr.toString(
+				16
+			)}, count=${count}, keys="${keys}"`
+		);
 		const msg = new WeeChatMessage(id);
 
 		// Resolve buffer and channel from pointer
@@ -803,40 +1003,55 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const requestedKeys = keys ? keys.split(",").map((k) => k.trim()) : [];
 		const typeForKey = (k: string): HDataField => {
 			switch (k) {
-				case "buffer": return {name: "buffer", type: "ptr"};
-				case "id": return {name: "id", type: "int"};
-				case "date": return {name: "date", type: "tim"};
-				case "date_usec": return {name: "date_usec", type: "int"};
-				case "date_printed": return {name: "date_printed", type: "tim"};
-				case "date_usec_printed": return {name: "date_usec_printed", type: "int"};
-				case "displayed": return {name: "displayed", type: "chr"};
-				case "notify": return {name: "notify", type: "int"};
-				case "notify_level": return {name: "notify_level", type: "int"};
-				case "highlight": return {name: "highlight", type: "chr"};
-				case "tags_array": return {name: "tags_array", type: "arr", arrayType: "str"};
-				case "prefix": return {name: "prefix", type: "str"};
-				case "message": return {name: "message", type: "str"};
-				default: return {name: k as any, type: "str"};
+				case "buffer":
+					return {name: "buffer", type: "ptr"};
+				case "id":
+					return {name: "id", type: "int"};
+				case "date":
+					return {name: "date", type: "tim"};
+				case "date_usec":
+					return {name: "date_usec", type: "int"};
+				case "date_printed":
+					return {name: "date_printed", type: "tim"};
+				case "date_usec_printed":
+					return {name: "date_usec_printed", type: "int"};
+				case "displayed":
+					return {name: "displayed", type: "chr"};
+				case "notify":
+					return {name: "notify", type: "int"};
+				case "notify_level":
+					return {name: "notify_level", type: "int"};
+				case "highlight":
+					return {name: "highlight", type: "chr"};
+				case "tags_array":
+					return {name: "tags_array", type: "arr", arrayType: "str"};
+				case "prefix":
+					return {name: "prefix", type: "str"};
+				case "message":
+					return {name: "message", type: "str"};
+				default:
+					return {name: k as any, type: "str"};
 			}
 		};
 
-		const fields: HDataField[] = requestedKeys.length > 0
-			? requestedKeys.map(typeForKey)
-			: [
-				// default full set
-				{name: "buffer", type: "ptr"},
-				{name: "id", type: "int"},
-				{name: "date", type: "tim"},
-				{name: "date_usec", type: "int"},
-				{name: "date_printed", type: "tim"},
-				{name: "date_usec_printed", type: "int"},
-				{name: "displayed", type: "chr"},
-				{name: "notify_level", type: "int"},
-				{name: "highlight", type: "chr"},
-				{name: "tags_array", type: "arr", arrayType: "str"},
-				{name: "prefix", type: "str"},
-				{name: "message", type: "str"},
-			];
+		const fields: HDataField[] =
+			requestedKeys.length > 0
+				? requestedKeys.map(typeForKey)
+				: [
+						// default full set
+						{name: "buffer", type: "ptr"},
+						{name: "id", type: "int"},
+						{name: "date", type: "tim"},
+						{name: "date_usec", type: "int"},
+						{name: "date_printed", type: "tim"},
+						{name: "date_usec_printed", type: "int"},
+						{name: "displayed", type: "chr"},
+						{name: "notify_level", type: "int"},
+						{name: "highlight", type: "chr"},
+						{name: "tags_array", type: "arr", arrayType: "str"},
+						{name: "prefix", type: "str"},
+						{name: "message", type: "str"},
+				  ];
 
 		const objects: HDataObject[] = [];
 		const messages = channel.messages.slice(-count);
@@ -847,21 +1062,31 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			const lineDataPtr = generatePointer();
 			const ts = Math.floor(m.time.getTime() / 1000);
 			const values: Record<string, any> = {};
-			if (requestedKeys.length === 0 || requestedKeys.includes("buffer")) values.buffer = bufferPtr;
+			if (requestedKeys.length === 0 || requestedKeys.includes("buffer"))
+				values.buffer = bufferPtr;
 			if (requestedKeys.length === 0 || requestedKeys.includes("id")) values.id = idx++;
 			if (requestedKeys.length === 0 || requestedKeys.includes("date")) values.date = ts;
-			if (requestedKeys.length === 0 || requestedKeys.includes("date_usec")) values.date_usec = 0;
-			if (requestedKeys.length === 0 || requestedKeys.includes("date_printed")) values.date_printed = ts;
-			if (requestedKeys.length === 0 || requestedKeys.includes("date_usec_printed")) values.date_usec_printed = 0;
-			if (requestedKeys.length === 0 || requestedKeys.includes("displayed")) values.displayed = 1;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date_usec"))
+				values.date_usec = 0;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date_printed"))
+				values.date_printed = ts;
+			if (requestedKeys.length === 0 || requestedKeys.includes("date_usec_printed"))
+				values.date_usec_printed = 0;
+			if (requestedKeys.length === 0 || requestedKeys.includes("displayed"))
+				values.displayed = 1;
 			if (requestedKeys.includes("notify")) values.notify = m.highlight ? 3 : 1;
-			if (requestedKeys.length === 0 || requestedKeys.includes("notify_level")) values.notify_level = m.highlight ? 3 : 1;
-			if (requestedKeys.length === 0 || requestedKeys.includes("highlight")) values.highlight = m.highlight ? 1 : 0;
-			if (requestedKeys.length === 0 || requestedKeys.includes("tags_array")) values.tags_array = this.buildMessageTags(m);
-			if (requestedKeys.length === 0 || requestedKeys.includes("prefix")) values.prefix = m.from?.nick || "";
-			if (requestedKeys.length === 0 || requestedKeys.includes("message")) values.message = m.text;
+			if (requestedKeys.length === 0 || requestedKeys.includes("notify_level"))
+				values.notify_level = m.highlight ? 3 : 1;
+			if (requestedKeys.length === 0 || requestedKeys.includes("highlight"))
+				values.highlight = m.highlight ? 1 : 0;
+			if (requestedKeys.length === 0 || requestedKeys.includes("tags_array"))
+				values.tags_array = this.buildMessageTags(m);
+			if (requestedKeys.length === 0 || requestedKeys.includes("prefix"))
+				values.prefix = m.from?.nick || "";
+			if (requestedKeys.length === 0 || requestedKeys.includes("message"))
+				values.message = m.text;
 
-			objects.push({ pointers: [bufferPtr, linesPtr, linePtr, lineDataPtr], values });
+			objects.push({pointers: [bufferPtr, linesPtr, linePtr, lineDataPtr], values});
 		}
 
 		if (objects.length > 0) {
@@ -872,15 +1097,22 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		return msg;
 	}
 
-
 	/**
 	 * Build lines HData (for history - single buffer, Lith style)
 	 * Uses data directly from IrssiClient.networks
 	 * CRITICAL FIX: Now async - loads from DB if channel.messages is empty
 	 */
-	async buildLinesHData(id: string, bufferPtr: bigint, count: number = 100): Promise<WeeChatMessage> {
+	async buildLinesHData(
+		id: string,
+		bufferPtr: bigint,
+		count: number = 100
+	): Promise<WeeChatMessage> {
 		// 🚨 DEBUG: Log buildLinesHData call
-		log.warn(`${colors.magenta("[Node->WeeChat DEBUG]")} 📜 buildLinesHData: id="${id}", bufferPtr=${bufferPtr}, count=${count}`);
+		log.warn(
+			`${colors.magenta(
+				"[Node->WeeChat DEBUG]"
+			)} 📜 buildLinesHData: id="${id}", bufferPtr=${bufferPtr}, count=${count}`
+		);
 
 		const msg = new WeeChatMessage(id);
 
@@ -889,7 +1121,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const found = this.findChannel(channelId);
 
 		if (!found) {
-			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ Channel not found for bufferPtr=${bufferPtr}`);
+			log.warn(
+				`${colors.yellow(
+					"[Node->WeeChat DEBUG]"
+				)} ⚠️ Channel not found for bufferPtr=${bufferPtr}`
+			);
 			buildEmptyHData(msg);
 			return msg;
 		}
@@ -901,11 +1137,27 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		let messages: any[] = [];
 
 		if (this.irssiClient.messageStorage) {
-			log.info(`${colors.cyan("[Node->WeeChat DEBUG]")} 📜 Loading ${count} messages from storage for ${channel.name}...`);
-			messages = await this.irssiClient.messageStorage.getLastMessages(network.uuid, channel.name, count);
-			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Loaded ${messages.length} messages from storage`);
+			log.info(
+				`${colors.cyan(
+					"[Node->WeeChat DEBUG]"
+				)} 📜 Loading ${count} messages from storage for ${channel.name}...`
+			);
+			messages = await this.irssiClient.messageStorage.getLastMessages(
+				network.uuid,
+				channel.name,
+				count
+			);
+			log.info(
+				`${colors.green("[Node->WeeChat DEBUG]")} ✅ Loaded ${
+					messages.length
+				} messages from storage`
+			);
 		} else {
-			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`);
+			log.warn(
+				`${colors.yellow(
+					"[Node->WeeChat DEBUG]"
+				)} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`
+			);
 			messages = channel.messages.slice(-count);
 		}
 
@@ -956,10 +1208,18 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (objects.length > 0) {
 			buildHData(msg, "line_data", fields, objects);
-			log.info(`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${objects.length} lines for ${channel.name}`);
+			log.info(
+				`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${objects.length} lines for ${
+					channel.name
+				}`
+			);
 		} else {
 			buildEmptyHData(msg);
-			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send for ${channel.name}`);
+			log.warn(
+				`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send for ${
+					channel.name
+				}`
+			);
 		}
 
 		return msg;
@@ -1027,7 +1287,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			case "part":
 				return {
 					prefix: "<--",
-					message: `${nick} (${hostmask}) has left the channel${msg.text ? ` (${msg.text})` : ""}`,
+					message: `${nick} (${hostmask}) has left the channel${
+						msg.text ? ` (${msg.text})` : ""
+					}`,
 				};
 
 			case "quit":
@@ -1039,7 +1301,9 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			case "kick":
 				return {
 					prefix: "<--",
-					message: `${msg.target?.nick || "?"} was kicked by ${nick}${msg.text ? ` (${msg.text})` : ""}`,
+					message: `${msg.target?.nick || "?"} was kicked by ${nick}${
+						msg.text ? ` (${msg.text})` : ""
+					}`,
 				};
 
 			case "mode":
@@ -1123,4 +1387,3 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		};
 	}
 }
-

@@ -2401,7 +2401,9 @@ export class IrssiClient {
 		if (this.config.weechatRelay?.enabled && !this.weechatRelayServer) {
 			log.info(`[IrssiClient] Starting WeeChat Relay after erssi sync...`);
 			this.startWeeChatRelay().catch((error) => {
-				log.error(`Failed to start WeeChat Relay for user ${colors.bold(this.name)}: ${error}`);
+				log.error(
+					`Failed to start WeeChat Relay for user ${colors.bold(this.name)}: ${error}`
+				);
 			});
 		}
 
@@ -2667,32 +2669,61 @@ export class IrssiClient {
 	 * Start WeeChat Relay server for this user
 	 */
 	async startWeeChatRelay(): Promise<void> {
-		log.info(`${colors.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${colors.bold(this.name)}`);
-		log.info(`${colors.cyan("[WeeChat Relay]")} Config:`, JSON.stringify(this.config.weechatRelay));
+		log.info(
+			`${colors.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${colors.bold(
+				this.name
+			)}`
+		);
+		log.info(
+			`${colors.cyan("[WeeChat Relay]")} Config:`,
+			JSON.stringify(this.config.weechatRelay)
+		);
 
 		// Validate config
 		if (!this.config.weechatRelay?.enabled) {
-			log.info(`${colors.yellow("[WeeChat Relay]")} Not enabled for user ${colors.bold(this.name)}`);
+			log.info(
+				`${colors.yellow("[WeeChat Relay]")} Not enabled for user ${colors.bold(this.name)}`
+			);
 			return;
 		}
 
-		if (!this.config.weechatRelay.port || this.config.weechatRelay.port < 1024 || this.config.weechatRelay.port > 65535) {
-			log.warn(`${colors.yellow("[WeeChat Relay]")} Invalid port for user ${colors.bold(this.name)}: ${this.config.weechatRelay.port}`);
+		if (
+			!this.config.weechatRelay.port ||
+			this.config.weechatRelay.port < 1024 ||
+			this.config.weechatRelay.port > 65535
+		) {
+			log.warn(
+				`${colors.yellow("[WeeChat Relay]")} Invalid port for user ${colors.bold(
+					this.name
+				)}: ${this.config.weechatRelay.port}`
+			);
 			return;
 		}
 
 		if (!this.config.weechatRelay.passwordEncrypted) {
-			log.warn(`${colors.yellow("[WeeChat Relay]")} No password configured for user ${colors.bold(this.name)}`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay]")} No password configured for user ${colors.bold(
+					this.name
+				)}`
+			);
 			return;
 		}
 
 		if (this.weechatRelayServer) {
-			log.warn(`${colors.yellow("[WeeChat Relay]")} Already running for user ${colors.bold(this.name)}`);
+			log.warn(
+				`${colors.yellow("[WeeChat Relay]")} Already running for user ${colors.bold(
+					this.name
+				)}`
+			);
 			return;
 		}
 
 		// Decrypt WeeChat password
-		log.info(`${colors.cyan("[WeeChat Relay]")} Decrypting password for user ${colors.bold(this.name)}`);
+		log.info(
+			`${colors.cyan("[WeeChat Relay]")} Decrypting password for user ${colors.bold(
+				this.name
+			)}`
+		);
 		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
 		this.weechatRelayPassword = await decryptIrssiPassword(
 			this.config.weechatRelay.passwordEncrypted,
@@ -2731,22 +2762,33 @@ export class IrssiClient {
 
 				if (certExists && keyExists) {
 					// Files exist - use them!
-					log.info(`${colors.green("[WeeChat Relay]")} ✅ Using existing certificate files`);
+					log.info(
+						`${colors.green("[WeeChat Relay]")} ✅ Using existing certificate files`
+					);
 					log.info(`${colors.green("[WeeChat Relay]")}    Cert: ${certPath}`);
 					log.info(`${colors.green("[WeeChat Relay]")}    Key:  ${keyPath}`);
-				} else if (this.config.weechatRelay.customCert && this.config.weechatRelay.customKey) {
+				} else if (
+					this.config.weechatRelay.customCert &&
+					this.config.weechatRelay.customKey
+				) {
 					// Files don't exist but user provided cert/key in config - save them!
-					log.info(`${colors.cyan("[WeeChat Relay]")} Saving custom certificate from config...`);
+					log.info(
+						`${colors.cyan("[WeeChat Relay]")} Saving custom certificate from config...`
+					);
 					fs.writeFileSync(certPath, this.config.weechatRelay.customCert);
 					fs.writeFileSync(keyPath, this.config.weechatRelay.customKey);
 					fs.chmodSync(keyPath, 0o600); // Secure permissions
-					log.info(`${colors.green("[WeeChat Relay]")} ✅ Custom certificate saved to ${certPath}`);
+					log.info(
+						`${colors.green(
+							"[WeeChat Relay]"
+						)} ✅ Custom certificate saved to ${certPath}`
+					);
 				} else {
 					// No files and no cert/key in config - ERROR!
 					throw new Error(
 						`Custom certificate enabled but cert/key not found.\n` +
-						`Expected files: ${certPath}, ${keyPath}\n` +
-						`Or provide cert/key in WeeChat Relay settings.`
+							`Expected files: ${certPath}, ${keyPath}\n` +
+							`Or provide cert/key in WeeChat Relay settings.`
 					);
 				}
 			}
@@ -2788,7 +2830,9 @@ export class IrssiClient {
 		// Setup event handlers
 		this.weechatRelayServer.on("client:authenticated", (clientId: string, username: string) => {
 			log.info(
-				`${colors.green("[WeeChat Relay]")} Client authenticated: ${clientId} for user ${this.name}`
+				`${colors.green("[WeeChat Relay]")} Client authenticated: ${clientId} for user ${
+					this.name
+				}`
 			);
 
 			// Get relay client
@@ -2804,7 +2848,11 @@ export class IrssiClient {
 
 			// Connect line_data events to THIS relayClient
 			const lineDataHandler = async (data: any) => {
-				log.info(`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${data.message}`);
+				log.info(
+					`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${
+						data.message
+					}`
+				);
 
 				// Import WeeChatMessage for BINARY protocol
 				const {WeeChatMessage} = await import("./weechatRelay/weechatProtocol");
@@ -2821,7 +2869,9 @@ export class IrssiClient {
 				msg.addString("line_data");
 
 				// Add keys with types
-				msg.addString("buffer:ptr,date:tim,date_printed:tim,displayed:chr,highlight:chr,tags_array:arr,prefix:str,message:str");
+				msg.addString(
+					"buffer:ptr,date:tim,date_printed:tim,displayed:chr,highlight:chr,tags_array:arr,prefix:str,message:str"
+				);
 
 				// Add count (1 item)
 				msg.addInt(1);
@@ -2831,10 +2881,10 @@ export class IrssiClient {
 				msg.addPointer(linePtr);
 
 				// Add values
-				msg.addPointer(data.buffer);       // buffer pointer
-				msg.addTime(data.date);            // date (timestamp)
-				msg.addTime(data.date);            // date_printed (same as date)
-				msg.addChar(1);                    // displayed (1 = yes)
+				msg.addPointer(data.buffer); // buffer pointer
+				msg.addTime(data.date); // date (timestamp)
+				msg.addTime(data.date); // date_printed (same as date)
+				msg.addChar(1); // displayed (1 = yes)
 				msg.addChar(data.highlight ? 1 : 0); // highlight
 
 				// Add tags_array (array of strings)
@@ -2848,8 +2898,8 @@ export class IrssiClient {
 				// addArray(type, values) - type is "str" for strings
 				msg.addArray("str", tags);
 
-				msg.addString(data.prefix);        // prefix (nick)
-				msg.addString(data.message);       // message text
+				msg.addString(data.prefix); // prefix (nick)
+				msg.addString(data.message); // message text
 
 				// Build and send
 				const binary = msg.build(false); // no compression
@@ -2876,7 +2926,10 @@ export class IrssiClient {
 			if (relayClient) {
 				// Remove line_data handler
 				if ((relayClient as any)._lineDataHandler) {
-					this.weechatNodeAdapter.removeListener("line_data", (relayClient as any)._lineDataHandler);
+					this.weechatNodeAdapter.removeListener(
+						"line_data",
+						(relayClient as any)._lineDataHandler
+					);
 					delete (relayClient as any)._lineDataHandler;
 				}
 
@@ -2894,7 +2947,9 @@ export class IrssiClient {
 		await this.weechatRelayServer.start();
 
 		log.info(
-			`${colors.green("[WeeChat Relay]")} ✅ Started for user ${colors.bold(this.name)} on port ${this.config.weechatRelay.port}`
+			`${colors.green("[WeeChat Relay]")} ✅ Started for user ${colors.bold(
+				this.name
+			)} on port ${this.config.weechatRelay.port}`
 		);
 	}
 

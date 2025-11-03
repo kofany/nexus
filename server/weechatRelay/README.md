@@ -21,6 +21,7 @@ User 3:
 ```
 
 Each user can use:
+
 - Multiple Vue browsers (already working)
 - Multiple Lith clients (new!)
 - Both at the same time!
@@ -28,9 +29,11 @@ Each user can use:
 ## Components
 
 ### 1. weechatProtocol.ts
+
 Binary protocol encoder/decoder for WeeChat Relay protocol.
 
 **Supported data types:**
+
 - `chr` - char (1 byte)
 - `int` - integer (4 bytes, big endian)
 - `lon` - long integer (variable length string)
@@ -43,38 +46,47 @@ Binary protocol encoder/decoder for WeeChat Relay protocol.
 - `arr` - array (typed array of values)
 
 **Compression:**
+
 - Supports zlib compression (WeeChat Relay standard)
 
 ### 2. weechatHData.ts
+
 Helper functions for building HData structures (most complex WeeChat data type).
 
 **Features:**
+
 - Build HData with multiple fields and objects
 - Generate consistent pointers from strings
 - Color code conversion (mIRC <-> WeeChat)
 
 ### 3. weechatRelayServer.ts
+
 Main server that accepts TCP and WebSocket connections from WeeChat clients.
 
 **Features:**
+
 - TCP server on configurable port
 - WebSocket server on configurable port
 - Per-client connection management
 - Event forwarding to adapters
 
 ### 4. weechatRelayClient.ts
+
 Handles individual client connections.
 
 **Features:**
+
 - Handshake negotiation (password hash algorithm, compression)
 - Authentication (plain, sha256, sha512, pbkdf2+sha256, pbkdf2+sha512)
 - Command parsing and routing
 - Binary message sending
 
 ### 5. erssiToWeechatAdapter.ts
+
 Translates erssi fe-web events to WeeChat Relay protocol.
 
 **Mappings:**
+
 - erssi network → WeeChat buffer (type: server)
 - erssi channel → WeeChat buffer (type: channel)
 - erssi query → WeeChat buffer (type: private)
@@ -82,15 +94,18 @@ Translates erssi fe-web events to WeeChat Relay protocol.
 - erssi user → WeeChat nicklist item
 
 **Events:**
+
 - `buffer:opened` - New buffer created
 - `buffer:closed` - Buffer closed
 - `line:added` - New message in buffer
 - `nicklist:changed` - Nicklist updated
 
 ### 6. weechatToErssiAdapter.ts
+
 Translates WeeChat Relay commands to erssi actions.
 
 **Commands:**
+
 - `handshake` - Negotiate protocol features
 - `init` - Authenticate user
 - `hdata buffer:gui_buffers(*)` - Get all buffers
@@ -128,6 +143,7 @@ Configuration is stored in each user's `user.json` file:
 ```
 
 **Configuration via UI:**
+
 - Go to Settings → WeeChat Relay (next to Irssi Connection)
 - Enable WeeChat Relay
 - Set unique port (e.g., 9001, 9002, 9003...)
@@ -135,6 +151,7 @@ Configuration is stored in each user's `user.json` file:
 - Save
 
 **Password encryption:**
+
 - Password is encrypted using the same method as irssiConnection
 - Stored as `passwordEncrypted` in user.json
 - Decrypted in memory when user logs in
@@ -142,6 +159,7 @@ Configuration is stored in each user's `user.json` file:
 ## Usage with Lith
 
 1. **Configure in nexuslounge UI:**
+
    - Login to nexuslounge web interface
    - Go to Settings → WeeChat Relay
    - Enable: Yes
@@ -150,6 +168,7 @@ Configuration is stored in each user's `user.json` file:
    - Save
 
 2. **Configure Lith:**
+
    - Host: Your nexuslounge server address
    - Port: The port you configured (e.g., 9001)
    - Use WebSocket: Yes
@@ -175,6 +194,7 @@ Configuration is stored in each user's `user.json` file:
 ## Testing
 
 Connect with Lith:
+
 ```
 Host: 127.0.0.1
 Port: 9002
@@ -184,9 +204,9 @@ Password: your_password
 ```
 
 Or test with raw WebSocket:
+
 ```javascript
-const ws = new WebSocket('ws://127.0.0.1:9002/weechat');
-ws.binaryType = 'arraybuffer';
+const ws = new WebSocket("ws://127.0.0.1:9002/weechat");
+ws.binaryType = "arraybuffer";
 // Send handshake, init, hdata commands...
 ```
-

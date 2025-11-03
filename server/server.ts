@@ -80,7 +80,11 @@ export default async function (
 	// Log level info
 	const logLevelNames = ["error", "warn", "info", "debug"];
 	const currentLogLevel = log.getLogLevel();
-	log.info(`Log level: ${colors.green(logLevelNames[currentLogLevel])} (set via LOG_LEVEL env var or NODE_ENV)`);
+	log.info(
+		`Log level: ${colors.green(
+			logLevelNames[currentLogLevel]
+		)} (set via LOG_LEVEL env var or NODE_ENV)`
+	);
 
 	const staticOptions = {
 		redirect: false,
@@ -986,7 +990,17 @@ function initializeClient(
 				return;
 			}
 
-			const {enabled, port, protocol, tls, useSelfSigned, customCert, customKey, password, compression} = data;
+			const {
+				enabled,
+				port,
+				protocol,
+				tls,
+				useSelfSigned,
+				customCert,
+				customKey,
+				password,
+				compression,
+			} = data;
 
 			// Validate
 			if (enabled && (!port || !password)) {
@@ -1260,7 +1274,9 @@ function initializeIrssiClient(
 		// This ensures it starts even if user enables WeeChat Relay in Settings after login
 		if (client.config.weechatRelay?.enabled && !client.weechatRelayServer) {
 			client.startWeeChatRelay().catch((error) => {
-				log.error(`Failed to start WeeChat Relay for user ${colors.bold(client.name)}: ${error}`);
+				log.error(
+					`Failed to start WeeChat Relay for user ${colors.bold(client.name)}: ${error}`
+				);
 			});
 		}
 	};
@@ -1613,7 +1629,17 @@ function initializeIrssiClient(
 			return;
 		}
 
-		const {enabled, port, protocol, tls, useSelfSigned, customCert, customKey, password, compression} = data;
+		const {
+			enabled,
+			port,
+			protocol,
+			tls,
+			useSelfSigned,
+			customCert,
+			customKey,
+			password,
+			compression,
+		} = data;
 
 		// Validate
 		if (enabled && (!port || !password)) {

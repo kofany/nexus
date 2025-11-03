@@ -10,17 +10,17 @@
 
 import log from "../log";
 import colors from "chalk";
-import { VariableMutationTracker } from "./variableMutationTracker";
+import {VariableMutationTracker} from "./variableMutationTracker";
 
 /**
  * Debugger configuration - control which hooks are active
  */
 export const DEBUG_CONFIG = {
-    TRACK_LINE_REQUESTED_KEYS: process.env.WEECHAT_TRACK_MUTATIONS === "true",
-    LOG_ALL_HDATA_REQUESTS: process.env.WEECHAT_DEBUG === "true",
-    VALIDATE_LINE_KEYS: process.env.WEECHAT_VALIDATE_KEYS === "true",
-    CAPTURE_STACK_TRACES: process.env.WEECHAT_STACK_TRACES === "true",
-    REQUEST_HISTORY: process.env.WEECHAT_REQUEST_HISTORY === "true",
+	TRACK_LINE_REQUESTED_KEYS: process.env.WEECHAT_TRACK_MUTATIONS === "true",
+	LOG_ALL_HDATA_REQUESTS: process.env.WEECHAT_DEBUG === "true",
+	VALIDATE_LINE_KEYS: process.env.WEECHAT_VALIDATE_KEYS === "true",
+	CAPTURE_STACK_TRACES: process.env.WEECHAT_STACK_TRACES === "true",
+	REQUEST_HISTORY: process.env.WEECHAT_REQUEST_HISTORY === "true",
 };
 
 /**
@@ -37,63 +37,88 @@ export const DEBUG_CONFIG = {
  * ```
  */
 export function setupLineRequestedKeysTracker(): VariableMutationTracker<string> {
-    const validKeys = new Set([
-        "buffer", "id", "date", "date_usec", "date_printed", "date_usec_printed",
-        "displayed", "notify", "notify_level", "highlight", "tags_array", "prefix", "message"
-    ]);
+	const validKeys = new Set([
+		"buffer",
+		"id",
+		"date",
+		"date_usec",
+		"date_printed",
+		"date_usec_printed",
+		"displayed",
+		"notify",
+		"notify_level",
+		"highlight",
+		"tags_array",
+		"prefix",
+		"message",
+	]);
 
-    const validator = (value: string): {valid: boolean; error?: string} => {
-        if (!value) return {valid: true}; // Empty is ok
+	const validator = (value: string): {valid: boolean; error?: string} => {
+		if (!value) return {valid: true}; // Empty is ok
 
-        const keys = value.split(",").map(k => k.trim());
-        const invalidKeys = keys.filter(k => !validKeys.has(k));
+		const keys = value.split(",").map((k) => k.trim());
+		const invalidKeys = keys.filter((k) => !validKeys.has(k));
 
-        if (invalidKeys.length > 0) {
-            return {
-                valid: false,
-                error: `Invalid keys: ${invalidKeys.join(", ")}`
-            };
-        }
+		if (invalidKeys.length > 0) {
+			return {
+				valid: false,
+				error: `Invalid keys: ${invalidKeys.join(", ")}`,
+			};
+		}
 
-        return {valid: true};
-    };
+		return {valid: true};
+	};
 
-    const tracker = new VariableMutationTracker<string>(
-        "lineRequestedKeys",
-        "",
-        {
-            validator: DEBUG_CONFIG.VALIDATE_LINE_KEYS ? validator : undefined,
-            captureStackTrace: DEBUG_CONFIG.CAPTURE_STACK_TRACES,
-            stackTraceDepth: 6,
-        }
-    );
+	const tracker = new VariableMutationTracker<string>("lineRequestedKeys", "", {
+		validator: DEBUG_CONFIG.VALIDATE_LINE_KEYS ? validator : undefined,
+		captureStackTrace: DEBUG_CONFIG.CAPTURE_STACK_TRACES,
+		stackTraceDepth: 6,
+	});
 
-    // Log mutations
-    tracker.on("mutate", (event) => {
-        log.warn(`${colors.magenta("[MUTATION]")} lineRequestedKeys: "${event.oldValue}" → "${event.newValue}"`);
+	// Log mutations
+	tracker.on("mutate", (event) => {
+		log.warn(
+			`${colors.magenta("[MUTATION]")} lineRequestedKeys: "${event.oldValue}" → "${
+				event.newValue
+			}"`
+		);
 
-        if (event.stack) {
-            log.debug(`${colors.dim("  Stack:")} ${event.stack}`);
-        }
+		if (event.stack) {
+			log.debug(`${colors.dim("  Stack:")} ${event.stack}`);
+		}
 
-        // EARLY WARNING: Suspicious field counts
-        const newKeys = event.newValue ? event.newValue.split(",") : [];
-        if (event.oldValue && newKeys.length === 0) {
-            log.error(`${colors.red("[BUG RISK]")} lineRequestedKeys was cleared! Old value had ${event.oldValue.split(",").length} fields`);
-        }
-        if (newKeys.length > 0 && newKeys.length < 3 && newKeys.length !== event.oldValue.split(",").length) {
-            log.warn(`${colors.yellow("[WARNING]")} Suspiciously few fields (${newKeys.length}) in lineRequestedKeys`);
-        }
-    });
+		// EARLY WARNING: Suspicious field counts
+		const newKeys = event.newValue ? event.newValue.split(",") : [];
+		if (event.oldValue && newKeys.length === 0) {
+			log.error(
+				`${colors.red("[BUG RISK]")} lineRequestedKeys was cleared! Old value had ${
+					event.oldValue.split(",").length
+				} fields`
+			);
+		}
+		if (
+			newKeys.length > 0 &&
+			newKeys.length < 3 &&
+			newKeys.length !== event.oldValue.split(",").length
+		) {
+			log.warn(
+				`${colors.yellow("[WARNING]")} Suspiciously few fields (${
+					newKeys.length
+				}) in lineRequestedKeys`
+			);
+		}
+	});
 
-    // Log validation errors
-    tracker.on("validation-error", (event) => {
-        log.error(`${colors.red("[VALIDATION ERROR]")} Invalid lineRequestedKeys: "${event.newValue}"`);
-        log.error(`${colors.red("  Error:")} ${event.validationError}`);
-        log.error(`${colors.red("  This will cause wrong field count in _buffer_line_added!")}`);
-    });
+	// Log validation errors
+	tracker.on("validation-error", (event) => {
+		log.error(
+			`${colors.red("[VALIDATION ERROR]")} Invalid lineRequestedKeys: "${event.newValue}"`
+		);
+		log.error(`${colors.red("  Error:")} ${event.validationError}`);
+		log.error(`${colors.red("  This will cause wrong field count in _buffer_line_added!")}`);
+	});
 
-    return tracker;
+	return tracker;
 }
 
 /**
@@ -108,13 +133,13 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
  * ```
  */
 export function logHDataRequest(id: string, args: string, currentLineRequestedKeys: string): void {
-    if (!DEBUG_CONFIG.LOG_ALL_HDATA_REQUESTS) return;
+	if (!DEBUG_CONFIG.LOG_ALL_HDATA_REQUESTS) return;
 
-    const spaceIdx = args.indexOf(" ");
-    const path = spaceIdx > 0 ? args.substring(0, spaceIdx) : args;
-    const keys = spaceIdx > 0 ? args.substring(spaceIdx + 1) : "";
+	const spaceIdx = args.indexOf(" ");
+	const path = spaceIdx > 0 ? args.substring(0, spaceIdx) : args;
+	const keys = spaceIdx > 0 ? args.substring(spaceIdx + 1) : "";
 
-    log.info(`
+	log.info(`
 ╔══════════════════════════════════════════════╗
 ║ HData Request [${id}]
 ╠══════════════════════════════════════════════╣
@@ -139,7 +164,7 @@ export function logHDataRequest(id: string, args: string, currentLineRequestedKe
  * ```
  */
 export function logLineKeysUpdate(source: string, newValue: string, oldValue: string): void {
-    log.info(`
+	log.info(`
 ${colors.magenta("[SET lineRequestedKeys]")} from ${source}
   Old: "${oldValue}"
   New: "${newValue}"
@@ -160,39 +185,50 @@ ${colors.magenta("[SET lineRequestedKeys]")} from ${source}
  * }
  * ```
  */
-export function validateLineAddedState(lineRequestedKeys: string, clientUsesHDataHistory: boolean): {valid: boolean; issues: string[]} {
-    const issues: string[] = [];
+export function validateLineAddedState(
+	lineRequestedKeys: string,
+	clientUsesHDataHistory: boolean
+): {valid: boolean; issues: string[]} {
+	const issues: string[] = [];
 
-    const requestedKeys = lineRequestedKeys ? lineRequestedKeys.split(",").map(k => k.trim()) : [];
+	const requestedKeys = lineRequestedKeys
+		? lineRequestedKeys.split(",").map((k) => k.trim())
+		: [];
 
-    // Check for empty keys when client expects history
-    if (clientUsesHDataHistory && lineRequestedKeys === "") {
-        issues.push("clientUsesHDataHistory=true but lineRequestedKeys is empty");
-    }
+	// Check for empty keys when client expects history
+	if (clientUsesHDataHistory && lineRequestedKeys === "") {
+		issues.push("clientUsesHDataHistory=true but lineRequestedKeys is empty");
+	}
 
-    // Check for suspiciously low field count
-    if (requestedKeys.length > 0 && requestedKeys.length < 3 && clientUsesHDataHistory) {
-        issues.push(`Suspiciously low field count (${requestedKeys.length}) for weechat-android client`);
-    }
+	// Check for suspiciously low field count
+	if (requestedKeys.length > 0 && requestedKeys.length < 3 && clientUsesHDataHistory) {
+		issues.push(
+			`Suspiciously low field count (${requestedKeys.length}) for weechat-android client`
+		);
+	}
 
-    // Check for just "id" and "buffer" (the bug signature)
-    if (requestedKeys.length === 2 && requestedKeys.includes("id") && requestedKeys.includes("buffer")) {
-        issues.push("BUG DETECTED: Only 'id' and 'buffer' fields - this is the crash pattern!");
-    }
+	// Check for just "id" and "buffer" (the bug signature)
+	if (
+		requestedKeys.length === 2 &&
+		requestedKeys.includes("id") &&
+		requestedKeys.includes("buffer")
+	) {
+		issues.push("BUG DETECTED: Only 'id' and 'buffer' fields - this is the crash pattern!");
+	}
 
-    if (issues.length > 0) {
-        log.error(`
+	if (issues.length > 0) {
+		log.error(`
 ${colors.red("[ASSERTION FAILURE]")} sendLineAdded state is invalid:
-${issues.map(issue => `  - ${issue}`).join("\n")}
+${issues.map((issue) => `  - ${issue}`).join("\n")}
 lineRequestedKeys: "${lineRequestedKeys}"
 clientUsesHDataHistory: ${clientUsesHDataHistory}
         `);
-    }
+	}
 
-    return {
-        valid: issues.length === 0,
-        issues
-    };
+	return {
+		valid: issues.length === 0,
+		issues,
+	};
 }
 
 /**
@@ -214,59 +250,64 @@ clientUsesHDataHistory: ${clientUsesHDataHistory}
  * ```
  */
 export class RequestHistoryTracker {
-    private history: Array<{
-        timestamp: number;
-        type: string;
-        args: string;
-        lineRequestedKeys: string;
-        clientUsesHDataHistory?: boolean;
-    }> = [];
-    private maxSize: number = 50;
+	private history: Array<{
+		timestamp: number;
+		type: string;
+		args: string;
+		lineRequestedKeys: string;
+		clientUsesHDataHistory?: boolean;
+	}> = [];
+	private maxSize: number = 50;
 
-    record(type: string, args: string, lineRequestedKeys: string, clientUsesHDataHistory?: boolean): void {
-        if (!DEBUG_CONFIG.REQUEST_HISTORY) return;
+	record(
+		type: string,
+		args: string,
+		lineRequestedKeys: string,
+		clientUsesHDataHistory?: boolean
+	): void {
+		if (!DEBUG_CONFIG.REQUEST_HISTORY) return;
 
-        this.history.push({
-            timestamp: Date.now(),
-            type,
-            args,
-            lineRequestedKeys,
-            clientUsesHDataHistory,
-        });
+		this.history.push({
+			timestamp: Date.now(),
+			type,
+			args,
+			lineRequestedKeys,
+			clientUsesHDataHistory,
+		});
 
-        if (this.history.length > this.maxSize) {
-            this.history.shift();
-        }
-    }
+		if (this.history.length > this.maxSize) {
+			this.history.shift();
+		}
+	}
 
-    getFormattedHistory(): string {
-        if (this.history.length === 0) return "No request history";
+	getFormattedHistory(): string {
+		if (this.history.length === 0) return "No request history";
 
-        const lines = ["=== Request History ==="];
+		const lines = ["=== Request History ==="];
 
-        for (let i = 0; i < this.history.length; i++) {
-            const entry = this.history[i];
-            const time = new Date(entry.timestamp).toISOString();
-            const keyCount = entry.lineRequestedKeys.split(",").length;
+		for (let i = 0; i < this.history.length; i++) {
+			const entry = this.history[i];
+			const time = new Date(entry.timestamp).toISOString();
+			const keyCount = entry.lineRequestedKeys.split(",").length;
 
-            lines.push(`[${i}] ${time} ${entry.type}`);
-            lines.push(`    args: ${entry.args.substring(0, 100)}`);
-            lines.push(`    lineRequestedKeys: "${entry.lineRequestedKeys}" (${keyCount} fields)`);
-            if (entry.clientUsesHDataHistory !== undefined) {
-                lines.push(`    clientUsesHDataHistory: ${entry.clientUsesHDataHistory}`);
-            }
-        }
+			lines.push(`[${i}] ${time} ${entry.type}`);
+			lines.push(`    args: ${entry.args.substring(0, 100)}`);
+			lines.push(`    lineRequestedKeys: "${entry.lineRequestedKeys}" (${keyCount} fields)`);
+			if (entry.clientUsesHDataHistory !== undefined) {
+				lines.push(`    clientUsesHDataHistory: ${entry.clientUsesHDataHistory}`);
+			}
+		}
 
-        return lines.join("\n");
-    }
+		return lines.join("\n");
+	}
 
-    getLastRequest(): any {
-        return this.history[this.history.length - 1] || null;
-    }
+	getLastRequest(): any {
+		return this.history[this.history.length - 1] || null;
+	}
 
-    clear(): void {
-        this.history = [];
-    }
+	clear(): void {
+		this.history = [];
+	}
 }
 
 /**
@@ -280,10 +321,17 @@ export class RequestHistoryTracker {
  * }
  * ```
  */
-export function logLineAddedState(buffer: any, message: any, lineRequestedKeys: string, clientUsesHDataHistory: boolean): void {
-    const requestedKeys = lineRequestedKeys ? lineRequestedKeys.split(",").map(k => k.trim()) : [];
+export function logLineAddedState(
+	buffer: any,
+	message: any,
+	lineRequestedKeys: string,
+	clientUsesHDataHistory: boolean
+): void {
+	const requestedKeys = lineRequestedKeys
+		? lineRequestedKeys.split(",").map((k) => k.trim())
+		: [];
 
-    log.info(`
+	log.info(`
 ${colors.cyan("[_buffer_line_added]")}
   buffer: ${buffer.fullName || buffer.pointer}
   message: "${(message.text || "").substring(0, 50)}"
@@ -312,25 +360,25 @@ ${colors.cyan("[_buffer_line_added]")}
  * ```
  */
 export function createDiagnosticReport(state: Record<string, any>): string {
-    const lines = [
-        "╔═══════════════════════════════════════════════════════════╗",
-        "║ WeeChat Adapter Diagnostic Report                         ║",
-        "╠═══════════════════════════════════════════════════════════╣",
-    ];
+	const lines = [
+		"╔═══════════════════════════════════════════════════════════╗",
+		"║ WeeChat Adapter Diagnostic Report                         ║",
+		"╠═══════════════════════════════════════════════════════════╣",
+	];
 
-    for (const [key, value] of Object.entries(state)) {
-        if (typeof value === "string" && value.length > 100) {
-            lines.push(`║ ${key}:`);
-            for (const line of value.split("\n")) {
-                lines.push(`║   ${line}`);
-            }
-        } else {
-            lines.push(`║ ${key}: ${JSON.stringify(value)}`);
-        }
-    }
+	for (const [key, value] of Object.entries(state)) {
+		if (typeof value === "string" && value.length > 100) {
+			lines.push(`║ ${key}:`);
+			for (const line of value.split("\n")) {
+				lines.push(`║   ${line}`);
+			}
+		} else {
+			lines.push(`║ ${key}: ${JSON.stringify(value)}`);
+		}
+	}
 
-    lines.push("╚═══════════════════════════════════════════════════════════╝");
-    return lines.join("\n");
+	lines.push("╚═══════════════════════════════════════════════════════════╝");
+	return lines.join("\n");
 }
 
 /**
@@ -339,7 +387,7 @@ export function createDiagnosticReport(state: Record<string, any>): string {
  * Print this to console to show available debugging options
  */
 export function printDebugOptionsGuide(): void {
-    const guide = `
+	const guide = `
 ╔════════════════════════════════════════════════════════════════╗
 ║ WeeChat Debugging Environment Variables                        ║
 ╠════════════════════════════════════════════════════════════════╣
@@ -367,5 +415,5 @@ export function printDebugOptionsGuide(): void {
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
     `;
-    console.log(guide);
+	console.log(guide);
 }

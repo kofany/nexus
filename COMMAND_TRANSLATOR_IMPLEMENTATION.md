@@ -17,6 +17,7 @@ Vue Frontend → Node.js Backend (Command Translator) → irssi (Standard IRC Co
 ```
 
 **Design Principle**: All translation logic is in Node.js. irssi only receives:
+
 - Standard IRC commands: `/part`, `/mode`, `/disconnect`
 - Standard JSON message types: `close_query`, `mark_read`
 
@@ -27,11 +28,13 @@ Vue Frontend → Node.js Backend (Command Translator) → irssi (Standard IRC Co
 **Location**: `server/irssiClient.ts:569-588`
 
 **Translation Rules**:
+
 - **Channel**: `/close` → `/part #channel` (IRC command)
 - **Query**: `/close` → `close_query` JSON message type
 - **Lobby**: Pass through (no translation)
 
 **Implementation**:
+
 ```typescript
 case "close":
     if (channel.type === ChanType.CHANNEL) {
@@ -54,9 +57,11 @@ case "close":
 **Location**: `server/irssiClient.ts:591-596`
 
 **Translation**:
+
 - `/banlist` → `/mode #channel +b`
 
 **Implementation**:
+
 ```typescript
 case "banlist":
     return `mode ${channel.name} +b`;
@@ -69,10 +74,12 @@ case "banlist":
 **Location**: `server/irssiClient.ts:598-608`
 
 **Translation**:
+
 - `/quit` in lobby → `/disconnect <serverTag>`
 - `/quit` in channel/query → pass through (normal IRC quit)
 
 **Implementation**:
+
 ```typescript
 case "quit":
     if (channel.type === ChanType.LOBBY) {
@@ -88,12 +95,14 @@ case "quit":
 ### Query Close (irssi ↔ Frontend)
 
 **Direction 1: Frontend → irssi** (Close query in Vue)
+
 - **Path**: Vue → Node.js → irssi
 - **Implementation**: Command translator sends `close_query` message type
 - **irssi Handler**: `fe-web-client.c:166-195` - calls `query_destroy()`
 - **Status**: ✅ Complete
 
 **Direction 2: irssi → Frontend** (Close query in irssi terminal)
+
 - **Path**: irssi → Node.js → Vue
 - **irssi Event**: `fe-web-signals.c:846` - sends `query_closed` event
 - **Backend Handler**: `irssiClient.ts:1184-1235` - removes query and broadcasts `part`
@@ -103,11 +112,13 @@ case "quit":
 ### Channel Part (irssi ↔ Frontend)
 
 **Direction 1: Frontend → irssi** (Leave channel in Vue)
+
 - **Path**: Vue `/close` → Node.js `/part` → irssi
 - **Implementation**: Command translator converts `/close` → `/part`
 - **Status**: ✅ Complete
 
 **Direction 2: irssi → Frontend** (Part channel in irssi terminal)
+
 - **Path**: irssi → Node.js → Vue
 - **irssi Event**: `fe-web-signals.c:339` - sends `channel_part` event
 - **Backend Handler**: `feWebAdapter.ts:223-251` - removes channel and broadcasts `part`
@@ -118,6 +129,7 @@ case "quit":
 ### Backend (Node.js/TypeScript)
 
 1. **`server/irssiClient.ts`**
+
    - Lines 447-612: Added command translation layer in `handleInput()`
    - Lines 560-612: Implemented `translateCommand()` method
    - Lines 402-405: Registered `query_closed` event handler
@@ -134,6 +146,7 @@ No changes needed - frontend already sends commands correctly via `socket.emit("
 ### irssi (C)
 
 No changes needed - all required functionality already exists:
+
 - `close_query` command handler: `fe-web-client.c:166-195`
 - `query_closed` event sender: `fe-web-signals.c:846`
 - `channel_part` event sender: `fe-web-signals.c:339`
@@ -187,6 +200,7 @@ No changes needed - all required functionality already exists:
 All commands need to be tested in both directions:
 
 ### Frontend → irssi
+
 - [ ] `/close` on channel → should part channel
 - [ ] `/close` on query → should close query
 - [ ] `/banlist` on channel → should show ban list
@@ -194,11 +208,13 @@ All commands need to be tested in both directions:
 - [ ] `/quit` in channel → should quit IRC
 
 ### irssi → Frontend
+
 - [ ] `/wc` (window close) in query → should close query in Vue
 - [ ] `/part #channel` in irssi → should close channel in Vue
 - [ ] `/disconnect` in irssi → should update network status in Vue
 
 ### Edge Cases
+
 - [ ] Close query that doesn't exist → should be idempotent
 - [ ] Close channel you're not in → should handle gracefully
 - [ ] Multiple browsers open → all should sync
@@ -206,11 +222,13 @@ All commands need to be tested in both directions:
 ## Performance & Security
 
 **Performance**:
+
 - Command translation is synchronous and fast (simple switch statement)
 - No additional network round-trips (translation happens before sending)
 - Logging can be disabled in production for better performance
 
 **Security**:
+
 - All translations are validated against channel type
 - Server tag is always from network object (not user input)
 - Channel names are sanitized by IRC command validation
@@ -218,6 +236,7 @@ All commands need to be tested in both directions:
 ## Future Enhancements
 
 Potential commands that might need translation:
+
 1. `/invite` - might need special handling for Vue UI
 2. `/names` - already handled via NAMES request handler
 3. `/list` - already works (standard IRC command)
@@ -227,6 +246,7 @@ Potential commands that might need translation:
 ## Architecture Benefits
 
 This design provides:
+
 1. ✅ **Universal fe-web Module**: irssi WebSocket module can be used by other clients
 2. ✅ **Centralized Translation**: All command logic in one place (Node.js backend)
 3. ✅ **Easy Debugging**: Detailed logging at translation layer
@@ -236,17 +256,17 @@ This design provides:
 
 ## Implementation Status
 
-| Component | Status | Notes |
-|-----------|--------|-------|
+| Component                    | Status      | Notes                    |
+| ---------------------------- | ----------- | ------------------------ |
 | Command Translator (Node.js) | ✅ Complete | `irssiClient.ts:560-612` |
-| `/close` → `/part` | ✅ Complete | For channels |
-| `/close` → `close_query` | ✅ Complete | For queries |
-| `/banlist` → `/mode +b` | ✅ Complete | Standard IRC |
-| `/quit` → `/disconnect` | ✅ Complete | In lobby only |
-| Query close (irssi → Vue) | ✅ Complete | 2-way sync |
-| Channel part (irssi → Vue) | ✅ Complete | Already existed |
-| TypeScript Compilation | ✅ Success | No errors |
-| Testing | ⏸️ Pending | User will test |
+| `/close` → `/part`           | ✅ Complete | For channels             |
+| `/close` → `close_query`     | ✅ Complete | For queries              |
+| `/banlist` → `/mode +b`      | ✅ Complete | Standard IRC             |
+| `/quit` → `/disconnect`      | ✅ Complete | In lobby only            |
+| Query close (irssi → Vue)    | ✅ Complete | 2-way sync               |
+| Channel part (irssi → Vue)   | ✅ Complete | Already existed          |
+| TypeScript Compilation       | ✅ Success  | No errors                |
+| Testing                      | ⏸️ Pending  | User will test           |
 
 ## Conclusion
 

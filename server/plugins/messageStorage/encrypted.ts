@@ -47,7 +47,9 @@ class LRUCache<K, V> {
 		// Remove oldest if at capacity
 		if (this.cache.size >= this.maxSize) {
 			const firstKey = this.cache.keys().next().value;
-			this.cache.delete(firstKey);
+			if (firstKey !== undefined) {
+				this.cache.delete(firstKey);
+			}
 		}
 
 		this.cache.set(key, value);
@@ -807,7 +809,9 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 			return new Map();
 		}
 
-		const rows = await this.serialize_fetchall("SELECT network, channel, last_read_time FROM unread_markers");
+		const rows = await this.serialize_fetchall(
+			"SELECT network, channel, last_read_time FROM unread_markers"
+		);
 
 		const markers = new Map<string, number>();
 		for (const row of rows) {

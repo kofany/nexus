@@ -88,7 +88,7 @@ class ClientManager {
 
 	autoloadUsers() {
 		fs.watch(Config.getUsersPath(), (_eventType, file) => {
-			if (!file.endsWith(".json")) {
+			if (typeof file !== "string" || !file.endsWith(".json")) {
 				return;
 			}
 
@@ -266,7 +266,7 @@ class ClientManager {
 		// IrssiClient doesn't have Network[] with export() method
 		// Instead, it stores networks in irssi - we only save networkUuidMap
 		const isIrssiClient = (client as any).irssiConnection !== undefined;
-		
+
 		const json = Object.assign({}, client.config, {
 			networks: isIrssiClient ? [] : client.networks.map((n) => n.export()),
 		});

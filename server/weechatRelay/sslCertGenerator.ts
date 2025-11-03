@@ -56,7 +56,9 @@ export async function generateSelfSignedCert(
 	certsDir: string
 ): Promise<CertificateInfo> {
 	log.info(
-		`${colors.cyan("[SSL]")} Generating CA-signed certificate for user ${colors.bold(username)}...`
+		`${colors.cyan("[SSL]")} Generating CA-signed certificate for user ${colors.bold(
+			username
+		)}...`
 	);
 
 	// Create certs directory if it doesn't exist
@@ -75,7 +77,9 @@ export async function generateSelfSignedCert(
 	// Check if cert already exists
 	if (fs.existsSync(serverCertPath) && fs.existsSync(serverKeyPath)) {
 		log.info(
-			`${colors.yellow("[SSL]")} Certificate already exists for ${colors.bold(username)}, reusing`
+			`${colors.yellow("[SSL]")} Certificate already exists for ${colors.bold(
+				username
+			)}, reusing`
 		);
 		return {certPath: serverCertPath, keyPath: serverKeyPath};
 	}
@@ -148,7 +152,12 @@ keyUsage = digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth
 
 [alt_names]
-${sanEntries.map((entry, i) => `${entry.startsWith("DNS:") ? `DNS.${i + 1}` : `IP.${i + 1}`} = ${entry.split(":")[1]}`).join("\n")}
+${sanEntries
+	.map(
+		(entry, i) =>
+			`${entry.startsWith("DNS:") ? `DNS.${i + 1}` : `IP.${i + 1}`} = ${entry.split(":")[1]}`
+	)
+	.join("\n")}
 `;
 
 		fs.writeFileSync(serverConfigPath, serverConfig);
@@ -188,7 +197,9 @@ ${sanEntries.map((entry, i) => `${entry.startsWith("DNS:") ? `DNS.${i + 1}` : `I
 		}
 
 		log.info(
-			`${colors.green("[SSL]")} ✅ Generated CA-signed certificate for ${colors.bold(username)}`
+			`${colors.green("[SSL]")} ✅ Generated CA-signed certificate for ${colors.bold(
+				username
+			)}`
 		);
 		log.info(`${colors.green("[SSL]")}    CA Cert: ${caCertPath}`);
 		log.info(`${colors.green("[SSL]")}    CA Key:  ${caKeyPath}`);
@@ -201,7 +212,9 @@ ${sanEntries.map((entry, i) => `${entry.startsWith("DNS:") ? `DNS.${i + 1}` : `I
 		return {certPath: fullChainPath, keyPath: serverKeyPath};
 	} catch (error: any) {
 		log.error(
-			`${colors.red("[SSL]")} ❌ Failed to generate certificate for ${colors.bold(username)}: ${error.message}`
+			`${colors.red("[SSL]")} ❌ Failed to generate certificate for ${colors.bold(
+				username
+			)}: ${error.message}`
 		);
 		throw new Error(`Failed to generate SSL certificate: ${error.message}`);
 	}
@@ -249,4 +262,3 @@ export function deleteCertificate(certPath: string, keyPath: string): void {
 		log.error(`${colors.red("[SSL]")} Failed to delete certificate: ${error.message}`);
 	}
 }
-

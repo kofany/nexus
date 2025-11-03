@@ -62,6 +62,7 @@ npm start
 ### 3. Co powinieneś zobaczyć
 
 ✅ **Jeśli działa**:
+
 - Lista kanałów i serwerów
 - Nicklist z grupami (ops, voices, users)
 - Historia wiadomości
@@ -70,6 +71,7 @@ npm start
 - Unread/highlight markers
 
 ❌ **Jeśli nie działa**:
+
 - Sprawdź logi serwera: `tail -f logs/server.log`
 - Sprawdź czy port jest otwarty: `netstat -an | grep 9001`
 - Sprawdź czy firewall nie blokuje portu
@@ -116,58 +118,66 @@ cat users/<username>/user.json | grep -A 5 weechatRelay
 ## Typowe problemy
 
 ### 1. "Connection refused"
+
 - Sprawdź czy serwer działa: `ps aux | grep node`
 - Sprawdź czy port jest poprawny w Lith
 - Sprawdź czy WeeChat Relay jest włączony dla użytkownika
 
 ### 2. "Authentication failed"
+
 - Sprawdź czy hasło jest poprawne
 - Sprawdź logi: `tail -f logs/server.log | grep "authenticated"`
 
 ### 3. "No channels visible"
+
 - Sprawdź czy użytkownik ma połączenie z erssi
 - Sprawdź czy erssi ma jakieś kanały: `tail -f logs/server.log | grep "networks"`
 
 ### 4. "Nicklist is empty"
+
 - Sprawdź czy kanał ma użytkowników
 - Sprawdź logi: `tail -f logs/server.log | grep "nicklist"`
 
 ### 5. "Messages not appearing"
+
 - Sprawdź czy sync jest włączony: `tail -f logs/server.log | grep "Syncing"`
 - Sprawdź czy eventy są przekazywane: `tail -f logs/server.log | grep "buffer_line_added"`
 
 ## Porównanie z Vue frontend
 
-| Funkcja | Vue | Lith (WeeChat Relay) | Status |
-|---------|-----|----------------------|--------|
-| Lista kanałów | ✅ | ✅ | Działa |
-| Historia wiadomości | ✅ | ✅ | Działa |
-| Wysyłanie wiadomości | ✅ | ✅ | Działa |
-| Nicklist | ✅ | ✅ | Działa (z grupami) |
-| Live updates | ✅ | ✅ | Działa |
-| Unread markers | ✅ | ✅ | Działa (hotlist) |
-| Highlight markers | ✅ | ✅ | Działa (hotlist) |
-| Mark as read | ✅ | ⚠️ | Częściowo (TODO) |
-| Zmiana topicu | ✅ | ✅ | Działa |
-| Join/Part events | ✅ | ⚠️ | Częściowo |
-| Nick changes | ✅ | ⚠️ | TODO |
-| Network status | ✅ | ⚠️ | TODO |
+| Funkcja              | Vue | Lith (WeeChat Relay) | Status             |
+| -------------------- | --- | -------------------- | ------------------ |
+| Lista kanałów        | ✅  | ✅                   | Działa             |
+| Historia wiadomości  | ✅  | ✅                   | Działa             |
+| Wysyłanie wiadomości | ✅  | ✅                   | Działa             |
+| Nicklist             | ✅  | ✅                   | Działa (z grupami) |
+| Live updates         | ✅  | ✅                   | Działa             |
+| Unread markers       | ✅  | ✅                   | Działa (hotlist)   |
+| Highlight markers    | ✅  | ✅                   | Działa (hotlist)   |
+| Mark as read         | ✅  | ⚠️                   | Częściowo (TODO)   |
+| Zmiana topicu        | ✅  | ✅                   | Działa             |
+| Join/Part events     | ✅  | ⚠️                   | Częściowo          |
+| Nick changes         | ✅  | ⚠️                   | TODO               |
+| Network status       | ✅  | ⚠️                   | TODO               |
 
 ## Następne kroki
 
 1. **Przetestuj podstawowe funkcje**:
+
    - Połączenie
    - Lista kanałów
    - Wysyłanie wiadomości
    - Nicklist
 
 2. **Przetestuj live updates**:
+
    - Wyślij wiadomość z Vue
    - Sprawdź czy pojawia się w Lith
    - Wyślij wiadomość z Lith
    - Sprawdź czy pojawia się w Vue
 
 3. **Przetestuj hotlist**:
+
    - Zamknij kanał w Lith
    - Wyślij wiadomość do tego kanału z Vue
    - Sprawdź czy Lith pokazuje unread marker
@@ -176,4 +186,3 @@ cat users/<username>/user.json | grep -A 5 weechatRelay
    - Jeśli coś nie działa, sprawdź logi
    - Skopiuj błędy z logów
    - Opisz co robiłeś gdy wystąpił błąd
-

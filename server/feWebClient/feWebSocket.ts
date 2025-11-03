@@ -540,9 +540,7 @@ export class FeWebSocket extends EventEmitter {
 					}
 				});
 			} else {
-				log.warn(
-					`[FeWebSocket] No handlers registered for message type: ${message.type}`
-				);
+				log.warn(`[FeWebSocket] No handlers registered for message type: ${message.type}`);
 			}
 		} catch (error) {
 			log.error(`[FeWebSocket] Failed to parse message: ${error}`);
