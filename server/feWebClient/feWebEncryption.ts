@@ -12,6 +12,7 @@
  */
 
 import crypto from "crypto";
+import log from "../log";
 
 /**
  * FIXED salt for fe-web v1.5 protocol
@@ -57,7 +58,7 @@ export class FeWebEncryption {
 	 */
 	async deriveKey(): Promise<void> {
 		if (!this.enabled || !this.password) {
-			console.log("[FeWebEncryption] Encryption disabled or no password");
+			log.debug("[FeWebEncryption] Encryption disabled or no password");
 			return;
 		}
 
@@ -75,7 +76,7 @@ export class FeWebEncryption {
 					}
 
 					this.key = derivedKey;
-					console.log(
+					log.debug(
 						"[FeWebEncryption] Encryption key derived successfully (fe-web v1.5)"
 					);
 					resolve();
@@ -148,7 +149,7 @@ export class FeWebEncryption {
 			// Decode to string
 			return plaintext.toString("utf8");
 		} catch (error) {
-			console.error("[FeWebEncryption] Decryption failed:", error);
+			log.error(`[FeWebEncryption] Decryption failed: ${error}`);
 			throw new Error("Decryption failed - invalid key or corrupted data");
 		}
 	}

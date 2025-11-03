@@ -71,11 +71,16 @@ export default async function (
 		dev: false,
 	}
 ) {
-	log.info(`The Lounge ${colors.green(Helper.getVersion())} \
+	log.info(`Nexus Lounge ${colors.green(Helper.getVersion())} \
 (Node.js ${colors.green(process.versions.node)} on ${colors.green(process.platform)} ${
 		process.arch
 	})`);
 	log.info(`Configuration file: ${colors.green(Config.getConfigPath())}`);
+
+	// Log level info
+	const logLevelNames = ["error", "warn", "info", "debug"];
+	const currentLogLevel = log.getLogLevel();
+	log.info(`Log level: ${colors.green(logLevelNames[currentLogLevel])} (set via LOG_LEVEL env var or NODE_ENV)`);
 
 	const staticOptions = {
 		redirect: false,

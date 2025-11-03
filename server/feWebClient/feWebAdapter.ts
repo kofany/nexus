@@ -152,8 +152,11 @@ export class FeWebAdapter {
 		// 17. query_opened - Query window opened
 		this.socket.onMessage("query_opened", (msg) => this.handleQueryOpened(msg));
 
-		// 18. query_closed - Query window closed
-		this.socket.onMessage("query_closed", (msg) => this.handleQueryClosed(msg));
+		// 18. query_closed - Query window closed (handled by IrssiClient directly via EventEmitter)
+		// Register empty handler to suppress warning
+		this.socket.onMessage("query_closed", () => {
+			// Handled by IrssiClient.handleQueryClosed() via EventEmitter
+		});
 
 		// 19. error - Error message
 		this.socket.onMessage("error", (msg) => this.handleError(msg));
@@ -163,6 +166,12 @@ export class FeWebAdapter {
 
 		// 21. mark_read - Channel marked as read (from irssi window change)
 		this.socket.onMessage("mark_read", (msg) => this.handleMarkRead(msg));
+
+		// 22. activity_update - Activity level changed (handled by IrssiClient directly via EventEmitter)
+		// Register empty handler to suppress warning
+		this.socket.onMessage("activity_update", () => {
+			// Handled by IrssiClient.handleActivityUpdate() via EventEmitter
+		});
 	}
 
 	/**
