@@ -13,7 +13,7 @@ class Utils {
 		[
 			"",
 			"Environment variable:",
-			`  THELOUNGE_HOME            Path for all configuration files and folders. Defaults to ${colors.green(
+			`  NEXUSLOUNGE_HOME          Path for all configuration files and folders. Defaults to ${colors.green(
 				Helper.expandHome(Utils.defaultHome())
 			)}`,
 			"",
@@ -122,7 +122,7 @@ class Utils {
 			// We only ever operate in production mode
 			NODE_ENV: "production",
 
-			// If The Lounge runs from a user that does not have a home directory,
+			// If Nexus Lounge runs from a user that does not have a home directory,
 			// yarn may fail when it tries to read certain folders,
 			// we give it an existing folder so the reads do not throw a permission error.
 			// Yarn uses os.homedir() to figure out the path, which internally reads

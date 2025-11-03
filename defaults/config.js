@@ -5,7 +5,7 @@ module.exports = {
 
 	// ### `public`
 	//
-	// When set to `true`, The Lounge starts in public mode. When set to `false`,
+	// When set to `true`, Nexus Lounge starts in public mode. When set to `false`,
 	// it starts in private mode.
 	//
 	// - A **public server** does not require authentication. Anyone can connect
@@ -91,9 +91,8 @@ module.exports = {
 	// Set the default theme to serve to new users. They will be able to select a
 	// different one in their client settings among those available.
 	//
-	// The Lounge ships with two themes (`default` and `morning`) and can be
-	// extended by installing more themes. Read more about how to manage them
-	// [here](https://thelounge.chat/docs/guides/theme-creation).
+	// Nexus Lounge ships with multiple themes and can be extended by installing
+	// more themes.
 	//
 	// This value needs to be the package name and not the display name. For
 	// example, the value for Morning would be `morning`, and the value for
@@ -124,19 +123,19 @@ module.exports = {
 
 	// ### `prefetchStorage`
 
-	// When set to `true`, The Lounge will store and proxy prefetched images and
+	// When set to `true`, Nexus Lounge will store and proxy prefetched images and
 	// thumbnails on the filesystem rather than directly display the content at
 	// the original URLs.
 	//
 	// This option primarily exists to resolve mixed content warnings by not
 	// loading images from http hosts. This option does not work for video
-	// or audio as The Lounge will only load these from https hosts.
+	// or audio as Nexus Lounge will only load these from https hosts.
 	//
-	// If storage is enabled, The Lounge will fetch and store images and thumbnails
-	// in the `${THELOUNGE_HOME}/storage` folder.
+	// If storage is enabled, Nexus Lounge will fetch and store images and thumbnails
+	// in the `${NEXUSLOUNGE_HOME}/storage` folder.
 	//
 	// Images are deleted when they are no longer referenced by any message
-	// (controlled by `maxHistory`), and the folder is cleaned up when The Lounge
+	// (controlled by `maxHistory`), and the folder is cleaned up when Nexus Lounge
 	// restarts.
 	//
 	// This value is set to `false` by default.
@@ -176,10 +175,10 @@ module.exports = {
 
 	// ### `fileUpload`
 	//
-	// Allow uploading files to the server hosting The Lounge.
+	// Allow uploading files to the server hosting Nexus Lounge.
 	//
-	// Files are stored in the `${THELOUNGE_HOME}/uploads` folder, do not expire,
-	// and are not removed by The Lounge. This may cause issues depending on your
+	// Files are stored in the `${NEXUSLOUNGE_HOME}/uploads` folder, do not expire,
+	// and are not removed by Nexus Lounge. This may cause issues depending on your
 	// hardware, for example in terms of disk usage.
 	//
 	// The available keys for the `fileUpload` object are:
@@ -194,7 +193,7 @@ module.exports = {
 	//   you can set this option to `"https://example.com/folder/"` and the final URL
 	//   would look like `"https://example.com/folder/aabbccddeeff1234/name.png"`.
 	//   If you use this option, you must have a reverse proxy configured,
-	//   to correctly proxy the uploads URLs back to The Lounge.
+	//   to correctly proxy the uploads URLs back to Nexus Lounge.
 	//   This value is set to `null` by default.
 	fileUpload: {
 		enable: false,
@@ -214,9 +213,8 @@ module.exports = {
 	// Set users' default `quit` and `part` messages if they are not providing
 	// one.
 	//
-	// This value is set to `"The Lounge - https://thelounge.chat"` by
-	// default.
-	leaveMessage: "The Lounge - https://thelounge.chat",
+	// This value is set to `"Nexus Lounge"` by default.
+	leaveMessage: "Nexus Lounge",
 
 	// ## Default network
 
@@ -227,7 +225,7 @@ module.exports = {
 	//
 	// The available keys for the `defaults` object are:
 	//
-	// - `name`: Name to display in the channel list of The Lounge. This value is
+	// - `name`: Name to display in the channel list of Nexus Lounge. This value is
 	//   not forwarded to the IRC network.
 	// - `host`: IP address or hostname of the IRC server.
 	// - `port`: Usually 6667 for unencrypted connections and 6697 for
@@ -245,8 +243,7 @@ module.exports = {
 	// - `leaveMessage`: Network specific leave message (overrides global leaveMessage)
 	// - `join`: Comma-separated list of channels to auto-join once connected.
 	//
-	// This value is set to connect to the official channel of The Lounge on
-	// Libera.Chat by default:
+	// Default configuration for Libera.Chat:
 	//
 	// ```js
 	// defaults: {
@@ -256,10 +253,10 @@ module.exports = {
 	//   password: "",
 	//   tls: true,
 	//   rejectUnauthorized: true,
-	//   nick: "thelounge%%",
-	//   username: "thelounge",
-	//   realname: "The Lounge User",
-	//   join: "#thelounge"
+	//   nick: "nexuslounge%%",
+	//   username: "nexuslounge",
+	//   realname: "Nexus Lounge User",
+	//   join: ""
 	// }
 	// ```
 	defaults: {
@@ -269,10 +266,10 @@ module.exports = {
 		password: "",
 		tls: true,
 		rejectUnauthorized: true,
-		nick: "thelounge%%",
-		username: "thelounge",
+		nick: "nexuslounge%%",
+		username: "nexuslounge",
 		realname: "",
-		join: "#thelounge",
+		join: "",
 		leaveMessage: "",
 	},
 

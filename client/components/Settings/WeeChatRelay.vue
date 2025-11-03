@@ -41,6 +41,85 @@
 				</div>
 
 				<div class="input-group">
+					<label for="weechat-protocol">Protocol</label>
+					<p class="help">
+						Choose connection protocol. TCP is recommended for Lith and weechat-android.
+						WebSocket is for Glowing Bear and web clients.
+					</p>
+					<select
+						id="weechat-protocol"
+						v-model="config.protocol"
+						name="weechat_protocol"
+						class="input"
+					>
+						<option value="tcp">TCP (recommended for Lith/weechat-android)</option>
+						<option value="ws">WebSocket (for Glowing Bear)</option>
+					</select>
+				</div>
+
+				<div class="input-group">
+					<label class="opt">
+						<input v-model="config.tls" type="checkbox" name="weechat_tls" />
+						Enable TLS/SSL
+						<span class="help">Secure connection with certificate</span>
+					</label>
+				</div>
+
+				<template v-if="config.tls">
+					<div class="input-group">
+						<label class="opt">
+							<input
+								v-model="config.useSelfSigned"
+								type="checkbox"
+								name="weechat_use_self_signed"
+							/>
+							Use self-signed certificate (auto-generated)
+							<span class="help">
+								Automatically generate a self-signed certificate. Works with
+								weechat-android (requires manual accept). Does NOT work with Lith
+								(use custom certificate instead).
+							</span>
+						</label>
+					</div>
+
+					<template v-if="!config.useSelfSigned">
+						<div class="input-group">
+							<label for="weechat-custom-cert">Custom Certificate (PEM)</label>
+							<p class="help">
+								Paste your certificate in PEM format (e.g., Let's Encrypt
+								fullchain.pem). This will overwrite the auto-generated certificate.
+							</p>
+							<textarea
+								id="weechat-custom-cert"
+								v-model="config.customCert"
+								rows="10"
+								class="input"
+								placeholder="-----BEGIN CERTIFICATE-----
+MIIFa...
+-----END CERTIFICATE-----"
+							></textarea>
+						</div>
+
+						<div class="input-group">
+							<label for="weechat-custom-key">Private Key (PEM)</label>
+							<p class="help">
+								Paste your private key in PEM format (e.g., Let's Encrypt
+								privkey.pem). This will overwrite the auto-generated key.
+							</p>
+							<textarea
+								id="weechat-custom-key"
+								v-model="config.customKey"
+								rows="10"
+								class="input"
+								placeholder="-----BEGIN PRIVATE KEY-----
+MIIJQ...
+-----END PRIVATE KEY-----"
+							></textarea>
+						</div>
+					</template>
+				</template>
+
+				<div class="input-group">
 					<label for="weechat-password">Password</label>
 					<p class="help">
 						Set a password for Lith to connect. This is separate from your login
@@ -97,6 +176,14 @@
 						<strong>Port:</strong> {{ currentConfig.port }}
 					</p>
 					<p v-if="currentConfig.enabled">
+						<strong>Protocol:</strong>
+						{{ currentConfig.protocol === "tcp" ? "TCP" : "WebSocket" }}
+					</p>
+					<p v-if="currentConfig.enabled">
+						<strong>TLS/SSL:</strong>
+						{{ currentConfig.tls ? "Enabled" : "Disabled" }}
+					</p>
+					<p v-if="currentConfig.enabled">
 						<strong>Compression:</strong>
 						{{ currentConfig.compression ? "Enabled" : "Disabled" }}
 					</p>
@@ -104,8 +191,8 @@
 						<strong>Connect with Lith:</strong><br />
 						Host: {{ serverAddress }}<br />
 						Port: {{ currentConfig.port }}<br />
-						Path: /weechat<br />
-						Use WebSocket: Yes<br />
+						Protocol: {{ currentConfig.protocol === "tcp" ? "Plain socket" : "WebSocket" }}<br />
+						TLS: {{ currentConfig.tls ? "Yes" : "No" }}<br />
 						Password: (the password you set above)
 					</p>
 				</div>
@@ -169,6 +256,11 @@ import RevealPassword from "../RevealPassword.vue";
 interface WeeChatRelayConfig {
 	enabled: boolean;
 	port: number;
+	protocol: "tcp" | "ws";
+	tls: boolean;
+	useSelfSigned: boolean;
+	customCert: string;
+	customKey: string;
 	password: string;
 	compression: boolean;
 }
@@ -187,6 +279,11 @@ export default defineComponent({
 		const config = ref<WeeChatRelayConfig>({
 			enabled: false,
 			port: 9001,
+			protocol: "tcp",
+			tls: false,
+			useSelfSigned: true,
+			customCert: "",
+			customKey: "",
 			password: "",
 			compression: true,
 		});
@@ -235,6 +332,8 @@ export default defineComponent({
 			const payload = {
 				enabled: config.value.enabled,
 				port: config.value.port,
+				protocol: config.value.protocol,
+				tls: config.value.tls,
 				password: config.value.password,
 				compression: config.value.compression,
 			};
@@ -260,6 +359,11 @@ export default defineComponent({
 				// Pre-fill form with current config (except password)
 				config.value.enabled = data.enabled;
 				config.value.port = data.port;
+				config.value.protocol = data.protocol || "tcp";
+				config.value.tls = data.tls || false;
+				config.value.useSelfSigned = data.useSelfSigned !== false; // Default to true
+				config.value.customCert = data.customCert || "";
+				config.value.customKey = data.customKey || "";
 				config.value.compression = data.compression;
 				// Don't pre-fill password for security
 			});

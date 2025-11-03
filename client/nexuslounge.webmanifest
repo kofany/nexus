@@ -1,7 +1,7 @@
 {
-	"name": "The Lounge",
-	"short_name": "The Lounge",
-	"description": "Self-hosted web IRC client",
+	"name": "Nexus Lounge",
+	"short_name": "Nexus Lounge",
+	"description": "Self-hosted web IRC client with erssi bridge",
 	"start_url": ".",
 	"display": "standalone",
 	"theme_color": "#415364",

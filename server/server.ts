@@ -956,12 +956,22 @@ function initializeClient(
 			(socket as any).emit("weechat:config:info", {
 				enabled: irssiClient.config.weechatRelay?.enabled || false,
 				port: irssiClient.config.weechatRelay?.port || 9001,
+				protocol: irssiClient.config.weechatRelay?.protocol || "tcp",
+				tls: irssiClient.config.weechatRelay?.tls ?? false,
+				useSelfSigned: irssiClient.config.weechatRelay?.useSelfSigned ?? true,
+				customCert: irssiClient.config.weechatRelay?.customCert || "",
+				customKey: irssiClient.config.weechatRelay?.customKey || "",
 				compression: irssiClient.config.weechatRelay?.compression ?? true,
 			});
 		});
 
 		(socket as any).on("weechat:config:save", async (data: any) => {
-			log.info(`[weechat:config:save] Request from ${socket.id}:`, data);
+			log.info(`[weechat:config:save] Request from ${socket.id}:`, {
+				...data,
+				password: data.password ? "***" : undefined,
+				customCert: data.customCert ? `${data.customCert.substring(0, 50)}...` : undefined,
+				customKey: data.customKey ? "***" : undefined,
+			});
 			const irssiClient = client as unknown as IrssiClient;
 
 			if (!_.isPlainObject(data)) {
@@ -971,7 +981,7 @@ function initializeClient(
 				return;
 			}
 
-			const {enabled, port, password, compression} = data;
+			const {enabled, port, protocol, tls, useSelfSigned, customCert, customKey, password, compression} = data;
 
 			// Validate
 			if (enabled && (!port || !password)) {
@@ -1011,6 +1021,11 @@ function initializeClient(
 						weechatRelay: {
 							enabled: true,
 							port,
+							protocol: protocol || "tcp",
+							tls: tls ?? false,
+							useSelfSigned: useSelfSigned ?? true,
+							customCert: customCert || "",
+							customKey: customKey || "",
 							passwordEncrypted,
 							compression: compression ?? true,
 						},
@@ -1032,6 +1047,8 @@ function initializeClient(
 						weechatRelay: {
 							enabled: false,
 							port: port || 9001,
+							protocol: "tcp",
+							tls: false,
 							passwordEncrypted: "",
 							compression: true,
 						},
@@ -1567,12 +1584,22 @@ function initializeIrssiClient(
 		(socket as any).emit("weechat:config:info", {
 			enabled: client.config.weechatRelay?.enabled || false,
 			port: client.config.weechatRelay?.port || 9001,
+			protocol: client.config.weechatRelay?.protocol || "tcp",
+			tls: client.config.weechatRelay?.tls ?? false,
+			useSelfSigned: client.config.weechatRelay?.useSelfSigned ?? true,
+			customCert: client.config.weechatRelay?.customCert || "",
+			customKey: client.config.weechatRelay?.customKey || "",
 			compression: client.config.weechatRelay?.compression ?? true,
 		});
 	});
 
 	(socket as any).on("weechat:config:save", async (data: any) => {
-		log.info(`[weechat:config:save] Request from ${socket.id}:`, data);
+		log.info(`[weechat:config:save] Request from ${socket.id}:`, {
+			...data,
+			password: data.password ? "***" : undefined,
+			customCert: data.customCert ? `${data.customCert.substring(0, 50)}...` : undefined,
+			customKey: data.customKey ? "***" : undefined,
+		});
 
 		if (!_.isPlainObject(data)) {
 			(socket as any).emit("weechat:config:error", {
@@ -1581,7 +1608,7 @@ function initializeIrssiClient(
 			return;
 		}
 
-		const {enabled, port, password, compression} = data;
+		const {enabled, port, protocol, tls, useSelfSigned, customCert, customKey, password, compression} = data;
 
 		// Validate
 		if (enabled && (!port || !password)) {
@@ -1621,6 +1648,11 @@ function initializeIrssiClient(
 					weechatRelay: {
 						enabled: true,
 						port,
+						protocol: protocol || "tcp",
+						tls: tls ?? false,
+						useSelfSigned: useSelfSigned ?? true,
+						customCert: customCert || "",
+						customKey: customKey || "",
 						passwordEncrypted,
 						compression: compression ?? true,
 					},
@@ -1642,6 +1674,8 @@ function initializeIrssiClient(
 					weechatRelay: {
 						enabled: false,
 						port: port || 9001,
+						protocol: "tcp",
+						tls: false,
 						passwordEncrypted: "",
 						compression: true,
 					},

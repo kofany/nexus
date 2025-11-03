@@ -675,10 +675,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		log.info(`${colors.magenta("[Node->WeeChat]")} 📄 Building per-buffer lines HData: buffer=${bufferPtr}, count=${count}, keys="${requestedKeys}"`);
 
 		const msg = new WeeChatMessage(id);
-		const keys = requestedKeys.split(",").map(k => k.trim());
+
+		// Default keys if not specified (Lith sends empty keys!)
+		const expectedKeys = ["id", "date", "displayed", "prefix", "message", "highlight", "notify", "tags_array"];
+		const keys = requestedKeys.trim() === ""
+			? expectedKeys
+			: requestedKeys.split(",").map(k => k.trim());
 
 		// Validate keys (MUST be exactly: id,date,displayed,prefix,message,highlight,notify,tags_array)
-		const expectedKeys = ["id", "date", "displayed", "prefix", "message", "highlight", "notify", "tags_array"];
 		if (keys.length !== 8 || !keys.every((k, i) => k === expectedKeys[i])) {
 			log.error(`${colors.red("[Node->WeeChat]")} ❌ Invalid keys for per-buffer lines: "${requestedKeys}" (expected: "${expectedKeys.join(",")}")`);
 			buildEmptyHData(msg);

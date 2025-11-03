@@ -14,6 +14,8 @@ import _ from "lodash";
 import {v4 as uuidv4} from "uuid";
 import crypto from "crypto";
 import colors from "chalk";
+import fs from "fs";
+import path from "path";
 import type {Socket} from "socket.io";
 
 import log from "./log";
@@ -55,8 +57,17 @@ export type IrssiConnectionConfig = {
 export type WeeChatRelayConfig = {
 	enabled: boolean;
 	port: number; // Unique port for this user
+	protocol: "tcp" | "ws"; // TCP or WebSocket
+	tls: boolean; // Enable TLS/SSL
 	passwordEncrypted: string; // Encrypted with encryption key (like irssiConnection)
 	compression: boolean;
+	// TLS certificate options
+	useSelfSigned?: boolean; // Use auto-generated self-signed cert (default: true)
+	customCert?: string; // Custom certificate (PEM format) - overwrites self-signed
+	customKey?: string; // Custom private key (PEM format) - overwrites self-signed
+	// TLS cert paths (auto-generated or user-uploaded)
+	certPath?: string; // Path to certificate file (relative to home dir)
+	keyPath?: string; // Path to private key file (relative to home dir)
 };
 
 // User config for irssi proxy mode
@@ -195,6 +206,13 @@ export class IrssiClient {
 
 		if (!_.isPlainObject(this.config.browser)) {
 			this.config.browser = {};
+		}
+
+		// Initialize weechatRelay config with defaults
+		if (this.config.weechatRelay) {
+			this.config.weechatRelay.protocol = this.config.weechatRelay.protocol || "tcp";
+			this.config.weechatRelay.tls = this.config.weechatRelay.tls ?? false;
+			this.config.weechatRelay.compression = this.config.weechatRelay.compression ?? true;
 		}
 
 		if (this.config.clientSettings.awayMessage) {
@@ -2652,32 +2670,92 @@ export class IrssiClient {
 		log.info(`${colors.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${colors.bold(this.name)}`);
 		log.info(`${colors.cyan("[WeeChat Relay]")} Config:`, JSON.stringify(this.config.weechatRelay));
 
+		// Validate config
 		if (!this.config.weechatRelay?.enabled) {
 			log.info(`${colors.yellow("[WeeChat Relay]")} Not enabled for user ${colors.bold(this.name)}`);
 			return;
 		}
 
+		if (!this.config.weechatRelay.port || this.config.weechatRelay.port < 1024 || this.config.weechatRelay.port > 65535) {
+			log.warn(`${colors.yellow("[WeeChat Relay]")} Invalid port for user ${colors.bold(this.name)}: ${this.config.weechatRelay.port}`);
+			return;
+		}
+
+		if (!this.config.weechatRelay.passwordEncrypted) {
+			log.warn(`${colors.yellow("[WeeChat Relay]")} No password configured for user ${colors.bold(this.name)}`);
+			return;
+		}
+
 		if (this.weechatRelayServer) {
-			log.warn(`WeeChat Relay already running for user ${colors.bold(this.name)}`);
+			log.warn(`${colors.yellow("[WeeChat Relay]")} Already running for user ${colors.bold(this.name)}`);
 			return;
 		}
 
 		// Decrypt WeeChat password
-		if (!this.config.weechatRelay.passwordEncrypted) {
-			log.warn(`User ${colors.bold(this.name)} has no WeeChat Relay password configured`);
-			return;
-		}
-
 		log.info(`${colors.cyan("[WeeChat Relay]")} Decrypting password for user ${colors.bold(this.name)}`);
-
 		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
 		this.weechatRelayPassword = await decryptIrssiPassword(
 			this.config.weechatRelay.passwordEncrypted,
-			"weechat-relay", // Use fixed salt for WeeChat password
+			"weechat-relay",
 			this.config.weechatRelay.port
 		);
 
-		log.info(`${colors.cyan("[WeeChat Relay]")} Password decrypted, length: ${this.weechatRelayPassword.length}`);
+		// Handle TLS certificate
+		let certPath: string | undefined;
+		let keyPath: string | undefined;
+
+		if (this.config.weechatRelay.tls) {
+			const Config = (await import("./config")).default;
+			const certsDir = Config.getClientCertificatesPath();
+
+			certPath = path.join(certsDir, `${this.name}-cert.pem`);
+			keyPath = path.join(certsDir, `${this.name}-key.pem`);
+
+			// Default to self-signed if not specified
+			const useSelfSigned = this.config.weechatRelay.useSelfSigned !== false;
+
+			if (useSelfSigned) {
+				// OPTION 1: Self-signed (auto-generate)
+				log.info(`${colors.cyan("[WeeChat Relay]")} Using self-signed certificate...`);
+				const {generateSelfSignedCert} = await import("./weechatRelay/sslCertGenerator");
+				const certInfo = await generateSelfSignedCert(this.name, certsDir);
+				certPath = certInfo.certPath;
+				keyPath = certInfo.keyPath;
+			} else {
+				// OPTION 2: Custom cert
+				log.info(`${colors.cyan("[WeeChat Relay]")} Using custom certificate...`);
+
+				// Check if cert files already exist (e.g., Let's Encrypt)
+				const certExists = fs.existsSync(certPath);
+				const keyExists = fs.existsSync(keyPath);
+
+				if (certExists && keyExists) {
+					// Files exist - use them!
+					log.info(`${colors.green("[WeeChat Relay]")} ✅ Using existing certificate files`);
+					log.info(`${colors.green("[WeeChat Relay]")}    Cert: ${certPath}`);
+					log.info(`${colors.green("[WeeChat Relay]")}    Key:  ${keyPath}`);
+				} else if (this.config.weechatRelay.customCert && this.config.weechatRelay.customKey) {
+					// Files don't exist but user provided cert/key in config - save them!
+					log.info(`${colors.cyan("[WeeChat Relay]")} Saving custom certificate from config...`);
+					fs.writeFileSync(certPath, this.config.weechatRelay.customCert);
+					fs.writeFileSync(keyPath, this.config.weechatRelay.customKey);
+					fs.chmodSync(keyPath, 0o600); // Secure permissions
+					log.info(`${colors.green("[WeeChat Relay]")} ✅ Custom certificate saved to ${certPath}`);
+				} else {
+					// No files and no cert/key in config - ERROR!
+					throw new Error(
+						`Custom certificate enabled but cert/key not found.\n` +
+						`Expected files: ${certPath}, ${keyPath}\n` +
+						`Or provide cert/key in WeeChat Relay settings.`
+					);
+				}
+			}
+
+			// Save cert paths to config (for future use)
+			this.config.weechatRelay.certPath = certPath;
+			this.config.weechatRelay.keyPath = keyPath;
+			this.save();
+		}
 
 		// Import WeeChat Relay components
 		log.info(`${colors.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
@@ -2685,19 +2763,21 @@ export class IrssiClient {
 		const {NodeToWeeChatAdapter} = await import("./weechatRelay/nodeToWeechatAdapter");
 		const {WeeChatToNodeAdapter} = await import("./weechatRelay/weechatToNodeAdapter");
 
-		// Create shared NodeToWeeChatAdapter (one per user, shared by all Lith clients)
+		// Create shared NodeToWeeChatAdapter (one per user, shared by all clients)
 		if (!this.weechatNodeAdapter) {
 			log.info(`${colors.cyan("[WeeChat Relay]")} Creating NodeToWeeChatAdapter...`);
 			this.weechatNodeAdapter = new NodeToWeeChatAdapter(this);
 		}
 
 		// Create server
-		log.info(`${colors.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer on port ${this.config.weechatRelay.port}...`);
+		log.info(`${colors.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer...`);
 		this.weechatRelayServer = new WeeChatRelayServer({
-			tcpPort: this.config.weechatRelay.port, // TCP for Lith
-			tcpHost: "0.0.0.0", // Listen on all interfaces
-			wsPort: undefined, // Disable WebSocket (use TCP only)
-			wsHost: undefined,
+			port: this.config.weechatRelay.port,
+			host: "0.0.0.0", // Listen on all interfaces
+			protocol: this.config.weechatRelay.protocol || "tcp", // Default to TCP
+			tls: this.config.weechatRelay.tls || false,
+			certPath,
+			keyPath,
 			wsPath: "/weechat",
 			password: this.weechatRelayPassword,
 			passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
