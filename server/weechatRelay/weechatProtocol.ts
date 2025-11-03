@@ -1,15 +1,15 @@
 /**
  * WeeChat Relay Protocol - Binary Message Encoder/Decoder
- * 
+ *
  * Implements the WeeChat Relay binary protocol for communication with clients like Lith.
  * Based on WeeChat Relay Protocol specification and weechat/src/plugins/relay/weechat/
- * 
+ *
  * Message format:
  * - 4 bytes: length (uint32, big endian)
  * - 1 byte: compression flag (0=off, 1=zlib, 2=zstd)
  * - N bytes: message ID (string with length prefix)
  * - N bytes: objects (typed data)
- * 
+ *
  * Object types:
  * - chr: char (1 byte)
  * - int: integer (4 bytes, big endian)

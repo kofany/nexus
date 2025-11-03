@@ -1,4 +1,5 @@
-# fe-web WebSocket Message Formats  
+# fe-web WebSocket Message Formats
+
 Kompletna lista wszystkich komunikatów obsługiwanych przez fe-web w wersji aktualnej.  
 Format: dla każdego typu komunikatu pokazane są formaty JSON dla kierunku klient → serwer i serwer → klient.
 
@@ -6,7 +7,8 @@ Format: dla każdego typu komunikatu pokazane są formaty JSON dla kierunku klie
 
 ## 1. Synchronizacja serwera / Server Synchronization / Serversynchronisation
 
-### Klient → Serwer / Client → Server / Client → Server  
+### Klient → Serwer / Client → Server / Client → Server
+
 ```json
 {
   "type": "sync_server",
@@ -649,3 +651,4 @@ Uwagi / Notes / Hinweise:
     •   Pole extra zawiera dodatkowe dane specyficzne dla typu komunikatu / The extra field contains additional type-specific data / Das Feld extra enthält zusätzliche typabhängige Daten
     •   Komunikaty klient → serwer mogą zawierać opcjonalne pole id dla śledzenia odpowiedzi / Client → server messages may include optional id for tracking responses / Client → Server Nachrichten können ein optionales id zur Verfolgung von Antworten enthalten
     •   Większość akcji klienta odbywa się przez command z komendami IRC / Most client actions are done via command with IRC commands / Die meisten Client-Aktionen erfolgen über command mit IRC-Befehlen
+```

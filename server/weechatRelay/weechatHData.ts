@@ -1,9 +1,9 @@
 /**
  * WeeChat Relay HData Builder
- * 
+ *
  * HData is the most complex data type in WeeChat Relay protocol.
  * It represents structured data with multiple objects, each with multiple fields.
- * 
+ *
  * Format:
  * - hpath: path to data (e.g., "buffer:0x12345678")
  * - keys: comma-separated list of "key:type" pairs (e.g., "id:ptr,number:int,name:str")
@@ -13,7 +13,18 @@
  *   - values: one value per key
  */
 
-import {WeeChatMessage, OBJ_HDATA, OBJ_INT, OBJ_LONG, OBJ_STRING, OBJ_POINTER, OBJ_TIME, OBJ_CHAR, OBJ_BUFFER, OBJ_ARRAY} from "./weechatProtocol";
+import {
+	WeeChatMessage,
+	OBJ_HDATA,
+	OBJ_INT,
+	OBJ_LONG,
+	OBJ_STRING,
+	OBJ_POINTER,
+	OBJ_TIME,
+	OBJ_CHAR,
+	OBJ_BUFFER,
+	OBJ_ARRAY,
+} from "./weechatProtocol";
 
 export interface HDataField {
 	name: string;
@@ -42,12 +53,14 @@ export function buildHData(
 	msg.addString(hpath);
 
 	// Build keys string (e.g., "id:ptr,number:int,name:str")
-	const keys = fields.map((f) => {
-		if (f.type === "arr" && f.arrayType) {
-			return `${f.name}:${f.type}:${f.arrayType}`;
-		}
-		return `${f.name}:${f.type}`;
-	}).join(",");
+	const keys = fields
+		.map((f) => {
+			if (f.type === "arr" && f.arrayType) {
+				return `${f.name}:${f.type}:${f.arrayType}`;
+			}
+			return `${f.name}:${f.type}`;
+		})
+		.join(",");
 	msg.addString(keys);
 
 	// Add count
@@ -120,11 +133,11 @@ export function stringToPointer(str: string): bigint {
 	// Simple hash function to generate consistent pointers
 	let hash = 0n;
 	for (let i = 0; i < str.length; i++) {
-		hash = ((hash << 5n) - hash) + BigInt(str.charCodeAt(i));
-		hash = hash & 0xFFFFFFFFFFFFFFFFn; // Keep it 64-bit
+		hash = (hash << 5n) - hash + BigInt(str.charCodeAt(i));
+		hash = hash & 0xffffffffffffffffn; // Keep it 64-bit
 	}
 	// Ensure it's non-zero and positive
-	return hash === 0n ? 1n : (hash < 0n ? -hash : hash);
+	return hash === 0n ? 1n : hash < 0n ? -hash : hash;
 }
 
 /**
@@ -215,4 +228,3 @@ export function convertToWeeChatColors(text: string): string {
 
 	return result;
 }
-

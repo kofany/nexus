@@ -5,6 +5,7 @@
 This document provides a complete specification for implementing a WebSocket client that connects to the irssi fe-web module.
 
 **⚠️ IMPORTANT**:
+
 - Password authentication is **REQUIRED** as of version 1.1
 - **Application-level encryption (AES-256-GCM)** is available as of version 1.3 (enabled by default)
 
@@ -52,6 +53,7 @@ Sec-WebSocket-Version: 13
 ```
 
 **Important**:
+
 - `Sec-WebSocket-Key` must be a random 16-byte value, base64-encoded
 - Generate new key for each connection
 - **Password is REQUIRED** - must be provided in query parameter `?password=yourpassword`
@@ -71,6 +73,7 @@ Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
 ```
 
 The `Sec-WebSocket-Accept` value is computed as:
+
 ```
 BASE64(SHA1(Sec-WebSocket-Key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
 ```
@@ -78,11 +81,13 @@ BASE64(SHA1(Sec-WebSocket-Key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
 ### 4. Post-Handshake
 
 After successful handshake with valid password:
+
 1. Server immediately sends `auth_ok` message (see below)
 2. Client is now authenticated
 3. Connection is ready for bidirectional communication
 
 **If password is missing or invalid**:
+
 - Server responds with `HTTP/1.1 401 Unauthorized`
 - Connection is closed immediately
 - No `auth_ok` message is sent
@@ -96,30 +101,34 @@ After successful handshake with valid password:
 Messages are sent as **WebSocket frames** containing JSON:
 
 **With encryption enabled (default):**
+
 - **BINARY frames** (opcode 0x2) containing encrypted JSON
 - Payload format: `[IV (12 bytes)] [Ciphertext] [Auth Tag (16 bytes)]`
 
 **With encryption disabled:**
+
 - **TEXT frames** (opcode 0x1) containing plain JSON
 
 #### Client → Server Frames
+
 - **MUST** be masked (RFC 6455 requirement)
 - Use random 4-byte masking key per frame
 - Payload is encrypted JSON (binary) or plain JSON (text)
 
 #### Server → Client Frames
+
 - **MUST NOT** be masked (RFC 6455 requirement)
 - Payload is encrypted JSON (binary) or plain JSON (text)
 
 ### Supported Opcodes
 
-| Opcode | Name   | Direction | Description |
-|--------|--------|-----------|-------------|
-| 0x1    | TEXT   | Both      | Plain JSON message (encryption disabled) |
+| Opcode | Name   | Direction | Description                                 |
+| ------ | ------ | --------- | ------------------------------------------- |
+| 0x1    | TEXT   | Both      | Plain JSON message (encryption disabled)    |
 | 0x2    | BINARY | Both      | Encrypted JSON message (encryption enabled) |
-| 0x8    | CLOSE  | Both      | Connection close |
-| 0x9    | PING   | Both      | Keepalive ping |
-| 0xA    | PONG   | Both      | Keepalive pong |
+| 0x8    | CLOSE  | Both      | Connection close                            |
+| 0x9    | PING   | Both      | Keepalive ping                              |
+| 0xA    | PONG   | Both      | Keepalive pong                              |
 
 ### Keepalive
 
@@ -137,15 +146,15 @@ All messages are JSON objects with a `type` field.
 
 ### Common Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | string | Yes | Message type identifier |
-| `id` | string | No | Unique message ID (for tracking requests) |
-| `timestamp` | number | No | Unix timestamp (server messages only) |
-| `server` | string | No | IRC server tag |
-| `channel` | string | No | Channel name (with #) |
-| `nick` | string | No | Nickname |
-| `text` | string | No | Message text/content |
+| Field       | Type   | Required | Description                               |
+| ----------- | ------ | -------- | ----------------------------------------- |
+| `type`      | string | Yes      | Message type identifier                   |
+| `id`        | string | No       | Unique message ID (for tracking requests) |
+| `timestamp` | number | No       | Unix timestamp (server messages only)     |
+| `server`    | string | No       | IRC server tag                            |
+| `channel`   | string | No       | Channel name (with #)                     |
+| `nick`      | string | No       | Nickname                                  |
+| `text`      | string | No       | Message text/content                      |
 
 ---
 
@@ -156,6 +165,7 @@ All messages are JSON objects with a `type` field.
 Synchronize client with one or all IRC networks.
 
 **Sync with all networks** (recommended for multi-network UI):
+
 ```json
 {
   "type": "sync_server",
@@ -164,6 +174,7 @@ Synchronize client with one or all IRC networks.
 ```
 
 **Sync with specific network**:
+
 ```json
 {
   "type": "sync_server",
@@ -174,9 +185,11 @@ Synchronize client with one or all IRC networks.
 **Response**: Server sends complete state dump (see State Dump section).
 
 **Fields**:
+
 - `server` (string, required): IRC network tag or `"*"` for all networks
 
 **Best Practices**:
+
 - Use `"*"` at startup to receive all networks/channels
 - Include `server` field in subsequent `command` messages
 - Re-sync only if connection was lost or state is stale
@@ -197,6 +210,7 @@ Execute an IRC command on a specific server/network.
 ```
 
 **Examples**:
+
 ```json
 {"type": "command", "command": "/join #channel", "server": "libera"}
 {"type": "command", "command": "/msg nick Hello!", "server": "ircnet"}
@@ -207,6 +221,7 @@ Execute an IRC command on a specific server/network.
 ```
 
 **Fields**:
+
 - `command` (string, required): IRC command starting with `/`
 - `server` (string, optional): IRC network/server tag for this command
   - If provided, command executes on specified server
@@ -214,11 +229,13 @@ Execute an IRC command on a specific server/network.
   - **Recommended**: Always include for multi-network setups
 
 **Why include server field?**
+
 - Allows commands on different networks without re-syncing
 - Better for UI with multiple networks visible simultaneously
 - Avoids excessive `sync_server` messages
 
 **Response**: Depends on command:
+
 - Messages result in `message` events
 - WHOIS results in `whois` response
 - MODE results in `channel_mode` events
@@ -238,6 +255,7 @@ Application-level ping (separate from WebSocket PING).
 ```
 
 **Response**:
+
 ```json
 {
   "id": "1234567890-0001",
@@ -248,6 +266,7 @@ Application-level ping (separate from WebSocket PING).
 ```
 
 **Fields**:
+
 - `id` (string, optional): Request identifier for matching responses
 
 ---
@@ -265,6 +284,7 @@ Close a query (private message) window with a specific user.
 ```
 
 **Fields**:
+
 - `server` (string, required): IRC network/server tag
 - `nick` (string, required): Nickname of the user to close query with
 
@@ -278,28 +298,28 @@ Close a query (private message) window with a specific user.
 
 ### Message Types Overview
 
-| Type | Description |
-|------|-------------|
-| `auth_ok` | Authentication successful |
-| `message` | IRC message (public/private) |
-| `server_status` | Server connection status |
-| `channel_join` | User joined channel |
-| `channel_part` | User left channel |
-| `channel_kick` | User kicked from channel |
-| `user_quit` | User quit IRC |
-| `topic` | Channel topic |
-| `channel_mode` | Channel mode change |
-| `nicklist` | Complete channel nicklist |
-| `nick_change` | Nick change |
-| `user_mode` | User mode change |
-| `away` | Away status change |
-| `whois` | WHOIS response |
-| `channel_list` | Channel list (ban/except/invite) |
-| `state_dump` | Initial state dump |
-| `query_opened` | Query (PM) window opened |
-| `query_closed` | Query (PM) window closed |
-| `error` | Error message |
-| `pong` | Pong response |
+| Type            | Description                      |
+| --------------- | -------------------------------- |
+| `auth_ok`       | Authentication successful        |
+| `message`       | IRC message (public/private)     |
+| `server_status` | Server connection status         |
+| `channel_join`  | User joined channel              |
+| `channel_part`  | User left channel                |
+| `channel_kick`  | User kicked from channel         |
+| `user_quit`     | User quit IRC                    |
+| `topic`         | Channel topic                    |
+| `channel_mode`  | Channel mode change              |
+| `nicklist`      | Complete channel nicklist        |
+| `nick_change`   | Nick change                      |
+| `user_mode`     | User mode change                 |
+| `away`          | Away status change               |
+| `whois`         | WHOIS response                   |
+| `channel_list`  | Channel list (ban/except/invite) |
+| `state_dump`    | Initial state dump               |
+| `query_opened`  | Query (PM) window opened         |
+| `query_closed`  | Query (PM) window closed         |
+| `error`         | Error message                    |
+| `pong`          | Pong response                    |
 
 ---
 
@@ -336,6 +356,7 @@ Public or private IRC message.
 ```
 
 **Private message**:
+
 ```json
 {
   "id": "1706198400-0003",
@@ -351,6 +372,7 @@ Public or private IRC message.
 ```
 
 **Own message**:
+
 ```json
 {
   "id": "1706198400-0004",
@@ -366,6 +388,7 @@ Public or private IRC message.
 ```
 
 **Fields**:
+
 - `server` (string): IRC server tag
 - `channel` (string): Channel name or nick (for private messages)
 - `nick` (string): Sender nickname
@@ -390,6 +413,7 @@ Server connected or disconnected.
 ```
 
 **Values for `text`**:
+
 - `"connected"` - Server connection established
 - `"disconnected"` - Server connection lost
 
@@ -414,6 +438,7 @@ Server connected or disconnected.
 ```
 
 **Fields**:
+
 - `extra.hostname` (string): User's hostname (user@host)
 - `extra.account` (string, optional): Account name from IRCv3 extended-join (only if user is identified with services)
 - `extra.realname` (string, optional): Real name (GECOS) from IRCv3 extended-join
@@ -440,6 +465,7 @@ Server connected or disconnected.
 ```
 
 **Fields**:
+
 - `text` (string, optional): Part message/reason
 - `extra.hostname` (string): User's hostname (user@host)
 
@@ -464,6 +490,7 @@ Server connected or disconnected.
 ```
 
 **Fields**:
+
 - `text` (string, optional): Kick reason
 - `extra.kicker` (string): Who performed the kick
 - `extra.hostname` (string): Kicked user's hostname (user@host)
@@ -489,6 +516,7 @@ Server connected or disconnected.
 ```
 
 **Fields**:
+
 - `text` (string, optional): Quit message
 - `extra.hostname` (string): User's hostname (user@host)
 
@@ -509,6 +537,7 @@ Server connected or disconnected.
 ```
 
 **Fields**:
+
 - `nick` (string, optional): Who set the topic (empty if from state dump)
 - `text` (string): Topic text
 
@@ -534,6 +563,7 @@ Server connected or disconnected.
 **Examples**:
 
 User modes:
+
 ```json
 {"extra": {"mode": "+o", "params": ["bob"]}}      // Give op to bob
 {"extra": {"mode": "-o", "params": ["bob"]}}      // Remove op from bob
@@ -542,6 +572,7 @@ User modes:
 ```
 
 Channel modes with parameters:
+
 ```json
 {"extra": {"mode": "+l", "params": ["100"]}}      // Set user limit to 100
 {"extra": {"mode": "+k", "params": ["password"]}} // Set channel key
@@ -549,6 +580,7 @@ Channel modes with parameters:
 ```
 
 Channel modes without parameters:
+
 ```json
 {"extra": {"mode": "+nt", "params": []}}          // Set no external messages + topic protection
 {"extra": {"mode": "+m", "params": []}}           // Set moderated mode
@@ -556,11 +588,13 @@ Channel modes without parameters:
 ```
 
 **Fields**:
+
 - `nick` (string): Who performed mode change
 - `extra.mode` (string): Mode string (e.g., "+o", "-v", "+nt")
 - `extra.params` (array of strings): Mode parameters (nicks, ban masks, limits, etc.)
 
 **Note**: When a user's channel status changes (e.g., gets op), the server sends:
+
 1. A `channel_mode` event (who did it and what changed)
 2. A `nicklist` event (updated user list with new prefixes)
 
@@ -582,6 +616,7 @@ Sent during state dump or on manual request.
 ```
 
 **`text` field contains JSON array**:
+
 ```json
 [
   {"nick": "alice", "prefix": "@"},
@@ -591,6 +626,7 @@ Sent during state dump or on manual request.
 ```
 
 **Prefix meanings**:
+
 - `@` - Channel operator (op)
 - `%` - Half-operator (halfop)
 - `+` - Voice
@@ -612,6 +648,7 @@ Sent during state dump or on manual request.
 ```
 
 **Fields**:
+
 - `nick` (string): Old nickname
 - `text` (string): New nickname
 
@@ -668,15 +705,13 @@ Sent during state dump or on manual request.
     "signon": "1706198100",
     "account": "alice_acc",
     "secure": "true",
-    "special": [
-      "is a Cloaked Connection (Spoof)",
-      "is using modes +ix"
-    ]
+    "special": ["is a Cloaked Connection (Spoof)", "is using modes +ix"]
   }
 }
 ```
 
 **Fields in `extra`**:
+
 - `user` (string): Username/ident
 - `host` (string): Hostname
 - `realname` (string): Real name/GECOS field
@@ -711,6 +746,7 @@ Response to MODE queries for ban/exception/invite lists.
 ```
 
 **Fields in `extra`**:
+
 - `list_type` (string): "b" (ban), "e" (except), "I" (invite)
 - `entries` (string): Space-separated list of masks
 
@@ -730,11 +766,13 @@ Sent after `sync_server` command. This is a marker message followed by multiple 
 ```
 
 **After state_dump, expect**:
+
 1. `channel_join` for each channel you're in
 2. `topic` for each channel (if topic is set)
 3. `nicklist` for each channel
 
 **Example sequence**:
+
 ```json
 {"type": "state_dump", "server": "libera"}
 {"type": "channel_join", "server": "libera", "channel": "#irssi", "nick": "mynick"}
@@ -758,6 +796,7 @@ Sent after `sync_server` command. This is a marker message followed by multiple 
 ```
 
 **Common errors**:
+
 - `"Not connected to any server"` - Client not synced to a server
 - `"Server not found"` - Invalid server tag in sync_server
 
@@ -793,14 +832,17 @@ Sent when a query (private message) window is opened, either by `/query` command
 ```
 
 **Fields**:
+
 - `server` (string): IRC server tag
 - `nick` (string): Nickname of the user the query is with
 
 **When sent**:
+
 - User executes `/query nick` command
 - Incoming private message from user without existing query window
 
 **Client behavior**:
+
 - Create query window in UI if not exists
 - Switch focus to query window (optional, based on UI preferences)
 - No action needed if query already exists (idempotent)
@@ -822,14 +864,17 @@ Sent when a query (private message) window is closed.
 ```
 
 **Fields**:
+
 - `server` (string): IRC server tag
 - `nick` (string): Nickname of the user the query was with
 
 **When sent**:
+
 - User closes query window in irssi (`/wc`, `/window close`)
 - Client sends `close_query` command (see Client → Server Messages)
 
 **Client behavior**:
+
 - Remove query window from UI
 - Clean up any associated state/history
 - No error if query doesn't exist (idempotent)
@@ -869,11 +914,13 @@ Sent when a query (private message) window is closed.
 ### Error Handling
 
 **Network Errors**:
+
 - TCP connection drops → Reconnect
 - WebSocket close → Reconnect
 - No data for >90s → Send PING or reconnect
 
 **Application Errors**:
+
 - `error` message → Display to user
 - Invalid command → Server ignores (no response)
 
@@ -886,12 +933,14 @@ Sent when a query (private message) window is closed.
 ### How Authentication Works
 
 1. **Configure password in irssi**:
+
    ```
    /SET fe_web_password yourpassword
    /SAVE
    ```
 
 2. **Include password in WebSocket URL**:
+
    ```
    ws://127.0.0.1:9001/?password=yourpassword
    ```
@@ -903,6 +952,7 @@ Sent when a query (private message) window is closed.
 ### Authentication Flow
 
 **Success**:
+
 ```
 Client → Server: GET /?password=correctpassword HTTP/1.1
                   Upgrade: websocket
@@ -916,6 +966,7 @@ Server → Client: {"type": "auth_ok", "timestamp": 1706198400}
 ```
 
 **Failure (wrong password)**:
+
 ```
 Client → Server: GET /?password=wrongpassword HTTP/1.1
                   Upgrade: websocket
@@ -931,6 +982,7 @@ Server → Client: HTTP/1.1 401 Unauthorized
 ```
 
 **Failure (no password)**:
+
 ```
 Client → Server: GET / HTTP/1.1
                   Upgrade: websocket
@@ -963,12 +1015,14 @@ Server → Client: HTTP/1.1 401 Unauthorized
 ### Why Application-Level Encryption?
 
 **Problems with SSL/TLS (wss://):**
+
 - ❌ Self-signed certificates cause browser warnings
 - ❌ Users must manually accept certificates
 - ❌ Complicated setup for localhost/LAN
 - ❌ Let's Encrypt requires public domain
 
 **Benefits of Application-Level Encryption:**
+
 - ✅ **No certificate warnings** - works immediately in browser
 - ✅ **Zero configuration** - no certificate management
 - ✅ **Password = encryption key** - single secret to remember
@@ -1005,22 +1059,26 @@ Server → Client: HTTP/1.1 401 Unauthorized
 ### Encryption Details
 
 **Algorithm**: AES-256-GCM (Galois/Counter Mode)
+
 - **Key size**: 256 bits (32 bytes)
 - **IV size**: 96 bits (12 bytes) - random per message
 - **Tag size**: 128 bits (16 bytes) - authentication tag
 
 **Key Derivation**: PBKDF2-HMAC-SHA256
+
 - **Input**: Password from `/SET fe_web_password`
 - **Salt**: Fixed string "irssi-fe-web-v1" (15 bytes)
 - **Iterations**: 10,000
 - **Output**: 256-bit key
 
 **Message Format**:
+
 ```
 [IV (12 bytes)] [Ciphertext (variable)] [Auth Tag (16 bytes)]
 ```
 
 **WebSocket Frames**:
+
 - **Binary frame (0x2)**: Encrypted JSON messages
 - **Text frame (0x1)**: Plain JSON (when encryption disabled)
 
@@ -1036,6 +1094,7 @@ Enable encryption in irssi (enabled by default):
 ```
 
 **Settings**:
+
 - `fe_web_encryption` - Enable/disable encryption (default: ON)
 - `fe_web_password` - Password for authentication + encryption key
 - Password is used for **both** authentication and encryption
@@ -1046,81 +1105,77 @@ Enable encryption in irssi (enabled by default):
 
 ```javascript
 class EncryptedWebSocket {
-    constructor(url, password) {
-        this.ws = new WebSocket(url);  // Plain ws://
-        this.password = password;
-        this.key = null;
-    }
+  constructor(url, password) {
+    this.ws = new WebSocket(url); // Plain ws://
+    this.password = password;
+    this.key = null;
+  }
 
-    async connect() {
-        // Derive encryption key from password
-        const encoder = new TextEncoder();
-        const passwordData = encoder.encode(this.password);
+  async connect() {
+    // Derive encryption key from password
+    const encoder = new TextEncoder();
+    const passwordData = encoder.encode(this.password);
 
-        const keyMaterial = await crypto.subtle.importKey(
-            'raw', passwordData, 'PBKDF2', false, ['deriveKey']
-        );
+    const keyMaterial = await crypto.subtle.importKey("raw", passwordData, "PBKDF2", false, [
+      "deriveKey",
+    ]);
 
-        this.key = await crypto.subtle.deriveKey(
-            {
-                name: 'PBKDF2',
-                salt: encoder.encode('irssi-fe-web-v1'),
-                iterations: 10000,
-                hash: 'SHA-256'
-            },
-            keyMaterial,
-            { name: 'AES-GCM', length: 256 },
-            false,
-            ['encrypt', 'decrypt']
-        );
+    this.key = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: encoder.encode("irssi-fe-web-v1"),
+        iterations: 10000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      {name: "AES-GCM", length: 256},
+      false,
+      ["encrypt", "decrypt"]
+    );
 
-        // Setup message handler
-        this.ws.onmessage = (event) => this.onMessage(event);
-    }
+    // Setup message handler
+    this.ws.onmessage = (event) => this.onMessage(event);
+  }
 
-    async send(obj) {
-        const plaintext = JSON.stringify(obj);
-        const iv = crypto.getRandomValues(new Uint8Array(12));
+  async send(obj) {
+    const plaintext = JSON.stringify(obj);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
 
-        const ciphertext = await crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv: iv },
-            this.key,
-            new TextEncoder().encode(plaintext)
-        );
+    const ciphertext = await crypto.subtle.encrypt(
+      {name: "AES-GCM", iv: iv},
+      this.key,
+      new TextEncoder().encode(plaintext)
+    );
 
-        // Build message: IV + ciphertext (includes tag)
-        const message = new Uint8Array(12 + ciphertext.byteLength);
-        message.set(iv, 0);
-        message.set(new Uint8Array(ciphertext), 12);
+    // Build message: IV + ciphertext (includes tag)
+    const message = new Uint8Array(12 + ciphertext.byteLength);
+    message.set(iv, 0);
+    message.set(new Uint8Array(ciphertext), 12);
 
-        // Send as binary frame
-        this.ws.send(message);
-    }
+    // Send as binary frame
+    this.ws.send(message);
+  }
 
-    async onMessage(event) {
-        const data = new Uint8Array(await event.data.arrayBuffer());
-        const iv = data.slice(0, 12);
-        const ciphertext = data.slice(12);
+  async onMessage(event) {
+    const data = new Uint8Array(await event.data.arrayBuffer());
+    const iv = data.slice(0, 12);
+    const ciphertext = data.slice(12);
 
-        const plaintext = await crypto.subtle.decrypt(
-            { name: 'AES-GCM', iv: iv },
-            this.key,
-            ciphertext
-        );
+    const plaintext = await crypto.subtle.decrypt({name: "AES-GCM", iv: iv}, this.key, ciphertext);
 
-        const json = new TextDecoder().decode(plaintext);
-        const msg = JSON.parse(json);
+    const json = new TextDecoder().decode(plaintext);
+    const msg = JSON.parse(json);
 
-        this.handleMessage(msg);
-    }
+    this.handleMessage(msg);
+  }
 
-    handleMessage(msg) {
-        console.log('Received:', msg);
-    }
+  handleMessage(msg) {
+    console.log("Received:", msg);
+  }
 }
 
 // Usage
-const ws = new EncryptedWebSocket('ws://localhost:9001/?password=yourpassword', 'yourpassword');
+const ws = new EncryptedWebSocket("ws://localhost:9001/?password=yourpassword", "yourpassword");
 await ws.connect();
 ```
 
@@ -1132,7 +1187,7 @@ await ws.connect();
 
 ```javascript
 class IrssiWebClient {
-  constructor(host = '127.0.0.1', port = 9001, password = '', useEncryption = true) {
+  constructor(host = "127.0.0.1", port = 9001, password = "", useEncryption = true) {
     this.host = host;
     this.port = port;
     this.password = password;
@@ -1149,21 +1204,21 @@ class IrssiWebClient {
       const encoder = new TextEncoder();
       const passwordData = encoder.encode(this.password);
 
-      const keyMaterial = await crypto.subtle.importKey(
-        'raw', passwordData, 'PBKDF2', false, ['deriveKey']
-      );
+      const keyMaterial = await crypto.subtle.importKey("raw", passwordData, "PBKDF2", false, [
+        "deriveKey",
+      ]);
 
       this.key = await crypto.subtle.deriveKey(
         {
-          name: 'PBKDF2',
-          salt: encoder.encode('irssi-fe-web-v1'),
+          name: "PBKDF2",
+          salt: encoder.encode("irssi-fe-web-v1"),
           iterations: 10000,
-          hash: 'SHA-256'
+          hash: "SHA-256",
         },
         keyMaterial,
-        { name: 'AES-GCM', length: 256 },
+        {name: "AES-GCM", length: 256},
         false,
-        ['encrypt', 'decrypt']
+        ["encrypt", "decrypt"]
       );
     }
 
@@ -1172,10 +1227,10 @@ class IrssiWebClient {
       const url = `ws://${this.host}:${this.port}/?password=${encodeURIComponent(this.password)}`;
 
       this.ws = new WebSocket(url);
-      this.ws.binaryType = 'arraybuffer';  // For encrypted messages
+      this.ws.binaryType = "arraybuffer"; // For encrypted messages
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log("WebSocket connected");
         this.connected = true;
       };
 
@@ -1192,23 +1247,23 @@ class IrssiWebClient {
 
         this.handleMessage(msg);
 
-        if (msg.type === 'auth_ok') {
+        if (msg.type === "auth_ok") {
           this.authenticated = true;
           resolve();
         }
       };
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
         reject(error);
       };
 
       this.ws.onclose = (event) => {
-        console.log('WebSocket closed');
+        console.log("WebSocket closed");
 
         // Check if closed due to authentication failure
         if (event.code === 1002) {
-          console.error('Authentication failed - invalid password');
+          console.error("Authentication failed - invalid password");
         }
 
         this.connected = false;
@@ -1222,7 +1277,7 @@ class IrssiWebClient {
     const encoder = new TextEncoder();
 
     const ciphertext = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv },
+      {name: "AES-GCM", iv: iv},
       this.key,
       encoder.encode(plaintext)
     );
@@ -1240,11 +1295,7 @@ class IrssiWebClient {
     const iv = dataArray.slice(0, 12);
     const ciphertext = dataArray.slice(12);
 
-    const plaintext = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: iv },
-      this.key,
-      ciphertext
-    );
+    const plaintext = await crypto.subtle.decrypt({name: "AES-GCM", iv: iv}, this.key, ciphertext);
 
     const decoder = new TextDecoder();
     const json = decoder.decode(plaintext);
@@ -1263,51 +1314,51 @@ class IrssiWebClient {
   }
 
   handleMessage(msg) {
-    console.log('Received:', msg);
+    console.log("Received:", msg);
 
-    switch(msg.type) {
-      case 'auth_ok':
-        console.log('Authenticated!');
+    switch (msg.type) {
+      case "auth_ok":
+        console.log("Authenticated!");
         break;
 
-      case 'message':
+      case "message":
         console.log(`[${msg.server}/${msg.channel}] <${msg.nick}> ${msg.text}`);
         break;
 
-      case 'channel_join':
+      case "channel_join":
         console.log(`${msg.nick} joined ${msg.channel}`);
         break;
 
-      case 'channel_part':
-        console.log(`${msg.nick} left ${msg.channel}: ${msg.text || ''}`);
+      case "channel_part":
+        console.log(`${msg.nick} left ${msg.channel}: ${msg.text || ""}`);
         break;
 
-      case 'topic':
+      case "topic":
         console.log(`Topic for ${msg.channel}: ${msg.text}`);
         break;
 
-      case 'nicklist':
+      case "nicklist":
         const nicks = JSON.parse(msg.text);
         console.log(`Users in ${msg.channel}:`, nicks);
         break;
 
-      case 'error':
-        console.error('Error:', msg.text);
+      case "error":
+        console.error("Error:", msg.text);
         break;
     }
   }
 
   syncServer(serverTag) {
     this.send({
-      type: 'sync_server',
-      server: serverTag
+      type: "sync_server",
+      server: serverTag,
     });
   }
 
   sendCommand(command) {
     this.send({
-      type: 'command',
-      command: command
+      type: "command",
+      command: command,
     });
   }
 
@@ -1320,7 +1371,7 @@ class IrssiWebClient {
   ping() {
     this.send({
       id: `ping-${Date.now()}`,
-      type: 'ping'
+      type: "ping",
     });
   }
 
@@ -1335,29 +1386,29 @@ class IrssiWebClient {
 
 // Example 1: Plain WebSocket (ws://)
 async function connectPlain() {
-  const client = new IrssiWebClient('127.0.0.1', 9001, 'yourpassword', false);
+  const client = new IrssiWebClient("127.0.0.1", 9001, "yourpassword", false);
 
   try {
     await client.connect();
-    console.log('Connected via ws:// and authenticated!');
+    console.log("Connected via ws:// and authenticated!");
 
-    client.syncServer('libera');
+    client.syncServer("libera");
   } catch (error) {
-    console.error('Connection failed:', error);
+    console.error("Connection failed:", error);
   }
 }
 
 // Example 2: With encryption enabled (recommended)
 async function connectEncrypted() {
-  const client = new IrssiWebClient('127.0.0.1', 9001, 'yourpassword', true);
+  const client = new IrssiWebClient("127.0.0.1", 9001, "yourpassword", true);
 
   try {
     await client.connect();
-    console.log('Connected with encryption and authenticated!');
+    console.log("Connected with encryption and authenticated!");
 
-    client.syncServer('libera');
+    client.syncServer("libera");
   } catch (error) {
-    console.error('Connection failed:', error);
+    console.error("Connection failed:", error);
   }
 }
 
@@ -1365,26 +1416,25 @@ async function connectEncrypted() {
 async function main() {
   // Create client with password and encryption
   const useEncryption = true; // Set to false for plain JSON
-  const client = new IrssiWebClient('127.0.0.1', 9001, 'yourpassword', useEncryption);
+  const client = new IrssiWebClient("127.0.0.1", 9001, "yourpassword", useEncryption);
 
   try {
     await client.connect();
-    console.log('Connected and authenticated!');
+    console.log("Connected and authenticated!");
 
     // Sync to server
-    client.syncServer('libera');
+    client.syncServer("libera");
 
     // Wait for state dump
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Send a message
-    client.sendCommand('/msg #irssi Hello from WebSocket!');
+    client.sendCommand("/msg #irssi Hello from WebSocket!");
 
     // Keepalive ping every 30 seconds
     setInterval(() => client.ping(), 30000);
-
   } catch (error) {
-    console.error('Connection failed:', error);
+    console.error("Connection failed:", error);
   }
 }
 
@@ -1529,6 +1579,7 @@ websocat "ws://127.0.0.1:9001/?password=yourpassword"
 ```
 
 **Note**: If you connect without password or with wrong password:
+
 ```bash
 websocat ws://127.0.0.1:9001/
 # Error: Unexpected server response: 401
@@ -1550,10 +1601,12 @@ irssi settings (via `/set` command):
 ```
 
 **Important**:
+
 - Password is **REQUIRED**. Without setting `fe_web_password`, all connection attempts will be rejected with `401 Unauthorized`.
 - Encryption is **enabled by default** (`fe_web_encryption ON`). Password is used for both authentication and encryption key derivation.
 
 Check status:
+
 ```
 /fe_web status
 ```
@@ -1583,34 +1636,35 @@ When implementing a client, ensure:
 
 ## Message Type Reference Table
 
-| Type | Fields | Description |
-|------|--------|-------------|
-| `auth_ok` | - | Authentication success |
-| `message` | server, channel, nick, text, level, is_own | IRC message |
-| `server_status` | server, text | Connection status |
-| `channel_join` | server, channel, nick, extra.hostname, extra.account?, extra.realname? | User joined |
-| `channel_part` | server, channel, nick, text?, extra.hostname | User left |
-| `channel_kick` | server, channel, nick, text?, extra.kicker, extra.hostname | User kicked |
-| `user_quit` | server, nick, text?, extra.hostname | User quit |
-| `topic` | server, channel, nick?, text | Topic change |
-| `channel_mode` | server, channel, nick, extra.mode, extra.params | Mode change |
-| `nicklist` | server, channel, text (JSON array) | Nicklist |
-| `nick_change` | server, nick, text | Nick change |
-| `user_mode` | server, nick, text | User mode |
-| `away` | server, nick, text | Away status |
-| `whois` | server, nick, response_to?, extra (user, host, realname, server, server_info, channels, idle, signon, account, secure, special) | WHOIS data |
-| `channel_list` | server, channel, response_to?, extra | Ban/except/invite list |
-| `state_dump` | server | State dump marker |
-| `query_opened` | server, nick | Query window opened |
-| `query_closed` | server, nick | Query window closed |
-| `error` | text | Error message |
-| `pong` | response_to? | Pong response |
+| Type            | Fields                                                                                                                          | Description            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `auth_ok`       | -                                                                                                                               | Authentication success |
+| `message`       | server, channel, nick, text, level, is_own                                                                                      | IRC message            |
+| `server_status` | server, text                                                                                                                    | Connection status      |
+| `channel_join`  | server, channel, nick, extra.hostname, extra.account?, extra.realname?                                                          | User joined            |
+| `channel_part`  | server, channel, nick, text?, extra.hostname                                                                                    | User left              |
+| `channel_kick`  | server, channel, nick, text?, extra.kicker, extra.hostname                                                                      | User kicked            |
+| `user_quit`     | server, nick, text?, extra.hostname                                                                                             | User quit              |
+| `topic`         | server, channel, nick?, text                                                                                                    | Topic change           |
+| `channel_mode`  | server, channel, nick, extra.mode, extra.params                                                                                 | Mode change            |
+| `nicklist`      | server, channel, text (JSON array)                                                                                              | Nicklist               |
+| `nick_change`   | server, nick, text                                                                                                              | Nick change            |
+| `user_mode`     | server, nick, text                                                                                                              | User mode              |
+| `away`          | server, nick, text                                                                                                              | Away status            |
+| `whois`         | server, nick, response_to?, extra (user, host, realname, server, server_info, channels, idle, signon, account, secure, special) | WHOIS data             |
+| `channel_list`  | server, channel, response_to?, extra                                                                                            | Ban/except/invite list |
+| `state_dump`    | server                                                                                                                          | State dump marker      |
+| `query_opened`  | server, nick                                                                                                                    | Query window opened    |
+| `query_closed`  | server, nick                                                                                                                    | Query window closed    |
+| `error`         | text                                                                                                                            | Error message          |
+| `pong`          | response_to?                                                                                                                    | Pong response          |
 
 ---
 
 ## Version History
 
 - **1.1** (2025-10-12): Password authentication required
+
   - **BREAKING CHANGE**: Password is now **REQUIRED** via query parameter
   - Password must be provided in WebSocket URL: `ws://host:port/?password=yourpassword`
   - Connections without password or with invalid password receive `401 Unauthorized`
@@ -1628,6 +1682,7 @@ When implementing a client, ensure:
 ## Support
 
 For issues or questions:
+
 - GitHub: https://github.com/kofany/irssi
 - IRC: #irssi on Libera.Chat
 

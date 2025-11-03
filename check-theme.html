@@ -1,75 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Check The Lounge Theme Settings</title>
-    <style>
-        body {
-            font-family: monospace;
-            background: #2d2d2d;
-            color: #e0e0e0;
-            padding: 20px;
-        }
-        pre {
-            background: #383838;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        button {
-            background: #409aed;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 5px;
-        }
-        button:hover {
-            background: #3080cd;
-        }
-    </style>
-</head>
-<body>
-    <h1>🔍 The Lounge Theme Checker</h1>
-    
-    <h2>Current localStorage settings:</h2>
-    <pre id="storage"></pre>
-    
-    <h2>Actions:</h2>
-    <button onclick="setHunter()">Set theme to Hunter</button>
-    <button onclick="clearTheme()">Clear theme setting</button>
-    <button onclick="reload()">Reload page</button>
-    
-    <script>
-        function displayStorage() {
-            const storage = {};
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.includes('thelounge')) {
-                    storage[key] = localStorage.getItem(key);
-                }
-            }
-            document.getElementById('storage').textContent = JSON.stringify(storage, null, 2);
-        }
-        
-        function setHunter() {
-            localStorage.setItem('thelounge.settings.theme', 'hunter');
-            alert('Theme set to hunter! Reload The Lounge.');
-            displayStorage();
-        }
-        
-        function clearTheme() {
-            localStorage.removeItem('thelounge.settings.theme');
-            alert('Theme setting cleared! Reload The Lounge.');
-            displayStorage();
-        }
-        
-        function reload() {
-            window.location.reload();
-        }
-        
-        displayStorage();
-    </script>
-</body>
-</html>
+	<head>
+		<title>Check The Lounge Theme Settings</title>
+		<style>
+			body {
+				font-family: monospace;
+				background: #2d2d2d;
+				color: #e0e0e0;
+				padding: 20px;
+			}
+			pre {
+				background: #383838;
+				padding: 15px;
+				border-radius: 5px;
+				overflow-x: auto;
+			}
+			button {
+				background: #409aed;
+				color: white;
+				border: none;
+				padding: 10px 20px;
+				border-radius: 5px;
+				cursor: pointer;
+				margin: 10px 5px;
+			}
+			button:hover {
+				background: #3080cd;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>🔍 The Lounge Theme Checker</h1>
 
+		<h2>Current localStorage settings:</h2>
+		<pre id="storage"></pre>
+
+		<h2>Actions:</h2>
+		<button onclick="setHunter()">Set theme to Hunter</button>
+		<button onclick="clearTheme()">Clear theme setting</button>
+		<button onclick="reload()">Reload page</button>
+
+		<script>
+			function displayStorage() {
+				const storage = {};
+				for (let i = 0; i < localStorage.length; i++) {
+					const key = localStorage.key(i);
+					if (key.includes("thelounge")) {
+						storage[key] = localStorage.getItem(key);
+					}
+				}
+				document.getElementById("storage").textContent = JSON.stringify(storage, null, 2);
+			}
+
+			function setHunter() {
+				localStorage.setItem("thelounge.settings.theme", "hunter");
+				alert("Theme set to hunter! Reload The Lounge.");
+				displayStorage();
+			}
+
+			function clearTheme() {
+				localStorage.removeItem("thelounge.settings.theme");
+				alert("Theme setting cleared! Reload The Lounge.");
+				displayStorage();
+			}
+
+			function reload() {
+				window.location.reload();
+			}
+
+			displayStorage();
+		</script>
+	</body>
+</html>

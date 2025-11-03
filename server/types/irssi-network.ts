@@ -202,4 +202,3 @@ export function serverFormToIrssi(formData: ServerFormData, chatnet: string): Ir
 		no_proxy: formData.noProxy,
 	};
 }
-

@@ -3,9 +3,9 @@
 		<div id="weechat-relay" role="group" aria-labelledby="label-weechat-relay">
 			<h2 id="label-weechat-relay">WeeChat Relay Settings</h2>
 			<p class="help">
-				Configure WeeChat Relay server to allow clients like Lith to connect. Each user
-				has their own relay server on a unique port. You can use Lith and the web
-				interface at the same time!
+				Configure WeeChat Relay server to allow clients like Lith to connect. Each user has
+				their own relay server on a unique port. You can use Lith and the web interface at
+				the same time!
 			</p>
 
 			<div v-if="status" class="feedback" :class="status.type">
@@ -24,8 +24,8 @@
 				<div class="input-group">
 					<label for="weechat-port">Port</label>
 					<p class="help">
-						Choose a unique port for your WeeChat Relay server. Make sure it's not
-						used by other services.
+						Choose a unique port for your WeeChat Relay server. Make sure it's not used
+						by other services.
 					</p>
 					<input
 						id="weechat-port"
@@ -191,7 +191,8 @@ MIIJQ...
 						<strong>Connect with Lith:</strong><br />
 						Host: {{ serverAddress }}<br />
 						Port: {{ currentConfig.port }}<br />
-						Protocol: {{ currentConfig.protocol === "tcp" ? "Plain socket" : "WebSocket" }}<br />
+						Protocol:
+						{{ currentConfig.protocol === "tcp" ? "Plain socket" : "WebSocket" }}<br />
 						TLS: {{ currentConfig.tls ? "Yes" : "No" }}<br />
 						Password: (the password you set above)
 					</p>
@@ -343,7 +344,10 @@ export default defineComponent({
 		};
 
 		const loadCurrentConfig = () => {
-			console.log("[WeeChatRelay] Loading current config, socket connected:", socket.connected);
+			console.log(
+				"[WeeChatRelay] Loading current config, socket connected:",
+				socket.connected
+			);
 			socket.emit("weechat:config:get");
 		};
 
@@ -402,4 +406,3 @@ export default defineComponent({
 	},
 });
 </script>
-

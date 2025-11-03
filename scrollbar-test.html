@@ -1,298 +1,427 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollbar Styling Test - Safari 18.6</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 20px;
-            background: #2d2d2d;
-            color: #e0e0e0;
-        }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Scrollbar Styling Test - Safari 18.6</title>
+		<style>
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+				padding: 20px;
+				background: #2d2d2d;
+				color: #e0e0e0;
+			}
 
-        h1 {
-            color: #409aed;
-        }
+			h1 {
+				color: #409aed;
+			}
 
-        h2 {
-            color: #91b14f;
-            margin-top: 40px;
-            border-bottom: 2px solid #404040;
-            padding-bottom: 10px;
-        }
+			h2 {
+				color: #91b14f;
+				margin-top: 40px;
+				border-bottom: 2px solid #404040;
+				padding-bottom: 10px;
+			}
 
-        .test-box {
-            display: block;
-            width: 400px;
-            height: 150px;
-            overflow: auto;
-            padding: 15px;
-            margin: 20px 0;
-            background: #383838;
-            border: 2px solid #404040;
-            border-radius: 8px;
-        }
+			.test-box {
+				display: block;
+				width: 400px;
+				height: 150px;
+				overflow: auto;
+				padding: 15px;
+				margin: 20px 0;
+				background: #383838;
+				border: 2px solid #404040;
+				border-radius: 8px;
+			}
 
-        .test-label {
-            font-weight: bold;
-            color: #409aed;
-            margin-bottom: 5px;
-        }
+			.test-label {
+				font-weight: bold;
+				color: #409aed;
+				margin-bottom: 5px;
+			}
 
-        .test-description {
-            font-size: 12px;
-            color: #9a9a9a;
-            margin-bottom: 10px;
-        }
+			.test-description {
+				font-size: 12px;
+				color: #9a9a9a;
+				margin-bottom: 10px;
+			}
 
-        /* TEST 1: MDN Example - ::-webkit-scrollbar only */
-        .test1::-webkit-scrollbar {
-            width: 5px;
-            height: 8px;
-            background-color: #aaaaaa;
-        }
+			/* TEST 1: MDN Example - ::-webkit-scrollbar only */
+			.test1::-webkit-scrollbar {
+				width: 5px;
+				height: 8px;
+				background-color: #aaaaaa;
+			}
 
-        .test1::-webkit-scrollbar-thumb {
-            background: black;
-        }
+			.test1::-webkit-scrollbar-thumb {
+				background: black;
+			}
 
-        /* TEST 2: Standard properties only (scrollbar-color + scrollbar-width) */
-        .test2 {
-            scrollbar-color: #888888ee transparent;
-            scrollbar-width: thin;
-        }
+			/* TEST 2: Standard properties only (scrollbar-color + scrollbar-width) */
+			.test2 {
+				scrollbar-color: #888888ee transparent;
+				scrollbar-width: thin;
+			}
 
-        /* TEST 3: Both webkit AND standard */
-        .test3 {
-            scrollbar-color: #ff6b6b #2d2d2d;
-            scrollbar-width: thin;
-        }
+			/* TEST 3: Both webkit AND standard */
+			.test3 {
+				scrollbar-color: #ff6b6b #2d2d2d;
+				scrollbar-width: thin;
+			}
 
-        .test3::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
+			.test3::-webkit-scrollbar {
+				width: 5px;
+				height: 5px;
+			}
 
-        .test3::-webkit-scrollbar-track {
-            background: #2d2d2d;
-        }
+			.test3::-webkit-scrollbar-track {
+				background: #2d2d2d;
+			}
 
-        .test3::-webkit-scrollbar-thumb {
-            background: #ff6b6b;
-        }
+			.test3::-webkit-scrollbar-thumb {
+				background: #ff6b6b;
+			}
 
-        /* TEST 4: @supports with scrollbar-color */
-        @supports (scrollbar-color: auto) {
-            .test4 {
-                scrollbar-color: #51cf66 #2d2d2d;
-                scrollbar-width: thin;
-            }
-        }
+			/* TEST 4: @supports with scrollbar-color */
+			@supports (scrollbar-color: auto) {
+				.test4 {
+					scrollbar-color: #51cf66 #2d2d2d;
+					scrollbar-width: thin;
+				}
+			}
 
-        /* TEST 5: @supports with ::-webkit-scrollbar */
-        @supports selector(::-webkit-scrollbar) {
-            .test5::-webkit-scrollbar {
-                width: 5px;
-                height: 5px;
-            }
+			/* TEST 5: @supports with ::-webkit-scrollbar */
+			@supports selector(::-webkit-scrollbar) {
+				.test5::-webkit-scrollbar {
+					width: 5px;
+					height: 5px;
+				}
 
-            .test5::-webkit-scrollbar-track {
-                background: #2d2d2d;
-            }
+				.test5::-webkit-scrollbar-track {
+					background: #2d2d2d;
+				}
 
-            .test5::-webkit-scrollbar-thumb {
-                background: #ffd43b;
-            }
-        }
+				.test5::-webkit-scrollbar-thumb {
+					background: #ffd43b;
+				}
+			}
 
-        /* TEST 6: Combined @supports (modern first, webkit fallback) */
-        @supports (scrollbar-color: auto) {
-            .test6 {
-                scrollbar-color: #a78bfa #2d2d2d;
-                scrollbar-width: thin;
-            }
-        }
+			/* TEST 6: Combined @supports (modern first, webkit fallback) */
+			@supports (scrollbar-color: auto) {
+				.test6 {
+					scrollbar-color: #a78bfa #2d2d2d;
+					scrollbar-width: thin;
+				}
+			}
 
-        @supports selector(::-webkit-scrollbar) {
-            .test6::-webkit-scrollbar {
-                width: 5px;
-                height: 5px;
-            }
+			@supports selector(::-webkit-scrollbar) {
+				.test6::-webkit-scrollbar {
+					width: 5px;
+					height: 5px;
+				}
 
-            .test6::-webkit-scrollbar-track {
-                background: #2d2d2d;
-            }
+				.test6::-webkit-scrollbar-track {
+					background: #2d2d2d;
+				}
 
-            .test6::-webkit-scrollbar-thumb {
-                background: #a78bfa;
-            }
-        }
+				.test6::-webkit-scrollbar-thumb {
+					background: #a78bfa;
+				}
+			}
 
-        /* TEST 7: Global * selector with webkit */
-        .test7-container * {
-            scrollbar-color: #f06595 transparent;
-            scrollbar-width: thin;
-        }
+			/* TEST 7: Global * selector with webkit */
+			.test7-container * {
+				scrollbar-color: #f06595 transparent;
+				scrollbar-width: thin;
+			}
 
-        .test7-container *::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
+			.test7-container *::-webkit-scrollbar {
+				width: 5px;
+				height: 5px;
+			}
 
-        .test7-container *::-webkit-scrollbar-track {
-            background: transparent;
-        }
+			.test7-container *::-webkit-scrollbar-track {
+				background: transparent;
+			}
 
-        .test7-container *::-webkit-scrollbar-thumb {
-            background: #f06595;
-        }
+			.test7-container *::-webkit-scrollbar-thumb {
+				background: #f06595;
+			}
 
-        /* TEST 8: Transparent track (like xyz) */
-        .test8::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
+			/* TEST 8: Transparent track (like xyz) */
+			.test8::-webkit-scrollbar {
+				width: 5px;
+				height: 5px;
+			}
 
-        .test8::-webkit-scrollbar-track {
-            background: transparent;
-        }
+			.test8::-webkit-scrollbar-track {
+				background: transparent;
+			}
 
-        .test8::-webkit-scrollbar-thumb {
-            background: #888888ee;
-        }
+			.test8::-webkit-scrollbar-thumb {
+				background: #888888ee;
+			}
 
-        .test8::-webkit-scrollbar-thumb:hover {
-            background: #555555;
-        }
+			.test8::-webkit-scrollbar-thumb:hover {
+				background: #555555;
+			}
 
-        /* TEST 9: With background-color on track */
-        .test9::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
+			/* TEST 9: With background-color on track */
+			.test9::-webkit-scrollbar {
+				width: 5px;
+				height: 5px;
+			}
 
-        .test9::-webkit-scrollbar-track {
-            background-color: #2d2d2d;
-        }
+			.test9::-webkit-scrollbar-track {
+				background-color: #2d2d2d;
+			}
 
-        .test9::-webkit-scrollbar-thumb {
-            background-color: #888888ee;
-        }
+			.test9::-webkit-scrollbar-thumb {
+				background-color: #888888ee;
+			}
 
-        /* TEST 10: Only scrollbar-width (no color) */
-        .test10 {
-            scrollbar-width: thin;
-        }
-    </style>
-</head>
-<body>
-    <h1>🧪 Scrollbar Styling Test Suite - Safari 18.6</h1>
-    <p>Test każdego podejścia do stylowania scrollbarów. Sprawdź, które działa w Twoim Safari.</p>
+			/* TEST 10: Only scrollbar-width (no color) */
+			.test10 {
+				scrollbar-width: thin;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>🧪 Scrollbar Styling Test Suite - Safari 18.6</h1>
+		<p>
+			Test każdego podejścia do stylowania scrollbarów. Sprawdź, które działa w Twoim Safari.
+		</p>
 
-    <h2>TEST 1: MDN Example - tylko ::-webkit-scrollbar</h2>
-    <div class="test-label">Oczekiwany efekt: szary track (#aaa), czarny thumb</div>
-    <div class="test-description">Kod: .test1::-webkit-scrollbar { width: 5px; background-color: #aaa; }</div>
-    <div class="test-box test1">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 1: MDN Example - tylko ::-webkit-scrollbar</h2>
+		<div class="test-label">Oczekiwany efekt: szary track (#aaa), czarny thumb</div>
+		<div class="test-description">
+			Kod: .test1::-webkit-scrollbar { width: 5px; background-color: #aaa; }
+		</div>
+		<div class="test-box test1">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 2: Tylko standardowe właściwości (scrollbar-color + scrollbar-width)</h2>
-    <div class="test-label">Oczekiwany efekt: półprzezroczysty szary thumb (#888888ee), transparent track</div>
-    <div class="test-description">Kod: scrollbar-color: #888888ee transparent; scrollbar-width: thin;</div>
-    <div class="test-box test2">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 2: Tylko standardowe właściwości (scrollbar-color + scrollbar-width)</h2>
+		<div class="test-label">
+			Oczekiwany efekt: półprzezroczysty szary thumb (#888888ee), transparent track
+		</div>
+		<div class="test-description">
+			Kod: scrollbar-color: #888888ee transparent; scrollbar-width: thin;
+		</div>
+		<div class="test-box test2">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 3: Webkit + Standard razem (bez @supports)</h2>
-    <div class="test-label">Oczekiwany efekt: czerwony thumb (#ff6b6b), ciemny track (#2d2d2d)</div>
-    <div class="test-description">Kod: scrollbar-color + ::-webkit-scrollbar w tym samym czasie</div>
-    <div class="test-box test3">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 3: Webkit + Standard razem (bez @supports)</h2>
+		<div class="test-label">
+			Oczekiwany efekt: czerwony thumb (#ff6b6b), ciemny track (#2d2d2d)
+		</div>
+		<div class="test-description">
+			Kod: scrollbar-color + ::-webkit-scrollbar w tym samym czasie
+		</div>
+		<div class="test-box test3">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 4: @supports (scrollbar-color: auto)</h2>
-    <div class="test-label">Oczekiwany efekt: zielony thumb (#51cf66), ciemny track</div>
-    <div class="test-description">Kod: @supports (scrollbar-color: auto) { scrollbar-color: #51cf66 #2d2d2d; }</div>
-    <div class="test-box test4">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 4: @supports (scrollbar-color: auto)</h2>
+		<div class="test-label">Oczekiwany efekt: zielony thumb (#51cf66), ciemny track</div>
+		<div class="test-description">
+			Kod: @supports (scrollbar-color: auto) { scrollbar-color: #51cf66 #2d2d2d; }
+		</div>
+		<div class="test-box test4">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 5: @supports selector(::-webkit-scrollbar)</h2>
-    <div class="test-label">Oczekiwany efekt: żółty thumb (#ffd43b), ciemny track</div>
-    <div class="test-description">Kod: @supports selector(::-webkit-scrollbar) { ::-webkit-scrollbar-thumb { background: #ffd43b; } }</div>
-    <div class="test-box test5">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 5: @supports selector(::-webkit-scrollbar)</h2>
+		<div class="test-label">Oczekiwany efekt: żółty thumb (#ffd43b), ciemny track</div>
+		<div class="test-description">
+			Kod: @supports selector(::-webkit-scrollbar) { ::-webkit-scrollbar-thumb { background:
+			#ffd43b; } }
+		</div>
+		<div class="test-box test5">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 6: Kombinacja @supports (modern + webkit fallback)</h2>
-    <div class="test-label">Oczekiwany efekt: fioletowy thumb (#a78bfa), ciemny track</div>
-    <div class="test-description">Kod: @supports (scrollbar-color) + @supports selector(::-webkit-scrollbar)</div>
-    <div class="test-box test6">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 6: Kombinacja @supports (modern + webkit fallback)</h2>
+		<div class="test-label">Oczekiwany efekt: fioletowy thumb (#a78bfa), ciemny track</div>
+		<div class="test-description">
+			Kod: @supports (scrollbar-color) + @supports selector(::-webkit-scrollbar)
+		</div>
+		<div class="test-box test6">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 7: Global * selector</h2>
-    <div class="test-label">Oczekiwany efekt: różowy thumb (#f06595), transparent track</div>
-    <div class="test-description">Kod: .container * { scrollbar-color + ::-webkit-scrollbar }</div>
-    <div class="test7-container">
-        <div class="test-box">
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-            <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-        </div>
-    </div>
+		<h2>TEST 7: Global * selector</h2>
+		<div class="test-label">Oczekiwany efekt: różowy thumb (#f06595), transparent track</div>
+		<div class="test-description">
+			Kod: .container * { scrollbar-color + ::-webkit-scrollbar }
+		</div>
+		<div class="test7-container">
+			<div class="test-box">
+				<p>
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+					incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+					nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+					Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+					fugiat nulla pariatur.
+				</p>
+				<p>
+					Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
+					deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus
+					error sit voluptatem accusantium doloremque laudantium.
+				</p>
+			</div>
+		</div>
 
-    <h2>TEST 8: Transparent track (jak xyz)</h2>
-    <div class="test-label">Oczekiwany efekt: półprzezroczysty szary thumb (#888888ee), transparent track</div>
-    <div class="test-description">Kod: ::-webkit-scrollbar-track { background: transparent; }</div>
-    <div class="test-box test8">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 8: Transparent track (jak xyz)</h2>
+		<div class="test-label">
+			Oczekiwany efekt: półprzezroczysty szary thumb (#888888ee), transparent track
+		</div>
+		<div class="test-description">
+			Kod: ::-webkit-scrollbar-track { background: transparent; }
+		</div>
+		<div class="test-box test8">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 9: Background-color na track</h2>
-    <div class="test-label">Oczekiwany efekt: półprzezroczysty szary thumb, ciemny track (#2d2d2d)</div>
-    <div class="test-description">Kod: ::-webkit-scrollbar-track { background-color: #2d2d2d; }</div>
-    <div class="test-box test9">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 9: Background-color na track</h2>
+		<div class="test-label">
+			Oczekiwany efekt: półprzezroczysty szary thumb, ciemny track (#2d2d2d)
+		</div>
+		<div class="test-description">
+			Kod: ::-webkit-scrollbar-track { background-color: #2d2d2d; }
+		</div>
+		<div class="test-box test9">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <h2>TEST 10: Tylko scrollbar-width (bez koloru)</h2>
-    <div class="test-label">Oczekiwany efekt: cienki scrollbar, domyślne kolory systemu</div>
-    <div class="test-description">Kod: scrollbar-width: thin;</div>
-    <div class="test-box test10">
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-    </div>
+		<h2>TEST 10: Tylko scrollbar-width (bez koloru)</h2>
+		<div class="test-label">Oczekiwany efekt: cienki scrollbar, domyślne kolory systemu</div>
+		<div class="test-description">Kod: scrollbar-width: thin;</div>
+		<div class="test-box test10">
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+				incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+				exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+				irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+				pariatur.
+			</p>
+			<p>
+				Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+				mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit
+				voluptatem accusantium doloremque laudantium.
+			</p>
+		</div>
 
-    <hr style="margin: 40px 0; border-color: #404040;">
+		<hr style="margin: 40px 0; border-color: #404040" />
 
-    <h2>📊 Wyniki testów</h2>
-    <p>Otwórz ten plik w Safari 18.6 i sprawdź, które testy pokazują stylowane scrollbary.</p>
-    <p><strong>Instrukcja:</strong> Przewiń każdy box i zanotuj, które mają:</p>
-    <ul>
-        <li>✅ Stylowany scrollbar (widoczny kolor thumba/tracka)</li>
-        <li>❌ Domyślny scrollbar systemu (szary/biały)</li>
-    </ul>
+		<h2>📊 Wyniki testów</h2>
+		<p>Otwórz ten plik w Safari 18.6 i sprawdź, które testy pokazują stylowane scrollbary.</p>
+		<p><strong>Instrukcja:</strong> Przewiń każdy box i zanotuj, które mają:</p>
+		<ul>
+			<li>✅ Stylowany scrollbar (widoczny kolor thumba/tracka)</li>
+			<li>❌ Domyślny scrollbar systemu (szary/biały)</li>
+		</ul>
 
-    <p style="margin-top: 40px; padding: 20px; background: #404040; border-radius: 8px;">
-        <strong>Informacje o przeglądarce:</strong><br>
-        User Agent: <span id="ua"></span><br>
-        Viewport: <span id="viewport"></span>
-    </p>
+		<p style="margin-top: 40px; padding: 20px; background: #404040; border-radius: 8px">
+			<strong>Informacje o przeglądarce:</strong><br />
+			User Agent: <span id="ua"></span><br />
+			Viewport: <span id="viewport"></span>
+		</p>
 
-    <script>
-        document.getElementById('ua').textContent = navigator.userAgent;
-        document.getElementById('viewport').textContent = window.innerWidth + 'x' + window.innerHeight;
-    </script>
-</body>
+		<script>
+			document.getElementById("ua").textContent = navigator.userAgent;
+			document.getElementById("viewport").textContent =
+				window.innerWidth + "x" + window.innerHeight;
+		</script>
+	</body>
 </html>
-

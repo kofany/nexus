@@ -3,6 +3,7 @@
 ## Problem 1: Brak informacji o utracie połączenia z irssi
 
 Gdy połączenie z irssi websocket zostało utracone:
+
 - ❌ Brak informacji w UI o disconnect
 - ❌ Sieci/kanały pozostawały na liście
 - ❌ Przy reconnect kanały się duplikowały
@@ -11,6 +12,7 @@ Gdy połączenie z irssi websocket zostało utracone:
 ## Problem 2: Brak możliwości zmiany hasła The Lounge
 
 Handler `change-password` był tylko w `initializeClient`, ale nie w `initializeIrssiClient`:
+
 - ❌ Nie można było zmienić hasła do logowania do The Lounge
 - ❌ IrssiClient nie miał metody `setPassword()`
 
@@ -19,59 +21,62 @@ Handler `change-password` był tylko w `initializeClient`, ale nie w `initialize
 ### 1. Czyszczenie sieci przy disconnect
 
 **server/irssiClient.ts - disconnected handler:**
+
 ```typescript
 (this.irssiConnection as any).on("disconnected", () => {
-    log.warn(`User ${this.name}: irssi WebSocket disconnected`);
+  log.warn(`User ${this.name}: irssi WebSocket disconnected`);
 
-    // CLEAR networks on disconnect
-    const clearedCount = this.networks.length;
-    this.networks = [];
-    this.lastActiveChannel = -1;
+  // CLEAR networks on disconnect
+  const clearedCount = this.networks.length;
+  this.networks = [];
+  this.lastActiveChannel = -1;
 
-    // Broadcast disconnect status to all browsers
-    this.broadcastToAllBrowsers("irssi:status", {
-        connected: false,
-        error: "Lost connection to irssi WebSocket",
-    });
+  // Broadcast disconnect status to all browsers
+  this.broadcastToAllBrowsers("irssi:status", {
+    connected: false,
+    error: "Lost connection to irssi WebSocket",
+  });
 
-    // Send empty init to clear UI networks
-    this.broadcastToAllBrowsers("init", {
-        networks: [],
-        active: -1,
-    });
+  // Send empty init to clear UI networks
+  this.broadcastToAllBrowsers("init", {
+    networks: [],
+    active: -1,
+  });
 
-    log.info(`Cleared ${clearedCount} networks after irssi disconnect`);
+  log.info(`Cleared ${clearedCount} networks after irssi disconnect`);
 });
 ```
 
 ### 2. Czyszczenie UI po disconnect
 
 **client/js/socket-events/irssi_status.ts:**
+
 ```typescript
 socket.on("irssi:status", function (data) {
-    if (data.connected) {
-        // Reconnected - show success message
-        store.commit("currentUserVisibleError", "✓ Connected to irssi WebSocket");
-        setTimeout(() => {
-            store.commit("currentUserVisibleError", null);
-        }, 3000);
-    } else {
-        // Disconnected - CLEAR networks from UI
-        console.log("[IRSSI_STATUS] Disconnected - clearing networks from UI");
-        
-        store.commit("networks", []);  // CLEAR all networks
-        
-        store.commit(
-            "currentUserVisibleError",
-            (data.error || "Lost connection to irssi WebSocket") + " - Reconnecting..."
-        );
-    }
+  if (data.connected) {
+    // Reconnected - show success message
+    store.commit("currentUserVisibleError", "✓ Connected to irssi WebSocket");
+    setTimeout(() => {
+      store.commit("currentUserVisibleError", null);
+    }, 3000);
+  } else {
+    // Disconnected - CLEAR networks from UI
+    console.log("[IRSSI_STATUS] Disconnected - clearing networks from UI");
+
+    store.commit("networks", []); // CLEAR all networks
+
+    store.commit(
+      "currentUserVisibleError",
+      (data.error || "Lost connection to irssi WebSocket") + " - Reconnecting..."
+    );
+  }
 });
 ```
 
 ### 3. Dodanie setPassword do IrssiClient
 
 **server/irssiClient.ts:**
+
 ```typescript
 /**
  * Set The Lounge password (login password, NOT irssi password!)
@@ -79,7 +84,7 @@ socket.on("irssi:status", function (data) {
 setPassword(hash: string, callback: (success: boolean) => void): void {
     const oldHash = this.config.password;
     this.config.password = hash;
-    
+
     this.manager.saveUser(this as any, (err) => {
         if (err) {
             this.config.password = oldHash;
@@ -93,51 +98,53 @@ setPassword(hash: string, callback: (success: boolean) => void): void {
 ### 4. Handler change-password w initializeIrssiClient
 
 **server/server.ts - initializeIrssiClient():**
+
 ```typescript
 // Handle password change (The Lounge login password, NOT irssi password!)
 if (!Config.values.public && !Config.values.ldap.enable) {
-    socket.on("change-password", (data) => {
-        if (_.isPlainObject(data)) {
-            const old = data.old_password;
-            const p1 = data.new_password;
-            const p2 = data.verify_password;
+  socket.on("change-password", (data) => {
+    if (_.isPlainObject(data)) {
+      const old = data.old_password;
+      const p1 = data.new_password;
+      const p2 = data.verify_password;
 
-            if (typeof p1 === "undefined" || p1 === "" || p1 !== p2) {
-                socket.emit("change-password", {error: "", success: false});
-                return;
-            }
+      if (typeof p1 === "undefined" || p1 === "" || p1 !== p2) {
+        socket.emit("change-password", {error: "", success: false});
+        return;
+      }
 
-            Helper.password
-                .compare(old || "", client.config.password)
-                .then((matching) => {
-                    if (!matching) {
-                        socket.emit("change-password", {
-                            error: "password_incorrect",
-                            success: false,
-                        });
-                        return;
-                    }
+      Helper.password
+        .compare(old || "", client.config.password)
+        .then((matching) => {
+          if (!matching) {
+            socket.emit("change-password", {
+              error: "password_incorrect",
+              success: false,
+            });
+            return;
+          }
 
-                    const hash = Helper.password.hash(p1);
+          const hash = Helper.password.hash(p1);
 
-                    client.setPassword(hash, (success: boolean) => {
-                        socket.emit("change-password", {
-                            success: success,
-                            error: success ? undefined : "update_failed",
-                        });
-                    });
-                })
-                .catch((error: Error) => {
-                    log.error(`Error checking password: ${error.message}`);
-                });
-        }
-    });
+          client.setPassword(hash, (success: boolean) => {
+            socket.emit("change-password", {
+              success: success,
+              error: success ? undefined : "update_failed",
+            });
+          });
+        })
+        .catch((error: Error) => {
+          log.error(`Error checking password: ${error.message}`);
+        });
+    }
+  });
 }
 ```
 
 ## Przepływ przy disconnect/reconnect
 
 ### Disconnect:
+
 1. irssi websocket się rozłącza
 2. `disconnected` event w irssiClient.ts
 3. **Czyści networks + lastActiveChannel**
@@ -149,6 +156,7 @@ if (!Config.values.public && !Config.values.ldap.enable) {
    - Pokazuje error: "Lost connection... Reconnecting..."
 
 ### Reconnect:
+
 1. irssi websocket reconnect
 2. Wysyła `state_dump` z aktualnymi sieciami
 3. `handleInit()` w irssiClient.ts przetwarza state_dump
@@ -167,6 +175,7 @@ if (!Config.values.public && !Config.values.ldap.enable) {
 ## Test
 
 ### Test 1: Disconnect irssi
+
 ```bash
 # Terminal 1: uruchom The Lounge
 npm start
@@ -180,6 +189,7 @@ npm start
 ```
 
 ### Test 2: Reconnect irssi
+
 ```bash
 # Terminal 2: uruchom irssi websocket ponownie
 
@@ -190,6 +200,7 @@ npm start
 ```
 
 ### Test 3: Zmiana hasła The Lounge
+
 ```bash
 # W przeglądarce:
 # 1. Settings → Account
@@ -205,10 +216,12 @@ npm start
 ## Pliki zmienione
 
 1. `server/irssiClient.ts`:
+
    - Rozszerzony `disconnected` handler - czyści networks i broadcastuje status
    - Dodana metoda `setPassword()`
 
 2. `client/js/socket-events/irssi_status.ts`:
+
    - Czyści networks z store przy disconnect
    - Uproszczona logika error message
 

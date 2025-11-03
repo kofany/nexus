@@ -5,6 +5,7 @@
 ### Backend (server/irssiClient.ts):
 
 **Disconnect handler:**
+
 ```
 [DISCONNECT] BEFORE clear: X networks
 [DISCONNECT] AFTER clear: 0 networks
@@ -13,6 +14,7 @@
 ```
 
 **handleInit() (przy reconnect):**
+
 ```
 [HANDLEINIT] ========================================
 [HANDLEINIT] Init with X networks
@@ -25,6 +27,7 @@
 ### Frontend (client/js/socket-events/init.ts):
 
 **Init handler:**
+
 ```
 [INIT] Received init event
 [INIT] networks count: X
@@ -33,6 +36,7 @@
 ```
 
 **mergeNetworkData():**
+
 ```
 [MERGE] ===============================================
 [MERGE] mergeNetworkData called
@@ -53,6 +57,7 @@ CASE 2 - Store ma sieci (normal merge):
 ```
 
 **mergeChannelData():**
+
 ```
 [MERGE-CHAN] mergeChannelData: old=3, new=3
 [MERGE-CHAN]   Channel #polska (id=4) - NEW, creating
@@ -63,6 +68,7 @@ CASE 2 - Store ma sieci (normal merge):
 ## Scenariusz testowy
 
 ### 1. Uruchom The Lounge:
+
 ```bash
 npm start
 ```
@@ -74,6 +80,7 @@ npm start
 ### 4. Zatrzymaj irssi websocket
 
 **Oczekiwane logi BACKEND:**
+
 ```
 [FeWebSocket] WebSocket closed (code: 1006, reason: )
 User kfn: irssi WebSocket disconnected (code: 1006)
@@ -84,6 +91,7 @@ User kfn: irssi WebSocket disconnected (code: 1006)
 ```
 
 **Oczekiwane logi FRONTEND (konsola przeglądarki):**
+
 ```
 [IRSSI_STATUS] Disconnected - clearing networks from UI
 
@@ -101,12 +109,14 @@ User kfn: irssi WebSocket disconnected (code: 1006)
 ```
 
 **W UI:**
+
 - Lista sieci ZNIKA
 - Error: "Lost connection to irssi WebSocket (code: 1006) - Reconnecting..."
 
 ### 5. Uruchom irssi websocket ponownie
 
 **Oczekiwane logi BACKEND:**
+
 ```
 [FeWebSocket] WebSocket connected, waiting for auth_ok...
 User kfn: irssi authentication successful
@@ -121,6 +131,7 @@ User kfn: irssi authentication successful
 ```
 
 **Oczekiwane logi FRONTEND (KLUCZOWE!):**
+
 ```
 [INIT] Received init event
 [INIT] networks count: 2
@@ -142,6 +153,7 @@ User kfn: irssi authentication successful
 ```
 
 **W UI:**
+
 - Sieci wracają (IRCnet, IRCal)
 - **BEZ DUPLIKACJI** - każda sieć tylko raz
 - Error znika (lub "✓ Connected to irssi WebSocket")
@@ -151,6 +163,7 @@ User kfn: irssi authentication successful
 ### A. Sprawdź frontend logi:
 
 **Jeśli widzisz:**
+
 ```
 [MERGE] store.state.networks.length: 2  ← NIE POWINNO!
 [MERGE] Using NORMAL merge logic        ← BŁĄD!
@@ -166,6 +179,7 @@ User kfn: irssi authentication successful
 ### B. Sprawdź backend logi:
 
 **Jeśli widzisz:**
+
 ```
 [HANDLEINIT] BEFORE assignment: this.networks.length = 2  ← NIE POWINNO!
 ```
@@ -179,10 +193,12 @@ User kfn: irssi authentication successful
 ### C. Sprawdź kolejność eventów:
 
 **Backend powinien wysłać w tej kolejności:**
+
 1. `irssi:status` {connected: false}
 2. `init` {networks: []}
 
 **Frontend powinien otrzymać:**
+
 1. `irssi:status` → czyści store
 2. `init` → merguje z pustym store (zwraca [])
 
@@ -192,15 +208,15 @@ Jeśli kolejność jest odwrotna → duplikacja!
 
 ```javascript
 // Sprawdź aktualny stan:
-store.state.networks.length
-store.state.networks.map(n => n.name)
+store.state.networks.length;
+store.state.networks.map((n) => n.name);
 
 // Sprawdź czy są duplikaty:
-store.state.networks.map(n => n.uuid)
+store.state.networks.map((n) => n.uuid);
 // Jeśli ten sam UUID występuje 2x → duplikacja!
 
 // Wymuś czyszczenie:
-store.commit("networks", [])
+store.commit("networks", []);
 ```
 
 ## Oczekiwany rezultat:

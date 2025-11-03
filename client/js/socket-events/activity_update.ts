@@ -30,4 +30,3 @@ socket.on("activity_update", function (data) {
 		}
 	}
 });
-

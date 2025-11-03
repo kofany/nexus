@@ -1,12 +1,15 @@
 # Analiza komend Vue → irssi - Command Translation Layer
 
 ## Problem
+
 Frontend Vue wysyła komendy IRC przez `socket.emit("input", {target: channelId, text: "/command"})`, ale wiele z tych komend nie jest obsługiwanych przez irssi lub wymaga dodatkowej logiki translacji.
 
 ## Komendy wykryte w kodzie Vue
 
 ### 1. Client-side commands (nie trafiają do serwera)
+
 **Lokalizacja:** `client/js/commands/index.ts`
+
 - `/collapse` - zwija podglądy
 - `/expand` - rozwija podglądy
 - `/join` - otwiera dialog join (nie wysyła do serwera!)
@@ -15,38 +18,43 @@ Frontend Vue wysyła komendy IRC przez `socket.emit("input", {target: channelId,
 ### 2. Commands wysyłane do backendu przez contextMenu.ts
 
 #### Lobby (sieć):
+
 ```typescript
-socket.emit("input", {target: channel.id, text: "/list"})
-socket.emit("input", {target: channel.id, text: "/ignorelist"})
-socket.emit("input", {target: channel.id, text: "/disconnect"})
-socket.emit("input", {target: channel.id, text: "/connect"})
+socket.emit("input", {target: channel.id, text: "/list"});
+socket.emit("input", {target: channel.id, text: "/ignorelist"});
+socket.emit("input", {target: channel.id, text: "/disconnect"});
+socket.emit("input", {target: channel.id, text: "/connect"});
 ```
 
 #### Channel:
+
 ```typescript
-socket.emit("input", {target: channel.id, text: "/banlist"})  // ❌ NIE DZIAŁA W IRSSI!
+socket.emit("input", {target: channel.id, text: "/banlist"}); // ❌ NIE DZIAŁA W IRSSI!
 ```
 
 #### Query:
+
 ```typescript
-socket.emit("input", {target: channel.id, text: "/whois " + nick})
-socket.emit("input", {target: channel.id, text: "/ignore " + nick})
+socket.emit("input", {target: channel.id, text: "/whois " + nick});
+socket.emit("input", {target: channel.id, text: "/ignore " + nick});
 ```
 
 #### User actions:
+
 ```typescript
-socket.emit("input", {target: channel.id, text: "/query " + nick})
-socket.emit("input", {target: channel.id, text: "/mode +o " + nick})
-socket.emit("input", {target: channel.id, text: "/kick " + nick})
+socket.emit("input", {target: channel.id, text: "/query " + nick});
+socket.emit("input", {target: channel.id, text: "/mode +o " + nick});
+socket.emit("input", {target: channel.id, text: "/kick " + nick});
 ```
 
 ### 3. Commands z use-close-channel.ts
+
 ```typescript
 // Zamknięcie sieci (lobby)
-socket.emit("input", {target: channel.id, text: "/quit"})  // ❌ TRZEBA SPECJALNIE OBSŁUŻYĆ!
+socket.emit("input", {target: channel.id, text: "/quit"}); // ❌ TRZEBA SPECJALNIE OBSŁUŻYĆ!
 
 // Zamknięcie kanału/query
-socket.emit("input", {target: channel.id, text: "/close"})  // ❌ NIE DZIAŁA W IRSSI!
+socket.emit("input", {target: channel.id, text: "/close"}); // ❌ NIE DZIAŁA W IRSSI!
 ```
 
 ## Komendy wymagające translacji
@@ -54,69 +62,80 @@ socket.emit("input", {target: channel.id, text: "/close"})  // ❌ NIE DZIAŁA W
 ### Kategoria 1: Komendy nieobsługiwane przez irssi
 
 #### `/close` → wymaga translacji
+
 **Problem:** irssi nie rozumie `/close`
 **Rozwiązanie:**
+
 - Dla kanału: `/part #channel` → wyślij do irssi
 - Dla query: wyślij `close_query` do irssi (już zaimplementowane w fe-web-client.c:166)
 - Backend musi wywołać odpowiednie metody
 
 **Implementacja:**
+
 ```typescript
 // Backend: irssiClient.ts
 if (command === "close") {
-    if (channel.type === ChanType.CHANNEL) {
-        // Send /part to IRC
-        await this.irssiConnection.executeCommand(`part ${channel.name}`, network.serverTag);
-    } else if (channel.type === ChanType.QUERY) {
-        // Send close_query to irssi
-        this.irssiConnection.send({
-            type: "close_query",
-            server: network.serverTag,
-            nick: channel.name
-        });
-    }
-    return; // Don't forward original /close
+  if (channel.type === ChanType.CHANNEL) {
+    // Send /part to IRC
+    await this.irssiConnection.executeCommand(`part ${channel.name}`, network.serverTag);
+  } else if (channel.type === ChanType.QUERY) {
+    // Send close_query to irssi
+    this.irssiConnection.send({
+      type: "close_query",
+      server: network.serverTag,
+      nick: channel.name,
+    });
+  }
+  return; // Don't forward original /close
 }
 ```
 
 #### `/banlist` → tłumacz na `/mode #channel +b`
+
 **Problem:** irssi nie ma komendy `/banlist`
 **Rozwiązanie:**
+
 ```typescript
 // Backend: irssiClient.ts
 if (command === "banlist") {
-    await this.irssiConnection.executeCommand(`mode ${channel.name} +b`, network.serverTag);
-    return; // Don't forward /banlist
+  await this.irssiConnection.executeCommand(`mode ${channel.name} +b`, network.serverTag);
+  return; // Don't forward /banlist
 }
 ```
 
 #### `/quit` → specjalna obsługa
+
 **Problem:** `/quit` w lobby powinien rozłączyć sieć w irssi (nie zamykać całego irssi!)
 **Rozwiązanie:**
+
 ```typescript
 // Backend: irssiClient.ts
 if (command === "quit" && channel.type === ChanType.LOBBY) {
-    // Send /disconnect for this server in irssi
-    await this.irssiConnection.executeCommand(`disconnect ${network.serverTag}`, "*");
-    // Note: irssi will send server_status with connected=false
-    return; // Don't forward /quit
+  // Send /disconnect for this server in irssi
+  await this.irssiConnection.executeCommand(`disconnect ${network.serverTag}`, "*");
+  // Note: irssi will send server_status with connected=false
+  return; // Don't forward /quit
 }
 ```
 
 ### Kategoria 2: Synchronizacja 2-kierunkowa
 
 #### Query close (zamknięcie okna query)
+
 **Aktualny stan:**
+
 - ✅ Frontend → Backend → irssi: działa (close_query)
 - ❌ irssi → Backend → Frontend: brak
 
 **Problem:** Gdy w irssi zamknę query (`/unquery nick`), frontend nie wie o tym
 
 **Rozwiązanie:**
+
 - irssi już wysyła `WEB_MSG_QUERY_CLOSED` (fe-web-signals.c)
 - Backend musi obsłużyć to zdarzenie i wysłać `part` do frontendu
 
 **Implementacja:**
+
 ```typescript
 // Backend: setupIrssiEventHandlers()
 (this.irssiConnection as any).on("query_closed", (msg: FeWebMessage) => {
@@ -150,7 +169,9 @@ private handleQueryClosed(msg: FeWebMessage): void {
 ```
 
 #### Channel part (opuszczenie kanału)
+
 **Aktualny stan:**
+
 - ✅ irssi → Backend → Frontend: działa (channel_part)
 - ✅ Frontend → Backend → irssi: działa (/part)
 
@@ -161,15 +182,19 @@ private handleQueryClosed(msg: FeWebMessage): void {
 ## Architektura rozwiązania
 
 ### Opcja 1: Command Translator w handleInput()
+
 **Zalety:**
+
 - Centralne miejsce dla wszystkich tłumaczeń
 - Łatwe dodawanie nowych komend
 - Możliwość logowania/debugowania
 
 **Wady:**
+
 - Wymaga parsowania każdej komendy
 
 **Implementacja:**
+
 ```typescript
 // irssiClient.ts - rozszerz handleInput()
 async handleInput(socketId: string, data: {target: number; text: string}): Promise<void> {
@@ -245,11 +270,14 @@ private async translateCommand(
 ```
 
 ### Opcja 2: Uniwersalny translator z konfiguracją
+
 **Zalety:**
+
 - Łatwe dodawanie nowych komend bez kodu
 - Możliwość konfiguracji przez JSON
 
 **Wady:**
+
 - Trudniejsze dla złożonych translacji (np. /close wymaga logiki)
 - Mniej czytelne dla programistów
 
@@ -262,10 +290,12 @@ private async translateCommand(
 **Kroki implementacji:**
 
 1. **Rozszerz handleInput() w irssiClient.ts:**
+
    - Dodaj `translateCommand()` method
    - Obsłuż `/close`, `/banlist`, `/quit`
 
 2. **Dodaj obsługę query_closed:**
+
    - Zarejestruj handler w `setupIrssiEventHandlers()`
    - Implementuj `handleQueryClosed()`
 

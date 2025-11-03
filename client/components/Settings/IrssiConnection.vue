@@ -60,12 +60,7 @@
 
 			<div class="input-group">
 				<label class="opt">
-					<input
-						v-model="config.useTLS"
-						type="checkbox"
-						name="irssi_use_tls"
-						disabled
-					/>
+					<input v-model="config.useTLS" type="checkbox" name="irssi_use_tls" disabled />
 					Use SSL/TLS (wss://)
 					<span class="help">Required for fe-web v1.5</span>
 				</label>
@@ -101,9 +96,7 @@
 			<h2>Current Connection</h2>
 			<div class="connection-info">
 				<p>
-					<strong>Host:</strong> {{ currentConnection.host }}:{{
-						currentConnection.port
-					}}
+					<strong>Host:</strong> {{ currentConnection.host }}:{{ currentConnection.port }}
 				</p>
 				<p>
 					<strong>Status:</strong>
@@ -353,4 +346,3 @@ export default defineComponent({
 	},
 });
 </script>
-

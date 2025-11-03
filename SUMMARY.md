@@ -11,11 +11,13 @@ Dostosowanie implementacji **The Lounge** do łączenia się z WebSocket modułe
 Jeśli user ma już skonfigurowane irssi proxy (host, port, password), to backend **POWINIEN ŁĄCZYĆ SIĘ DO IRSSI OD RAZU** przy starcie The Lounge (`npm start`), **NIE CZEKAJĄC** na pierwszą przeglądarkę!
 
 **Obecny flow (ZŁY):**
+
 ```
 npm start → Backend startuje → Czeka na login → User loguje się → Backend łączy do irssi
 ```
 
 **Docelowy flow (DOBRY):**
+
 ```
 npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted != "" → Łączy do irssi OD RAZU
                                                                                     ↓
@@ -23,12 +25,14 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
 ```
 
 **Rozwiązanie encryption:**
+
 - Używamy **IP+PORT** jako salt do szyfrowania hasła irssi
 - `PBKDF2(irssiPassword, "${host}:${port}", 10k iter, 256-bit)` → Encryption Key
 - Zapisujemy encrypted password w config
 - Przy starcie: odczytujemy IP+PORT z config → derive key → decrypt password → connect!
 
 ### Architektura:
+
 ```
 ┌─────────────┐         ┌──────────────────┐         ┌─────────────┐
 │  Browser 1  │◄───────►│                  │◄───────►│             │
@@ -45,6 +49,7 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
 ```
 
 ### Kluczowe założenia:
+
 1. **NIE UŻYWAMY trybu IRC** - The Lounge działa TYLKO jako proxy do irssi
 2. **Backend trzyma połączenie z irssi** - jedno WebSocket connection per user
 3. **Frontend łączy się do backendu** - wiele przeglądarek per user
@@ -56,23 +61,28 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
 ## 🔧 OBECNY STAN (CO JUŻ DZIAŁA)
 
 ### ✅ Zaimplementowane:
+
 1. **FeWebSocket** - WebSocket client dla irssi fe-web
+
    - Dual-layer encryption: TLS + AES-256-GCM
    - PBKDF2 key derivation (password + "irssi-fe-web-v1", 10k iterations)
    - Binary frames, ping/pong keepalive
 
 2. **FeWebAdapter** - mapowanie fe-web messages → The Lounge events
+
    - 20 server→client message types
    - 4 client→server message types
    - Pełna implementacja CLIENT-SPEC.md
 
 3. **IrssiClient** - zmodyfikowany Client class
+
    - Persistent WebSocket connection do irssi
    - Multiple browser sessions (`attachedBrowsers: Map<socketId, BrowserSession>`)
    - Networks cache (`networks: NetworkData[]`)
    - Encrypted message storage (wyłączony - do włączenia!)
 
 4. **Frontend integration**
+
    - Socket.IO events
    - Vue components (MessageList, nicklist, etc.)
    - Lazy loading UI ("Show older messages" button)
@@ -84,15 +94,19 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
    - WHOIS, channel list
 
 ### ❌ NIE DZIAŁA (DO NAPRAWY):
+
 1. **Messages NIE SĄ ZAPISYWANE** do storage
+
    - `if (this.messageStorage && false)` - wyłączone!
    - `channel.messages` pozostaje puste
 
 2. **Messages NIE SĄ DODAWANE** do cache
+
    - `handleMessage()` tylko emituje event do frontendów
    - Nie dodaje do `channel.messages` array
 
 3. **Druga przeglądarka NIE DOSTAJE init event**
+
    - `attachBrowser()` nie wysyła init jeśli `this.networks` już istnieje
    - Czeka na `state_dump` który NIE PRZYJDZIE (bo już połączony)
 
@@ -108,6 +122,7 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
 ### 1. Message Storage - Wymagania
 
 #### Buffer w pamięci (cache):
+
 - **1000 ostatnich linii** per kanał/query
 - Nowe messages wypychają stare (FIFO)
 - Używany dla:
@@ -115,6 +130,7 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
   - Lazy loading (`more` event - 100 messages per request)
 
 #### Storage na dysku (SQLite):
+
 - **10 lat wstecz** - wszystko!
 - **Encrypted** - AES-256-GCM (to samo hasło co fe-web)
 - **Wszystkie message types:**
@@ -124,6 +140,7 @@ npm start → Backend startuje → Sprawdza config → Jeśli passwordEncrypted 
   - Wszystko z timestampami!
 
 #### Lazy loading:
+
 - Scroll w górę → "Show older messages" button
 - Klik → `socket.emit("more", {target, lastId})`
 - Backend → pobiera 100 starszych messages z cache
@@ -144,15 +161,16 @@ this.networks = [
       {
         id: 1,
         name: "#polska",
-        users: Map<nick, User>,  // ✅ ZAWSZE AKTUALNY (nicklist)
-        messages: []              // ❌ PUSTE! Nie cachujemy messages!
-      }
-    ]
-  }
-]
+        users: Map<nick, User>, // ✅ ZAWSZE AKTUALNY (nicklist)
+        messages: [], // ❌ PUSTE! Nie cachujemy messages!
+      },
+    ],
+  },
+];
 ```
 
 **Co trzymamy:**
+
 - ✅ Networks (uuid, name, nick, serverOptions)
 - ✅ Channels (id, name, topic, state)
 - ✅ Users (nicklist - Map<nick, User>)
@@ -160,6 +178,7 @@ this.networks = [
 - ❌ Messages (tylko w SQLite storage!)
 
 **Dlaczego nie cachujemy messages:**
+
 - Pamięć: 1000 messages × 100 kanałów × 10 users = dużo RAM!
 - Storage jest szybki (SQLite + encryption)
 - Frontend ładuje lazy (100 messages per request)
@@ -202,6 +221,7 @@ Frontend: dodaje starsze messages na początek listy
 ```
 
 **WAŻNE:**
+
 - Open queries też muszą być w cache (`this.networks[].channels[]`)!
 - Jeśli ktoś napisał do nas godzinę temu, query **MUSI BYĆ** w channels[] żeby backend mógł załadować messages przy init!
 - Backend ładuje messages **PRZY KAŻDYM INIT** (dla każdej przeglądarki osobno)
@@ -519,49 +539,49 @@ loadUser(name: string): IrssiClient {
 // server/irssiConfigHelper.ts
 
 export async function encryptIrssiPassword(
-    irssiPassword: string,
-    host: string,
-    port: number
+  irssiPassword: string,
+  host: string,
+  port: number
 ): Promise<string> {
-    // Use IP+PORT as salt
-    const salt = `${host}:${port}`;
-    const key = crypto.pbkdf2Sync(irssiPassword, salt, 10000, 32, "sha256");
+  // Use IP+PORT as salt
+  const salt = `${host}:${port}`;
+  const key = crypto.pbkdf2Sync(irssiPassword, salt, 10000, 32, "sha256");
 
-    // Generate random IV (12 bytes for GCM)
-    const iv = crypto.randomBytes(12);
+  // Generate random IV (12 bytes for GCM)
+  const iv = crypto.randomBytes(12);
 
-    // Encrypt with AES-256-GCM
-    const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-    const encrypted = Buffer.concat([cipher.update(irssiPassword, "utf8"), cipher.final()]);
-    const tag = cipher.getAuthTag();
+  // Encrypt with AES-256-GCM
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(irssiPassword, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
 
-    // Format: [IV (12 bytes)] [Ciphertext] [Tag (16 bytes)]
-    const result = Buffer.concat([iv, encrypted, tag]);
-    return result.toString("base64");
+  // Format: [IV (12 bytes)] [Ciphertext] [Tag (16 bytes)]
+  const result = Buffer.concat([iv, encrypted, tag]);
+  return result.toString("base64");
 }
 
 export async function decryptIrssiPassword(
-    encryptedPassword: string,
-    host: string,
-    port: number
+  encryptedPassword: string,
+  host: string,
+  port: number
 ): Promise<string> {
-    // Use IP+PORT as salt
-    const salt = `${host}:${port}`;
-    const key = crypto.pbkdf2Sync(encryptedPassword, salt, 10000, 32, "sha256");
+  // Use IP+PORT as salt
+  const salt = `${host}:${port}`;
+  const key = crypto.pbkdf2Sync(encryptedPassword, salt, 10000, 32, "sha256");
 
-    const encryptedBuffer = Buffer.from(encryptedPassword, "base64");
+  const encryptedBuffer = Buffer.from(encryptedPassword, "base64");
 
-    // Parse: [IV (12 bytes)] [Ciphertext] [Tag (16 bytes)]
-    const iv = encryptedBuffer.slice(0, 12);
-    const tag = encryptedBuffer.slice(-16);
-    const ciphertext = encryptedBuffer.slice(12, -16);
+  // Parse: [IV (12 bytes)] [Ciphertext] [Tag (16 bytes)]
+  const iv = encryptedBuffer.slice(0, 12);
+  const tag = encryptedBuffer.slice(-16);
+  const ciphertext = encryptedBuffer.slice(12, -16);
 
-    // Decrypt with AES-256-GCM
-    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
-    decipher.setAuthTag(tag);
+  // Decrypt with AES-256-GCM
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
 
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-    return decrypted.toString("utf8");
+  const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  return decrypted.toString("utf8");
 }
 ```
 
@@ -572,15 +592,19 @@ export async function decryptIrssiPassword(
 ### ⚠️ ZMIANA: IP+PORT jako salt (zamiast user password)
 
 **STARA METODA (wymagała user password przy starcie):**
+
 ```
 User Password → PBKDF2 → Encryption Key → Decrypt irssi password
 ```
+
 ❌ Problem: Nie możemy autoconnect przy starcie (nie mamy user password)
 
 **NOWA METODA (używa IP+PORT):**
+
 ```
 irssi Password + IP+PORT → PBKDF2 → Encrypted Password → Save to config
 ```
+
 ✅ Rozwiązanie: IP+PORT są w config (plaintext), możemy decrypt przy starcie!
 
 ### Encryption flow:
@@ -607,6 +631,7 @@ irssi Password + IP+PORT → PBKDF2 → Encrypted Password → Save to config
 ```
 
 Używamy irssi_websocket_password do encryption key dla messages:
+
 ```
 User irssi_websocket_password → PBKDF2("thelounge_irssi_temp_salt") → Message Encryption Key
 ```
@@ -630,6 +655,7 @@ CREATE INDEX time ON messages (time);
 ## 📊 FLOW DIAGRAM
 
 ### Initial connection (first browser):
+
 ```
 Browser 1 → Login → Backend
                       ↓
@@ -645,6 +671,7 @@ Browser 1 → Login → Backend
 ```
 
 ### Second browser connection:
+
 ```
 Browser 2 → Login → Backend
                       ↓
@@ -656,6 +683,7 @@ Browser 2 → Login → Backend
 ```
 
 ### New message arrives:
+
 ```
 irssi → fe-web message → Backend
                            ↓
@@ -667,6 +695,7 @@ irssi → fe-web message → Backend
 ```
 
 ### Lazy loading (scroll up):
+
 ```
 Browser → "Show older messages" → socket.emit("more", {target, lastId})
                                         ↓
@@ -725,23 +754,28 @@ Browser → "Show older messages" → socket.emit("more", {target, lastId})
 **Zaimplementowane funkcje:**
 
 1. **Socket.io event types** (`shared/types/socket-events.d.ts`)
+
    - `activity_update: EventHandler<{chan: number; unread: number; highlight: number}>`
    - `mark_read: EventHandler<{target: number}>`
 
 2. **Frontend handler** (`client/js/socket-events/activity_update.ts`)
+
    - Odbiera `activity_update` z backendu
    - Aktualizuje `channel.unread` i `channel.highlight`
    - Ignoruje update dla aktywnego kanału (user już go widzi)
 
 3. **Frontend wysyłanie mark_read** (`client/components/Chat.vue`)
+
    - Wysyła `mark_read` event przy otwarciu kanału
    - Czyści unread markers w irssi
 
 4. **Backend handler** (`server/server.ts`)
+
    - `socket.on("mark_read")` w `initializeIrssiClient()`
    - Wywołuje `IrssiClient.markAsRead(network.uuid, channel.name)`
 
 5. **Backend poprawki** (`server/irssiClient.ts`)
+
    - Zmieniono event z `activity:update` na `activity_update`
    - Format danych: `{chan, unread, highlight}` (zgodny z frontendem)
 
@@ -770,6 +804,7 @@ przeglądarka → The Lounge Backend → irssi → wszystkie przeglądarki:
 Gdy użytkownik przełączał okna w irssi (np. `/window 5`), activity dla tego okna **NIE było czyszczone** w statusbar (Act:). Badge w The Lounge również pozostawał.
 
 **Przyczyna:**
+
 - irssi core emituje sygnał `"window changed"` gdy user przełącza okna
 - fe-web **NIE** obsługiwał tego sygnału
 - Czyszczenie activity działało TYLKO gdy:
@@ -789,6 +824,7 @@ static void sig_window_changed(WINDOW_REC *new_window, WINDOW_REC *old_window)
 ```
 
 Zarejestrowano sygnał:
+
 ```c
 signal_add("window changed", (SIGNAL_FUNC)sig_window_changed);
 ```
@@ -796,6 +832,7 @@ signal_add("window changed", (SIGNAL_FUNC)sig_window_changed);
 **Commit:** `cb5033a0d` (2025-10-14 11:06:26)
 
 **Teraz działa:**
+
 - User przełącza okno w irssi → activity automatycznie czyszczone
 - Badge w The Lounge znika
 - Statusbar Act: aktualizowany poprawnie
@@ -804,10 +841,12 @@ signal_add("window changed", (SIGNAL_FUNC)sig_window_changed);
 
 **Problem:**
 Irssi core emituje **DWA** sygnały dla tej samej wiadomości:
+
 1. `"window hilight"` → `sig_window_hilight()` → wysyła `activity_update`
 2. `"window activity"` → `sig_window_activity()` → **DUPLIKAT** wysyła znowu `activity_update`
 
 **Dowód z logów:**
+
 ```
 15:10:18 Activity HILIGHT for #irc.al (level=2)      ← pierwszy activity_update
 15:10:18 Activity UPDATE for #irc.al (level=2, old=1) ← DUPLIKAT (level się nie zmienił!)
@@ -815,6 +854,7 @@ Irssi core emituje **DWA** sygnały dla tej samej wiadomości:
 
 **Rozwiązanie:**
 Dodano deduplikację w `sig_window_activity()`:
+
 ```c
 /* Skip if level didn't change (avoid duplicates with window hilight) */
 if (data_level == old_level) {
@@ -830,20 +870,22 @@ if (data_level == old_level) {
 Backend otrzymywał `activity_update` z irssi, ale licznik `unreadCount` zawsze wynosił 0.
 
 **Przyczyna:**
+
 ```typescript
 // server/irssiClient.ts - handleActivityUpdate()
 if (dataLevel === DataLevel.NONE) {
-    marker.unreadCount = 0;
+  marker.unreadCount = 0;
 }
 // ❌ Brak inkrementacji gdy dataLevel > 0!
 ```
 
 **Rozwiązanie:**
+
 ```typescript
 if (dataLevel === DataLevel.NONE) {
-    marker.unreadCount = 0;
+  marker.unreadCount = 0;
 } else {
-    marker.unreadCount++;  // ✅ Dodano
+  marker.unreadCount++; // ✅ Dodano
 }
 ```
 
@@ -854,6 +896,7 @@ if (dataLevel === DataLevel.NONE) {
 **Status:** W trakcie debugowania
 
 Dodano szczegółowe logi do `sig_window_changed()` żeby zdiagnozować dlaczego handler nie jest wywoływany:
+
 - Log przy wywołaniu funkcji
 - Log przy każdym warunku (no active item, no server, data_level)
 - Log gdy wysyłamy activity_update
@@ -869,6 +912,7 @@ Dodano szczegółowe logi do `sig_window_changed()` żeby zdiagnozować dlaczego
 User klika w The Lounge na kanał → backend wysyła `mark_read` do irssi → irssi czyści activity **ALE NIE PRZEŁĄCZA OKNA**.
 
 **Dowód z logów:**
+
 ```
 node2.log: Sending: {"type":"mark_read","server":"IRCnet","target":"#polska"}
 irssi2.log: Received mark_read → Activity CLEAR (dehilight)
@@ -878,6 +922,7 @@ Okno w irssi pozostaje niezmienione.
 
 **Rozwiązanie:**
 Dodano `window_set_active(window)` w mark_read handler:
+
 ```c
 /* Switch to this window in irssi (user clicked in browser) */
 window_set_active(window);
@@ -892,6 +937,7 @@ Gdy przychodzi 5 wiadomości, unreadCount = 1 zamiast 5.
 
 **Przyczyna:**
 Deduplikacja w `sig_window_activity()` była **ZA AGRESYWNA**:
+
 ```c
 // Stary kod:
 if (data_level == old_level) {
@@ -900,6 +946,7 @@ if (data_level == old_level) {
 ```
 
 Gdy przychodzi nowa wiadomość z highlightem na kanale który JUŻ MA level=2:
+
 1. `sig_window_hilight()` wysyła activity_update level=2
 2. `sig_window_activity()` dostaje old_level=2, data_level=2 → **SKIPUJE**
 3. Backend dostaje tylko 1x activity_update → unreadCount++
@@ -907,6 +954,7 @@ Gdy przychodzi nowa wiadomość z highlightem na kanale który JUŻ MA level=2:
 
 **Rozwiązanie:**
 Zmieniono logikę deduplikacji - skipuj TYLKO gdy level **SPADA**:
+
 ```c
 /* Skip if level DECREASED (e.g. from hilight to text) */
 /* But ALWAYS send if level stayed same or increased - this counts new messages */
@@ -916,6 +964,7 @@ if (data_level < old_level) {
 ```
 
 Teraz:
+
 - Nowa wiadomość z highlightem (level=2) → `sig_window_hilight()` + `sig_window_activity()` → **2x activity_update** → unreadCount += 2 ✅
 - Kolejna wiadomość z highlightem → znowu 2x → unreadCount += 2 ✅
 
@@ -926,6 +975,7 @@ Teraz:
 ### 🐛 Bugfix #6: unreadCount liczony z bazy zamiast increment
 
 **Problem z poprzednim rozwiązaniem (#5):**
+
 - Duplikaty activity_update (2x na wiadomość) powodowały że unreadCount rósł 2x za szybko
 - `msg.level` to **POZIOM** aktywności (0-3), NIE liczba wiadomości
 - Increment przy każdym activity_update był błędny
@@ -955,6 +1005,7 @@ if (dataLevel === DataLevel.NONE) {
 ```
 
 **Teraz działa:**
+
 - Każda wiadomość zapisana w bazie z `time > lastReadTime` jest liczona jako unread ✅
 - Nie ma znaczenia ile razy irssi wysyła activity_update (duplikaty nie szkodzą) ✅
 - unreadCount zawsze pokazuje **prawdziwą liczbę** nieprzeczytanych wiadomości ✅
@@ -965,6 +1016,7 @@ if (dataLevel === DataLevel.NONE) {
 
 **Problem:**
 Gdy user klikał w Vue na kanał:
+
 1. Backend wysyłał `mark_read` do irssi ✅
 2. irssi przełączał okno i wysyłał `activity_update level=0` ✅
 3. Backend otrzymywał `level=0` i ustawiał `marker.unreadCount = 0` ✅
@@ -972,23 +1024,25 @@ Gdy user klikał w Vue na kanał:
 5. Badge w Vue **NIE ZNIKAŁ** ❌
 
 **Rozwiązanie:**
+
 ```typescript
 if (dataLevel === DataLevel.NONE) {
-    marker.lastReadTime = Date.now();
-    marker.unreadCount = 0;
-    this.unreadMarkers.set(key, marker);
+  marker.lastReadTime = Date.now();
+  marker.unreadCount = 0;
+  this.unreadMarkers.set(key, marker);
 
-    // ✅ DODANO: Broadcast do przeglądarek
-    this.broadcastToAllBrowsers("activity_update" as any, {
-        chan: channel.id,
-        unread: 0,
-        highlight: 0,
-    });
-    return;
+  // ✅ DODANO: Broadcast do przeglądarek
+  this.broadcastToAllBrowsers("activity_update" as any, {
+    chan: channel.id,
+    unread: 0,
+    highlight: 0,
+  });
+  return;
 }
 ```
 
 **Teraz działa:**
+
 - User klika w Vue → irssi przełącza okno → wysyła level=0 → backend broadcastuje → badge znika ✅
 
 **Commit:** `5b68d635` (2025-10-14 16:01:49)
@@ -997,11 +1051,13 @@ if (dataLevel === DataLevel.NONE) {
 
 **Problem:**
 Gdy user przełączał okna w irssi (ESC+nr lub `/window N`):
+
 - W **czystym irssi** (bez fe-web): Act: [2,3,4,5] → numer znika ✅
 - Z **załadowanym fe-web**: Act: [2,3,4,5] → **numer NIE ZNIKA** ❌
 
 **Przyczyna:**
 Gdy core irssi czyści activity:
+
 1. Core wywołuje `window_activity(window, 0, NULL)` ✅
 2. Core ustawia `window->data_level = 0` ✅
 3. Core emituje `"window hilight"` signal ✅
@@ -1026,6 +1082,7 @@ if (window->data_level == 0) {
 ```
 
 **Teraz działa:**
+
 - User przełącza okno w irssi → core czyści `window->data_level = 0` → fe-web **SKIPUJE** wysyłanie → Act: znika ✅
 - User klika w Vue → irssi przełącza okno → Act: znika ✅
 
@@ -1042,6 +1099,7 @@ irssi odpowiada: `Not joined to any channel` ❌
 irssi wymaga pełnej składni: `/kick #polska gibi~ test` gdy komenda nie jest wykonywana w oknie kanału.
 
 Backend ma `translateCommand()` który tłumaczy `/close` → `/part #channel`, ale **NIE MA** translacji dla:
+
 - `/kick nick reason` → `/kick #channel nick reason`
 - `/ban nick` → `/ban #channel nick`
 - `/invite nick` → `/invite nick #channel`
@@ -1072,6 +1130,7 @@ case "invite":
 ```
 
 **Teraz działa:**
+
 - User w Vue: `/kick gibi~ test` → Backend: `/kick #polska gibi~ test` → irssi: ✅
 - User w Vue: `/ban troll` → Backend: `/ban #polska troll` → irssi: ✅
 - User w Vue: `/invite friend` → Backend: `/invite friend #polska` → irssi: ✅
@@ -1082,6 +1141,7 @@ case "invite":
 
 **Problem:**
 Po bugfix #8 (skipowanie `sig_window_hilight` gdy `window->data_level=0`):
+
 - User klika w Vue → irssi przełącza okno ✅
 - Backend otrzymuje `activity_update level=0` ✅
 - Badge w Vue znika ✅
@@ -1099,6 +1159,7 @@ signal_emit("window dehilight", 1, window);
 ```
 
 **Dlaczego to nie działa:**
+
 1. Ręczne zerowanie `window->data_level` **NIE AKTUALIZUJE** statusbar
 2. Core irssi ma funkcję `window_activity(window, 0, NULL)` która:
    - Ustawia `window->data_level = 0` ✅
@@ -1116,6 +1177,7 @@ window_activity(window, 0, NULL);  // Czyści activity + aktualizuje statusbar
 ```
 
 **Teraz działa:**
+
 - User klika w Vue → irssi przełącza okno ✅
 - `window_activity(window, 0, NULL)` czyści activity ✅
 - Statusbar dostaje sygnał i **USUWA NUMER** z Act: ✅
@@ -1127,6 +1189,7 @@ window_activity(window, 0, NULL);  // Czyści activity + aktualizuje statusbar
 ### 🐛 Bugfix #11: Zamykanie kanałów/query nie synchronizowało się między irssi a Vue
 
 **Problem:**
+
 ```
 User w Vue: Leave channel (#polska)
   ↓
@@ -1138,6 +1201,7 @@ Vue: Okno kanału NADAL WIDOCZNE ❌
 ```
 
 **I odwrotnie:**
+
 ```
 User w irssi: /wc (window close)
   ↓
@@ -1148,10 +1212,12 @@ Vue: Okno NADAL WIDOCZNE ❌
 
 **Przyczyna:**
 fe-web **NIE MIAŁ** handlerów dla sygnałów:
+
 - `"window item remove"` - emitowany gdy kanał/query jest usuwany z okna (np. `/wc`, `/part`)
 - `"window destroyed"` - emitowany gdy całe okno jest zamykane
 
 **Istniejące handlery były tylko dla INNYCH userów:**
+
 - `"message part"` - gdy **KTOŚ INNY** wychodzi z kanału (otrzymujemy IRC PART message od serwera)
 - `"query destroyed"` - gdy query jest niszczony (ale to też dla innych userów)
 
@@ -1159,6 +1225,7 @@ fe-web **NIE MIAŁ** handlerów dla sygnałów:
 Dodano nowe handlery w `fe-web-signals.c`:
 
 1. **`sig_window_item_remove()`** - obsługuje `"window item remove"`:
+
    - Sprawdza czy item to kanał (`IRC_CHANNEL`) czy query (`QUERY`)
    - Dla kanału: wysyła `WEB_MSG_CHANNEL_PART` z `nick = server->nick` (MY wychodzimy)
    - Dla query: wysyła `WEB_MSG_QUERY_CLOSED`
@@ -1167,10 +1234,12 @@ Dodano nowe handlery w `fe-web-signals.c`:
    - Tylko loguje (bo `"window item remove"` jest emitowany PRZED `"window destroyed"` dla każdego item)
 
 **Backend już miał implementację:**
+
 - `handleChannelPart()` sprawdza `if (nick === network.nick)` → usuwa kanał z UI
 - `handleQueryClosed()` usuwa query z UI
 
 **Teraz działa:**
+
 ```
 User w Vue: Leave → /part → irssi zamyka okno → window item remove → channel_part → Vue usuwa kanał ✅
 User w irssi: /wc → window item remove → channel_part/query_closed → Vue usuwa kanał/query ✅
@@ -1184,4 +1253,3 @@ User w irssi: /part → IRC PART → window item remove → channel_part → Vue
 **Data utworzenia:** 2025-10-13
 **Ostatnia aktualizacja:** 2025-10-14 17:06
 **Status:** Message storage ready, Unread markers FIXED, Command translator FIXED, Act: statusbar FIXED, Window close sync FIXED
-
