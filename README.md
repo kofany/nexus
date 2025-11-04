@@ -1,95 +1,57 @@
-<h1 align="center">
-	<img
-		width="300"
-		alt="The Lounge"
-		src="https://raw.githubusercontent.com/thelounge/thelounge/master/client/img/logo-vertical-transparent-bg.svg?sanitize=true">
-</h1>
+# Nexus Lounge
 
-<h3 align="center">
-	Modern web IRC client designed for self-hosting
-</h3>
-
-<p align="center">
-	<strong>
-		<a href="https://thelounge.chat/">Website</a>
-		•
-		<a href="https://thelounge.chat/docs">Docs</a>
-		•
-		<a href="https://demo.thelounge.chat/">Demo</a>
-    •
-		<a href="https://github.com/thelounge/thelounge-docker">Docker</a>
-	</strong>
-</p>
-<p align="center">
-	<a href="https://demo.thelounge.chat/"><img
-		alt="#thelounge IRC channel on Libera.Chat"
-		src="https://img.shields.io/badge/Libera.Chat-%23thelounge-415364.svg?colorA=ff9e18"></a>
-	<a href="https://yarn.pm/thelounge"><img
-		alt="npm version"
-		src="https://img.shields.io/npm/v/thelounge.svg?colorA=333a41&maxAge=3600"></a>
-	<a href="https://github.com/thelounge/thelounge/actions"><img
-		alt="Build Status"
-		src="https://github.com/thelounge/thelounge/workflows/Build/badge.svg"></a>
-</p>
-
-<p align="center">
-	<img src="https://raw.githubusercontent.com/thelounge/thelounge.github.io/master/img/thelounge-screenshot.png" width="550">
-</p>
+Nexus Lounge is our heavily customized fork of [The Lounge](https://github.com/thelounge/thelounge). It is tailored to integrate erssi/irssi FE-Web protocol workflows and ships with an additional WeeChat relay so that "incoming" clients can bridge through the same gateway.
 
 ## Overview
 
-- **Modern features brought to IRC.** Push notifications, link previews, new message markers, and more bring IRC to the 21st century.
-- **Always connected.** Remains connected to IRC servers while you are offline.
-- **Cross platform.** It doesn't matter what OS you use, it just works wherever Node.js runs.
-- **Responsive interface.** The client works smoothly on every desktop, smartphone and tablet.
-- **Synchronized experience.** Always resume where you left off no matter what device.
-
-To learn more about configuration, usage and features of The Lounge, take a look at [the website](https://thelounge.chat).
-
-The Lounge is the official and community-managed fork of [Shout](https://github.com/erming/shout), by [Mattias Erming](https://github.com/erming).
+- **Built for erssi/irssi FE-Web protocol deployments.** Nexus Lounge extends the original architecture with protocol adapters and helper tooling required by erssi environments.
+- **Always connected IRC access.** The server remains connected to IRC networks while clients come and go.
+- **Cross platform and responsive.** Works wherever Node.js runs and adapts to desktop and mobile browsers.
+- **WeeChat relay for incoming clients.** A bundled relay layer enables both Nexus Lounge and external WeeChat relay compatible consumers to connect simultaneously.
 
 ## Installation and usage
 
-The Lounge requires latest [Node.js](https://nodejs.org/) LTS version or more recent.
-The [Yarn package manager](https://yarnpkg.com/) is also recommended.
-If you want to install with npm, `--unsafe-perm` is required for a correct install.
+Nexus Lounge requires the latest [Node.js](https://nodejs.org/) LTS version or more recent. The [Yarn package manager](https://yarnpkg.com/) is also recommended.
 
-### Running stable releases
+### Install from a package registry
 
-Please refer to the [install and upgrade documentation on our website](https://thelounge.chat/docs/install-and-upgrade) for all available installation methods.
+```sh
+npm install --global nexuslounge
+```
+
+The CLI binary is named `nexuslounge`. After installing you can run:
+
+```sh
+nexuslounge start
+```
+
+Configuration data is stored in `~/.nexuslounge` by default. Set the `NEXUSLOUNGE_HOME` environment variable to override the location.
 
 ### Running from source
 
-The following commands install and run the development version of The Lounge:
-
 ```sh
-git clone https://github.com/thelounge/thelounge.git
-cd thelounge
+git clone https://github.com/erssi-org/nexuslounge.git
+cd nexuslounge
 yarn install
 NODE_ENV=production yarn build
 yarn start
 ```
 
-When installed like this, `thelounge` executable is not created. Use `node index <command>` to run commands.
+When running from source, commands can also be executed directly via:
 
-⚠️ While it is the most recent codebase, this is not production-ready! Run at
-your own risk. It is also not recommended to run this as root.
+```sh
+node index start
+```
 
-## Development setup
+## Development guidelines
 
-Simply follow the instructions to run The Lounge from source above, on your own
-fork.
+- Run `yarn test` before submitting changes.
+- Use `yarn build:client` when updating anything in `client/js` or `client/components`.
+- Use `yarn build:server` when updating server-side TypeScript in `server/`.
+- `yarn dev` starts Nexus Lounge with hot module reloading for local development.
 
-Before submitting any change, make sure to:
+To install the pre-commit hook run `yarn githooks-install`.
 
-- Read the [Contributing instructions](https://github.com/thelounge/thelounge/blob/master/.github/CONTRIBUTING.md#contributing)
-- Run `yarn test` to execute linters and the test suite
-  - Run `yarn format:prettier` if linting fails
-- Run `yarn build:client` if you change or add anything in `client/js` or `client/components`
-  - The built files will be output to `public/` by webpack
-- Run `yarn build:server` if you change anything in `server/`
-  - The built files will be output to `dist/` by tsc
-- `yarn dev` can be used to start The Lounge with hot module reloading
+## Licensing
 
-To ensure that you don't commit files that fail the linting, you can install a pre-commit git hook.
-Execute `yarn githooks-install` to do so.
+Nexus Lounge continues to be distributed under the MIT license. See [LICENSE](LICENSE) for details.

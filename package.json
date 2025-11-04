@@ -1,6 +1,6 @@
 {
-  "name": "thelounge",
-  "description": "The self-hosted Web IRC client",
+  "name": "nexuslounge",
+  "description": "Nexus Lounge - A heavily modified fork of The Lounge with erssi/irssi fe-web protocol support and weechat relay for incoming clients",
   "version": "4.4.3",
   "preferGlobal": true,
   "bin": "index.js",
@@ -32,20 +32,22 @@
   },
   "keywords": [
     "lounge",
+    "nexuslounge",
     "browser",
     "web",
     "chat",
     "client",
     "irc",
-    "server",
-    "thelounge"
+    "irssi",
+    "weechat",
+    "server"
   ],
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   },
   "files": [
-    "./.thelounge_home",
+    "./.nexuslounge_home",
     "./index.js",
     "./yarn.lock",
     "./client/index.html.tpl",
