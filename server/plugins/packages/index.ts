@@ -229,7 +229,6 @@ async function outdated(cacheTimeout = TIME_TO_LIVE) {
         "--json",
         "--production",
         "--ignore-scripts",
-        "--non-interactive",
         "--cwd",
         packagesPath,
     ];
