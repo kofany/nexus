@@ -11,7 +11,15 @@ Nexus Lounge is our heavily customized fork of [The Lounge](https://github.com/t
 
 ## Installation and usage
 
-Nexus Lounge requires the latest [Node.js](https://nodejs.org/) LTS version or more recent. The [Yarn package manager](https://yarnpkg.com/) is also recommended.
+Nexus Lounge requires the latest [Node.js](https://nodejs.org/) LTS version (≥18.0.0) or more recent. The project uses [Yarn 4.10.3](https://yarnpkg.com/) which is managed via Corepack.
+
+**Before installing, enable Corepack:**
+
+```sh
+corepack enable
+```
+
+This enables automatic package manager version management. Corepack is included with Node.js ≥16.9 and ensures the correct Yarn version (4.10.3) is used.
 
 ### Install from a package registry
 
@@ -32,6 +40,7 @@ Configuration data is stored in `~/.nexuslounge` by default. Set the `NEXUSLOUNG
 ```sh
 git clone https://github.com/erssi-org/nexuslounge.git
 cd nexuslounge
+corepack enable  # Enable Corepack if not already enabled
 yarn install
 NODE_ENV=production yarn build
 yarn start

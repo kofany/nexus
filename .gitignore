@@ -17,3 +17,6 @@ PROMPT.md
 *.log
 node.log
 PROMPT.md
+memory.db*
+.yarn/install-state.gz
+/.yarn
