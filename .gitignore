@@ -3,7 +3,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
-
+.yarn/install-state.gz
 coverage/
 public/
 dist/
@@ -19,7 +19,7 @@ node.log
 PROMPT.md
 memory.db*
 .yarn/install-state.gz
-/.yarn
+.yarn/
 *.gz
 .DS_Store
 .yarn/install-state.gz
