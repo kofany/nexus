@@ -22,3 +22,4 @@ memory.db*
 /.yarn
 *.gz
 .DS_Store
+.yarn/install-state.gz
