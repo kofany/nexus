@@ -1979,95 +1979,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ldapjs/asn1@npm:2.0.0, @ldapjs/asn1@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@ldapjs/asn1@npm:2.0.0"
-  checksum: 10c0/23feb9e9b866e5c312c9d72a20e321db5d510f8f3b74230ef42b68634b9900228a20a51e105c3fc3f072dd03a90120b35555f80ffad7a15ee1767f9bbc39b5ab
-  languageName: node
-  linkType: hard
-
-"@ldapjs/asn1@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@ldapjs/asn1@npm:1.2.0"
-  checksum: 10c0/0fdc18a9040b67505afaa83c3629c71ea78cef0b177abf5e705fc57cd87ca2796fa3c072e9c26af985cfb86a02218b3c41c9c6347e924af11f3bfdbf0806621e
-  languageName: node
-  linkType: hard
-
-"@ldapjs/attribute@npm:1.0.0, @ldapjs/attribute@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@ldapjs/attribute@npm:1.0.0"
-  dependencies:
-    "@ldapjs/asn1": "npm:2.0.0"
-    "@ldapjs/protocol": "npm:^1.2.1"
-    process-warning: "npm:^2.1.0"
-  checksum: 10c0/c00776df3dfd5023a142f110e07d426ef6cf67e1178fbaeaa1fcf66cb9569d14fa59201096e4208ef701185cbe0a63ae1cc2573e96336544690396c84ce45716
-  languageName: node
-  linkType: hard
-
-"@ldapjs/change@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@ldapjs/change@npm:1.0.0"
-  dependencies:
-    "@ldapjs/asn1": "npm:2.0.0"
-    "@ldapjs/attribute": "npm:1.0.0"
-  checksum: 10c0/ba65d2c74bdf49b7e9dba282bc9fb901f44c1a2bdd3cc3fec44221278d64ff1fc003b07d9b7c9e7acffb79d1c992ea35fcb47daa0de1542e77fbff3983113fe8
-  languageName: node
-  linkType: hard
-
-"@ldapjs/controls@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "@ldapjs/controls@npm:2.1.0"
-  dependencies:
-    "@ldapjs/asn1": "npm:^1.2.0"
-    "@ldapjs/protocol": "npm:^1.2.1"
-  checksum: 10c0/993b5a856f3c87233dcad6e1ee76b18dcbfb5db5de0a44f56b1a515d0728f7fb153fdfa98ce52b4fde78cb8ea46c40f17faa3e12e6b6c2f726f6539c8f6f9ff7
-  languageName: node
-  linkType: hard
-
-"@ldapjs/dn@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@ldapjs/dn@npm:1.1.0"
-  dependencies:
-    "@ldapjs/asn1": "npm:2.0.0"
-    process-warning: "npm:^2.1.0"
-  checksum: 10c0/9a686e70b8930f3d6575a33c4905327625c67c5c30cb525d0d53da8c58d83d48787ad8184c6bda07547f7c087041d534b1ef218be37d5a0ea548a05d297e6332
-  languageName: node
-  linkType: hard
-
-"@ldapjs/filter@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@ldapjs/filter@npm:2.1.1"
-  dependencies:
-    "@ldapjs/asn1": "npm:2.0.0"
-    "@ldapjs/protocol": "npm:^1.2.1"
-    process-warning: "npm:^2.1.0"
-  checksum: 10c0/58c20387c921513f0b7bfe2fc6c83e2ecf9c70a9c4fa91fdfcf2b409416f8960533680e034aa9bdd44394c6bc352e228b825ea40d499e75130ab84bd9408e2c5
-  languageName: node
-  linkType: hard
-
-"@ldapjs/messages@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@ldapjs/messages@npm:1.3.0"
-  dependencies:
-    "@ldapjs/asn1": "npm:^2.0.0"
-    "@ldapjs/attribute": "npm:^1.0.0"
-    "@ldapjs/change": "npm:^1.0.0"
-    "@ldapjs/controls": "npm:^2.1.0"
-    "@ldapjs/dn": "npm:^1.1.0"
-    "@ldapjs/filter": "npm:^2.1.1"
-    "@ldapjs/protocol": "npm:^1.2.1"
-    process-warning: "npm:^2.2.0"
-  checksum: 10c0/5ed86ff6c13bd1bb3c7e53d449a3ddbfc83d441e24691e3b4c102216ac948bf7e8fb5b21f3c7374a0599d5c411474bd08ff9fe2706297b459ee139ac59aa008d
-  languageName: node
-  linkType: hard
-
-"@ldapjs/protocol@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@ldapjs/protocol@npm:1.2.1"
-  checksum: 10c0/d6b9cfda7d78b4f35f0ac226d6170d5a0485ded2bd7749bc7a298de77820c52c0a7b8d7f20fd0d6fd7a4b3a0e2941b3844b8e5130980e73ecf7e028a87d9a74b
-  languageName: node
-  linkType: hard
-
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -2316,6 +2227,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/asn1@npm:>=0.2.4":
+  version: 0.2.4
+  resolution: "@types/asn1@npm:0.2.4"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/6aced492982f11e64b26f025b94a596b6b2c39d05dd7638a45bb6cbf326cd2ef895b0fc3737d5a5f33750a0846d55a8590ba40b20e68f4e5f5a38bc18da15b1e
+  languageName: node
+  linkType: hard
+
 "@types/bcryptjs@npm:2.4.6":
   version: 2.4.6
   resolution: "@types/bcryptjs@npm:2.4.6"
@@ -2490,15 +2410,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/ff8f54fc49621210291f815fe5b15d809fd7d032941b3180743440bd507ecdf08b9e844625fa346af568c84bf34114eb378dcdc3e921a08ba1e2a08d7e3c809c
-  languageName: node
-  linkType: hard
-
-"@types/ldapjs@npm:2.2.5":
-  version: 2.2.5
-  resolution: "@types/ldapjs@npm:2.2.5"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/a7b5b8da86a02616914e33246f39bacec7149196c84cb2d1c9d0af1fbcd204d475e6a8068f07586397a44142c729751d1d4f7f77bf9aba1f1d5104f27f113331
   languageName: node
   linkType: hard
 
@@ -3253,13 +3164,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"abstract-logging@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "abstract-logging@npm:2.0.1"
-  checksum: 10c0/304879d9babcf6772260e5ddde632e6428e1f42f7a7a116d4689e97ad813a20e0ec2dd1e0a122f3617557f40091b9ca85735de4b48c17a2041268cb47b3f8ef1
-  languageName: node
-  linkType: hard
-
 "accepts@npm:~1.3.4, accepts@npm:~1.3.8":
   version: 1.3.8
   resolution: "accepts@npm:1.3.8"
@@ -3585,10 +3489,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assert-plus@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "assert-plus@npm:1.0.0"
-  checksum: 10c0/b194b9d50c3a8f872ee85ab110784911e696a4d49f7ee6fc5fb63216dedbefd2c55999c70cb2eaeb4cf4a0e0338b44e9ace3627117b5bf0d42460e9132f21b91
+"asn1@npm:0.2.6":
+  version: 0.2.6
+  resolution: "asn1@npm:0.2.6"
+  dependencies:
+    safer-buffer: "npm:~2.1.0"
+  checksum: 10c0/00c8a06c37e548762306bcb1488388d2f76c74c36f70c803f0c081a01d3bdf26090fc088cd812afc5e56a6d49e33765d451a5f8a68ab9c2b087eba65d2e980e0
   languageName: node
   linkType: hard
 
@@ -3727,15 +3633,6 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: 10c0/75090e2577e941a135517b75718fcfa0482fceaad000ac6f6eb7f1836a8841911ba71d55dc091e51039efdc648dc1b82fb74225cf8bbc3669cb1c34471bdd929
-  languageName: node
-  linkType: hard
-
-"backoff@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "backoff@npm:2.5.0"
-  dependencies:
-    precond: "npm:0.2"
-  checksum: 10c0/57afcd07c08e9174d78f79643ebca1e8da752143ef6675e6b4a0b08ec6b497db3317089350c02fb747ae54c53f485c4d8b0742130b78028bb8a8cd96dd69ce0f
   languageName: node
   linkType: hard
 
@@ -4475,13 +4372,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-util-is@npm:1.0.2":
-  version: 1.0.2
-  resolution: "core-util-is@npm:1.0.2"
-  checksum: 10c0/980a37a93956d0de8a828ce508f9b9e3317039d68922ca79995421944146700e4aaf490a6dbfebcb1c5292a7184600c7710b957d724be1e37b8254c6bc0fe246
-  languageName: node
-  linkType: hard
-
 "cors@npm:~2.8.5":
   version: 2.8.5
   resolution: "cors@npm:2.8.5"
@@ -4833,6 +4723,18 @@ __metadata:
     supports-color:
       optional: true
   checksum: 10c0/d79136ec6c83ecbefd0f6a5593da6a9c91ec4d7ddc4b54c883d6e71ec9accb5f67a1a5e96d00a328196b5b5c86d365e98d8a3a70856aaf16b4e7b1985e67f5a6
+  languageName: node
+  linkType: hard
+
+"debug@npm:4.4.1":
+  version: 4.4.1
+  resolution: "debug@npm:4.4.1"
+  dependencies:
+    ms: "npm:^2.1.3"
+  peerDependenciesMeta:
+    supports-color:
+      optional: true
+  checksum: 10c0/d2b44bc1afd912b49bb7ebb0d50a860dc93a4dd7d946e8de94abc957bb63726b7dd5aa48c18c2386c379ec024c46692e15ed3ed97d481729f929201e671fcd55
   languageName: node
   linkType: hard
 
@@ -5678,13 +5580,6 @@ __metadata:
     utils-merge: "npm:1.0.1"
     vary: "npm:~1.1.2"
   checksum: 10c0/38168fd0a32756600b56e6214afecf4fc79ec28eca7f7a91c2ab8d50df4f47562ca3f9dee412da7f5cea6b1a1544b33b40f9f8586dbacfbdada0fe90dbb10a1f
-  languageName: node
-  linkType: hard
-
-"extsprintf@npm:^1.2.0":
-  version: 1.4.1
-  resolution: "extsprintf@npm:1.4.1"
-  checksum: 10c0/e10e2769985d0e9b6c7199b053a9957589d02e84de42832c295798cb422a025e6d4a92e0259c1fb4d07090f5bfde6b55fd9f880ac5855bd61d775f8ab75a7ab0
   languageName: node
   linkType: hard
 
@@ -7495,25 +7390,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ldapjs@npm:3.0.7":
-  version: 3.0.7
-  resolution: "ldapjs@npm:3.0.7"
+"ldapts@npm:8.0.9":
+  version: 8.0.9
+  resolution: "ldapts@npm:8.0.9"
   dependencies:
-    "@ldapjs/asn1": "npm:^2.0.0"
-    "@ldapjs/attribute": "npm:^1.0.0"
-    "@ldapjs/change": "npm:^1.0.0"
-    "@ldapjs/controls": "npm:^2.1.0"
-    "@ldapjs/dn": "npm:^1.1.0"
-    "@ldapjs/filter": "npm:^2.1.1"
-    "@ldapjs/messages": "npm:^1.3.0"
-    "@ldapjs/protocol": "npm:^1.2.1"
-    abstract-logging: "npm:^2.0.1"
-    assert-plus: "npm:^1.0.0"
-    backoff: "npm:^2.5.0"
-    once: "npm:^1.4.0"
-    vasync: "npm:^2.2.1"
-    verror: "npm:^1.10.1"
-  checksum: 10c0/4c537d116b0f019a165606954f7093b22dc77963eadd825cbcba8dfbf6350ad70261000f57fd52e474292dbc84c5e2c964d2100598927b836fce2dceb46df88d
+    "@types/asn1": "npm:>=0.2.4"
+    asn1: "npm:0.2.6"
+    debug: "npm:4.4.1"
+    strict-event-emitter-types: "npm:2.0.0"
+    uuid: "npm:11.1.0"
+    whatwg-url: "npm:14.2.0"
+  checksum: 10c0/f9d153bfae14455c881ea6a3da4306ce322542c02f242b12356311fbd36c7480c2c7475e2b1f573d7792670be22f364abc2f99aedab40e3845ffeb4abd13d27c
   languageName: node
   linkType: hard
 
@@ -8286,7 +8173,6 @@ __metadata:
     "@types/content-disposition": "npm:0.5.9"
     "@types/express": "npm:4.17.21"
     "@types/is-utf8": "npm:0.2.3"
-    "@types/ldapjs": "npm:2.2.5"
     "@types/linkify-it": "npm:3.0.5"
     "@types/lodash": "npm:4.17.20"
     "@types/mime-types": "npm:2.1.4"
@@ -8334,7 +8220,7 @@ __metadata:
     got: "npm:11.8.6"
     irc-framework: "npm:4.14.0"
     is-utf8: "npm:0.2.1"
-    ldapjs: "npm:3.0.7"
+    ldapts: "npm:8.0.9"
     linkify-it: "npm:5.0.0"
     lodash: "npm:4.17.21"
     mime-types: "npm:2.1.35"
@@ -9977,13 +9863,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"precond@npm:0.2":
-  version: 0.2.3
-  resolution: "precond@npm:0.2.3"
-  checksum: 10c0/289b71202c090286fab340acafc96bc1d719e6f2d2484a868ef5dff28efd5953bafda78aebe4416ebf907992aa88942e68cd53ed7e2ab9eaf0709a6b5ac72340
-  languageName: node
-  linkType: hard
-
 "prelude-ls@npm:^1.2.1":
   version: 1.2.1
   resolution: "prelude-ls@npm:1.2.1"
@@ -10050,13 +9929,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"process-warning@npm:^2.1.0, process-warning@npm:^2.2.0":
-  version: 2.3.2
-  resolution: "process-warning@npm:2.3.2"
-  checksum: 10c0/6bccf187f604dd63067ae8b5a08f658d1cc5df4948a51525691a564ad9250575802c094dd5d1b69f015934fe5df6d925f2e607d7a589918069129b07a777aa7b
-  languageName: node
-  linkType: hard
-
 "process@npm:^0.11.10":
   version: 0.11.10
   resolution: "process@npm:0.11.10"
@@ -10108,7 +9980,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"punycode@npm:^2.1.0":
+"punycode@npm:^2.1.0, punycode@npm:^2.3.1":
   version: 2.3.1
   resolution: "punycode@npm:2.3.1"
   checksum: 10c0/14f76a8206bc3464f794fb2e3d3cc665ae416c01893ad7a02b23766eb07159144ee612ad67af5e84fa4479ccfe67678c4feb126b0485651b302babf66f04f9e9
@@ -10543,7 +10415,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safer-buffer@npm:>= 2.1.2 < 3, safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:^2.1.0":
+"safer-buffer@npm:>= 2.1.2 < 3, safer-buffer@npm:>= 2.1.2 < 3.0.0, safer-buffer@npm:^2.1.0, safer-buffer@npm:~2.1.0":
   version: 2.1.2
   resolution: "safer-buffer@npm:2.1.2"
   checksum: 10c0/7e3c8b2e88a1841c9671094bbaeebd94448111dd90a81a1f606f3f67708a6ec57763b3b47f06da09fc6054193e0e6709e77325415dc8422b04497a8070fa02d4
@@ -11135,6 +11007,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"strict-event-emitter-types@npm:2.0.0":
+  version: 2.0.0
+  resolution: "strict-event-emitter-types@npm:2.0.0"
+  checksum: 10c0/7a2985b81908c2a7d1de10afe3be1de3423b8ce6188dc32aeb3dbaf66d4ac3f11029d6931c67d972a3bb976bbd04d27ee090eeed1cbd089c5ba3e899a04ed1b7
+  languageName: node
+  linkType: hard
+
 "string-width-cjs@npm:string-width@^4.2.0, string-width@npm:^1.0.2 || 2 || 3 || 4, string-width@npm:^4.1.0, string-width@npm:^4.2.0, string-width@npm:^4.2.3":
   version: 4.2.3
   resolution: "string-width@npm:4.2.3"
@@ -11623,6 +11502,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tr46@npm:^5.1.0":
+  version: 5.1.1
+  resolution: "tr46@npm:5.1.1"
+  dependencies:
+    punycode: "npm:^2.3.1"
+  checksum: 10c0/ae270e194d52ec67ebd695c1a42876e0f19b96e4aca2ab464ab1d9d17dc3acd3e18764f5034c93897db73421563be27c70c98359c4501136a497e46deda5d5ec
+  languageName: node
+  linkType: hard
+
 "tree-dump@npm:^1.0.3, tree-dump@npm:^1.1.0":
   version: 1.1.0
   resolution: "tree-dump@npm:1.1.0"
@@ -12064,6 +11952,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"uuid@npm:11.1.0":
+  version: 11.1.0
+  resolution: "uuid@npm:11.1.0"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 10c0/34aa51b9874ae398c2b799c88a127701408cd581ee89ec3baa53509dd8728cbb25826f2a038f9465f8b7be446f0fbf11558862965b18d21c993684297628d4d3
+  languageName: node
+  linkType: hard
+
 "uuid@npm:^8.3.2":
   version: 8.3.2
   resolution: "uuid@npm:8.3.2"
@@ -12094,37 +11991,6 @@ __metadata:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: 10c0/f15d588d79f3675135ba783c91a4083dcd290a2a5be9fcb6514220a1634e23df116847b1cc51f66bfb0644cf9353b2abb7815ae499bab06e46dd33c1a6bf1f4f
-  languageName: node
-  linkType: hard
-
-"vasync@npm:^2.2.1":
-  version: 2.2.1
-  resolution: "vasync@npm:2.2.1"
-  dependencies:
-    verror: "npm:1.10.0"
-  checksum: 10c0/2287b24dc12a982230fd41950979c0ee38f5df4802f9db6332b4af85b21eed12195706cdfbeb527480379783f5d11fe26a0b6a6ed114ee9fc102822a4c96e143
-  languageName: node
-  linkType: hard
-
-"verror@npm:1.10.0":
-  version: 1.10.0
-  resolution: "verror@npm:1.10.0"
-  dependencies:
-    assert-plus: "npm:^1.0.0"
-    core-util-is: "npm:1.0.2"
-    extsprintf: "npm:^1.2.0"
-  checksum: 10c0/37ccdf8542b5863c525128908ac80f2b476eed36a32cb944de930ca1e2e78584cc435c4b9b4c68d0fc13a47b45ff364b4be43aa74f8804f9050140f660fb660d
-  languageName: node
-  linkType: hard
-
-"verror@npm:^1.10.1":
-  version: 1.10.1
-  resolution: "verror@npm:1.10.1"
-  dependencies:
-    assert-plus: "npm:^1.0.0"
-    core-util-is: "npm:1.0.2"
-    extsprintf: "npm:^1.2.0"
-  checksum: 10c0/293fb060a4c9b07965569a0c3e45efa954127818707995a8a4311f691b5d6687be99f972c759838ba6eecae717f9af28e3c49d2afc7bbdf5f0b675238f1426e8
   languageName: node
   linkType: hard
 
@@ -12232,6 +12098,13 @@ __metadata:
   bin:
     web-push: src/cli.js
   checksum: 10c0/d6a90dfe12f938396d0bff4e211a73347c3d584591768f6e62d006b5426710b033bae196a39cf28114f14dc0443a714c24ada1528ec8f11dfa5cb92153643c96
+  languageName: node
+  linkType: hard
+
+"webidl-conversions@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "webidl-conversions@npm:7.0.0"
+  checksum: 10c0/228d8cb6d270c23b0720cb2d95c579202db3aaf8f633b4e9dd94ec2000a04e7e6e43b76a94509cdb30479bd00ae253ab2371a2da9f81446cc313f89a4213a2c4
   languageName: node
   linkType: hard
 
@@ -12402,6 +12275,16 @@ __metadata:
   version: 4.0.0
   resolution: "whatwg-mimetype@npm:4.0.0"
   checksum: 10c0/a773cdc8126b514d790bdae7052e8bf242970cebd84af62fb2f35a33411e78e981f6c0ab9ed1fe6ec5071b09d5340ac9178e05b52d35a9c4bcf558ba1b1551df
+  languageName: node
+  linkType: hard
+
+"whatwg-url@npm:14.2.0":
+  version: 14.2.0
+  resolution: "whatwg-url@npm:14.2.0"
+  dependencies:
+    tr46: "npm:^5.1.0"
+    webidl-conversions: "npm:^7.0.0"
+  checksum: 10c0/f746fc2f4c906607d09537de1227b13f9494c171141e5427ed7d2c0dd0b6a48b43d8e71abaae57d368d0c06b673fd8ec63550b32ad5ed64990c7b0266c2b4272
   languageName: node
   linkType: hard
 
