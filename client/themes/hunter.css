@@ -1,4 +1,5 @@
 /* Hunter Theme - Based on irc.xyz design */
+
 /* Exact 1:1 clone of irc.xyz with Hack font and proper colors */
 
 @import url("https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.css");
@@ -77,7 +78,7 @@
 	--hostmask-color: #5f8787;
 	--channel-color: #5fafaf;
 	--separator-color: #5f5f87;
-	--info-color: #666666;
+	--info-color: #666;
 	--reason-color: #af8787;
 	--mode-change-color: #d787d7;
 
@@ -97,7 +98,7 @@
 	--list-item-selected-bg: #2b2b2b;
 
 	/* Input colors */
-	--input-bg-color: #444444;
+	--input-bg-color: #444;
 	--input-border-color: #404040;
 }
 
@@ -118,16 +119,16 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #888888ee;
+	background: #888e;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: #555555;
+	background: #555;
 }
 
 /* Window styling */
 .window {
-	box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 20px rgb(0 0 0 / 50%);
 }
 
 /* Chat area */
@@ -224,12 +225,12 @@ body {
 }
 
 #chat .userlist .count {
-	background: #444444;
+	background: #444;
 }
 
 /* Input styling */
 #form .input {
-	background-color: #444444;
+	background-color: #444;
 	border-color: #404040;
 	color: #e0e0e0;
 }
@@ -445,6 +446,7 @@ body {
 }
 
 /* Nick colors - 32 subtle pastel colors based on irc.xyz palette */
+
 /* Soft greens, cyans, yellows, pinks - RGB values in 100-230 range for pastel effect */
 .user.color-1 { color: #8ce467; }   /* soft green */
 .user.color-2 { color: #67e47c; }   /* soft lime */
@@ -518,7 +520,7 @@ code,
 }
 
 #chat .userlist .count {
-	background-color: #444444;
+	background-color: #444;
 	color: var(--body-color-muted);
 }
 
@@ -534,21 +536,21 @@ code,
 }
 
 #form #nick {
-	background: #444444 !important;
+	background: #444 !important;
 	color: #e0e0e0 !important;
 }
 
 /* Input text field - dark background like sidebar */
 #form .input,
 .input {
-	background-color: #444444 !important;
+	background-color: #444 !important;
 	border-color: #404040 !important;
 	color: #e0e0e0 !important;
 }
 
 #form .input::placeholder,
 .input::placeholder {
-	color: #777777 !important;
+	color: #777 !important;
 }
 
 /* Borders */
@@ -576,7 +578,7 @@ code,
 
 #footer button:hover,
 #footer button.active {
-	color: #ffffff;
+	color: #fff;
 	background-color: #323232;
 }
 

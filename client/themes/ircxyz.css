@@ -1,9 +1,11 @@
 /* IRCxyz Theme - 1:1 clone of irc.xyz web client */
+
 /* Based on https://irc.xyz - exact colors, spacing, fonts, and styling */
+
 /* Files: xyz/style and xyz/style2 */
 
 @import url("https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.css");
-@import "default.css";
+@import url("default.css");
 
 /* ========================================
    CSS VARIABLES - EXACT FROM xyz/style
@@ -15,11 +17,10 @@
 	--accent-hover: #409aedaa;
 	--warning: #db4437;
 	--warning-hover: #db4437aa;
-
 	--primary-bg: #2d2d2d;
 	--chat-bg: #2d2d2d;
 	--list-bg: #383838;
-	--list-header-bg: #444444;
+	--list-header-bg: #444;
 	--list-item-hover-bg: #323232;
 	--list-item-selected-bg: #2b2b2b;
 	--topic-bg: #282828EE;
@@ -31,18 +32,14 @@
 	--reaction-bg: #383838;
 	--reaction-hover-bg: #323232;
 	--monospace-bg: #202020;
-
-	--tooltip-bg: #666666ee;
-	--tooltip-hover-bg: #666666;
-
-	--switch-bg: rgba(255, 255, 255, 0.5);
+	--tooltip-bg: #666e;
+	--tooltip-hover-bg: #666;
+	--switch-bg: rgb(255 255 255 / 50%);
 	--switch-thumb: #fff;
 	--switch-fill: var(--accent);
-
 	--scrollbar-track: transparent;
-	--scrollbar-thumb: #888888ee;
-	--scrollbar-thumb-hover: #555555;
-
+	--scrollbar-thumb: #888e;
+	--scrollbar-thumb-hover: #555;
 	--border: #252525;
 	--form-border: #404040;
 	--list-border: #404040;
@@ -50,24 +47,20 @@
 	--notice-border: #5d3737;
 	--highlight-border: #46546e;
 	--selected-border: #404040;
-
-	--input-bg: #444444;
-	--input-caret: #ffffff;
-
+	--input-bg: #444;
+	--input-caret: #fff;
 	--primary-font: #e0e0e0;
 	--secondary-font: #9a9a9a;
 	--timestamp-font: #6d6d6d;
-	--mode-font: #666666;
-	--server-font: #777777;
+	--mode-font: #666;
+	--server-font: #777;
 	--notice-font: #cc4237;
 	--highlight-font: #e0e0e0;
 	--selected-font: #e0e0e0;
 	--positive-font: #91b14f;
 	--negative-font: #db4437;
-
-	--input-font: #cccccc;
-	--placeholder-font: #777777;
-
+	--input-font: #ccc;
+	--placeholder-font: #777;
 	--action-prefix: "• ";
 	--join-prefix: "» ";
 	--join-prefix-color: #91b14f;
@@ -75,13 +68,11 @@
 	--quit-prefix-color: #db4437;
 	--info-prefix: "* ";
 	--info-prefix-color: #dba937;
-
 	--nick-prefix: "<";
 	--nick-suffix: ">";
 	--notice-nick-prefix: "-";
 	--notice-nick-suffix: "-";
 	--action-nick-suffix: "";
-
 	--header-font-size: 20px;
 	--subheader-font-size: 16px;
 	--primary-font-size: 14px;
@@ -147,11 +138,11 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #888888ee;
+	background: #888e;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: #555555;
+	background: #555;
 }
 
 /* ========================================
@@ -159,7 +150,7 @@ a:hover {
    ======================================== */
 
 .window {
-	box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 20px rgb(0 0 0 / 50%);
 	border-radius: 0;
 }
 
@@ -241,38 +232,38 @@ a:hover {
    ======================================== */
 
 /* Exact RGB values from irc.xyz HTML */
-.user.color-1 { color: rgb(140, 228, 103); }
-.user.color-2 { color: rgb(103, 228, 124); }
-.user.color-3 { color: rgb(103, 228, 186); }
-.user.color-4 { color: rgb(228, 217, 103); }
-.user.color-5 { color: rgb(228, 186, 103); }
-.user.color-6 { color: rgb(228, 149, 103); }
-.user.color-7 { color: rgb(228, 103, 186); }
-.user.color-8 { color: rgb(186, 103, 228); }
-.user.color-9 { color: rgb(149, 103, 228); }
-.user.color-10 { color: rgb(103, 186, 228); }
-.user.color-11 { color: rgb(103, 217, 228); }
-.user.color-12 { color: rgb(103, 228, 168); }
-.user.color-13 { color: rgb(149, 228, 103); }
-.user.color-14 { color: rgb(186, 228, 103); }
-.user.color-15 { color: rgb(217, 228, 103); }
-.user.color-16 { color: rgb(228, 193, 103); }
-.user.color-17 { color: rgb(228, 168, 103); }
-.user.color-18 { color: rgb(228, 129, 103); }
-.user.color-19 { color: rgb(228, 103, 149); }
-.user.color-20 { color: rgb(217, 103, 228); }
-.user.color-21 { color: rgb(186, 149, 228); }
-.user.color-22 { color: rgb(129, 149, 228); }
-.user.color-23 { color: rgb(103, 168, 228); }
-.user.color-24 { color: rgb(103, 193, 228); }
-.user.color-25 { color: rgb(129, 228, 186); }
-.user.color-26 { color: rgb(129, 228, 149); }
-.user.color-27 { color: rgb(168, 228, 103); }
-.user.color-28 { color: rgb(193, 228, 103); }
-.user.color-29 { color: rgb(228, 217, 129); }
-.user.color-30 { color: rgb(228, 186, 129); }
-.user.color-31 { color: rgb(228, 149, 129); }
-.user.color-32 { color: rgb(228, 103, 168); }
+.user.color-1 { color: rgb(140 228 103); }
+.user.color-2 { color: rgb(103 228 124); }
+.user.color-3 { color: rgb(103 228 186); }
+.user.color-4 { color: rgb(228 217 103); }
+.user.color-5 { color: rgb(228 186 103); }
+.user.color-6 { color: rgb(228 149 103); }
+.user.color-7 { color: rgb(228 103 186); }
+.user.color-8 { color: rgb(186 103 228); }
+.user.color-9 { color: rgb(149 103 228); }
+.user.color-10 { color: rgb(103 186 228); }
+.user.color-11 { color: rgb(103 217 228); }
+.user.color-12 { color: rgb(103 228 168); }
+.user.color-13 { color: rgb(149 228 103); }
+.user.color-14 { color: rgb(186 228 103); }
+.user.color-15 { color: rgb(217 228 103); }
+.user.color-16 { color: rgb(228 193 103); }
+.user.color-17 { color: rgb(228 168 103); }
+.user.color-18 { color: rgb(228 129 103); }
+.user.color-19 { color: rgb(228 103 149); }
+.user.color-20 { color: rgb(217 103 228); }
+.user.color-21 { color: rgb(186 149 228); }
+.user.color-22 { color: rgb(129 149 228); }
+.user.color-23 { color: rgb(103 168 228); }
+.user.color-24 { color: rgb(103 193 228); }
+.user.color-25 { color: rgb(129 228 186); }
+.user.color-26 { color: rgb(129 228 149); }
+.user.color-27 { color: rgb(168 228 103); }
+.user.color-28 { color: rgb(193 228 103); }
+.user.color-29 { color: rgb(228 217 129); }
+.user.color-30 { color: rgb(228 186 129); }
+.user.color-31 { color: rgb(228 149 129); }
+.user.color-32 { color: rgb(228 103 168); }
 
 /* ========================================
    SIDEBAR - CHANNEL LIST
@@ -581,7 +572,7 @@ code,
    RESPONSIVE DESIGN
    ======================================== */
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
 	.window {
 		border-radius: 0;
 	}

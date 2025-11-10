@@ -1,7 +1,8 @@
 /* Steel Theme - Minimalist monochrome IRC theme */
+
 /* Stonowany motyw z ograniczoną paletą kolorów */
 
-@import "default.css";
+@import url("default.css");
 
 :root {
 	/* Main colors - monochrome palette */
@@ -22,7 +23,7 @@
 	--nick-voice-color: #b8b8b8;
 	--nick-normal-color: #a0a0a0;
 	--nick-system-color: #909090;
-	--nick-bot-color: #888888;
+	--nick-bot-color: #888;
 
 	/* Event symbol colors - muted pastels */
 	--join-color: #b0c5a0;    /* stonowany zielony - join */
@@ -38,7 +39,7 @@
 	--separator-color: #606060;
 	--info-color: #808080;
 	--reason-color: #707070;
-	--mode-change-color: #888888;
+	--mode-change-color: #888;
 
 	/* Markers */
 	--date-marker-color: #909090;
@@ -75,16 +76,16 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #888888ee;
+	background: #888e;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: #555555;
+	background: #555;
 }
 
 /* Window styling */
 .window {
-	box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 20px rgb(0 0 0 / 50%);
 }
 
 /* Chat area */
@@ -181,18 +182,18 @@ body {
 }
 
 #chat .userlist .count {
-	background: #444444;
+	background: #444;
 }
 
 /* Input styling - dark background like sidebar */
 #form .input {
 	background-color: #383838;
 	border-color: #404040;
-	color: #cccccc;
+	color: #ccc;
 }
 
 #form .input::placeholder {
-	color: #777777;
+	color: #777;
 }
 
 /* Input field focus */
@@ -205,7 +206,7 @@ body {
 textarea.input {
 	background-color: #383838;
 	border: 1px solid #404040;
-	color: #cccccc;
+	color: #ccc;
 	overflow: hidden;
 	resize: none;
 }
@@ -376,12 +377,12 @@ textarea.input::-webkit-scrollbar {
 #form {
 	background-color: #2d2d2d !important;
 	border-color: #404040 !important;
-	color: #cccccc !important;
+	color: #ccc !important;
 }
 
 #form #nick {
 	background: #383838 !important;
-	color: #cccccc !important;
+	color: #ccc !important;
 }
 
 /* Input text field - dark background like sidebar */
@@ -389,12 +390,12 @@ textarea.input::-webkit-scrollbar {
 .input {
 	background-color: #383838 !important;
 	border-color: #404040 !important;
-	color: #cccccc !important;
+	color: #ccc !important;
 }
 
 #form .input::placeholder,
 .input::placeholder {
-	color: #777777 !important;
+	color: #777 !important;
 }
 
 /* Stonowane kolory dla nicków w czacie - monochrome palette */
