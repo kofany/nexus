@@ -115,7 +115,6 @@ class Utils {
 			packagesPath,
 			"--json",
 			"--ignore-scripts",
-			"--non-interactive",
 		];
 
 		const env = {
