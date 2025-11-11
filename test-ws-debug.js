@@ -3,6 +3,7 @@ const tls = require("tls");
 
 // Monkey-patch tls.connect to see what options are passed
 const originalTlsConnect = tls.connect;
+
 tls.connect = function (...args) {
 	console.log("\n=== tls.connect called ===");
 	console.log("Arguments:", JSON.stringify(args, null, 2));

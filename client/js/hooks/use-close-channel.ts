@@ -48,6 +48,7 @@ export default function useCloseChannel(channel: ClientChan) {
 
 		// STEP 3: Remove channel from local state IMMEDIATELY
 		const index = netChan.network.channels.findIndex((c) => c.id === channel.id);
+
 		if (index !== -1) {
 			netChan.network.channels.splice(index, 1);
 		}

@@ -413,10 +413,12 @@ export class IrssiClient {
 
 		// Load existing network UUID map from config (for persistent UUIDs across reconnects)
 		const existingUuidMap = new Map<string, string>();
+
 		if (this.config.networkUuidMap) {
 			for (const [serverTag, uuid] of Object.entries(this.config.networkUuidMap)) {
 				existingUuidMap.set(serverTag, uuid);
 			}
+
 			log.info(
 				`[IrssiClient] Loaded ${existingUuidMap.size} persistent network UUIDs from config`
 			);
@@ -547,6 +549,7 @@ export class IrssiClient {
 
 		for (const net of this.networks) {
 			channel = net.channels.find((c) => c.id === data.target);
+
 			if (channel) {
 				network = net;
 				break;
@@ -615,6 +618,7 @@ export class IrssiClient {
 
 		// Split multi-line input
 		const lines = text.split("\n");
+
 		for (const line of lines) {
 			if (!line.trim()) continue;
 
@@ -626,6 +630,7 @@ export class IrssiClient {
 
 				for (const net of this.networks) {
 					channel = net.channels.find((c) => c.id === data.target);
+
 					if (channel) {
 						network = net;
 						break;
@@ -675,6 +680,7 @@ export class IrssiClient {
 					"wc",
 				];
 				const cmdName = finalCommand.split(" ")[0].toLowerCase();
+
 				if (windowManagementCommands.includes(cmdName)) {
 					this.sendWindowCommand(network.serverTag);
 				}
@@ -685,6 +691,7 @@ export class IrssiClient {
 
 				for (const net of this.networks) {
 					channel = net.channels.find((c) => c.id === data.target);
+
 					if (channel) {
 						network = net;
 						break;
@@ -755,6 +762,7 @@ export class IrssiClient {
 					this.sendWindowCommand(network.serverTag);
 					return false; // Handled
 				}
+
 				break;
 
 			case "kick":
@@ -770,6 +778,7 @@ export class IrssiClient {
 					);
 					return translated;
 				}
+
 				break;
 
 			case "ban":
@@ -785,6 +794,7 @@ export class IrssiClient {
 					);
 					return translated;
 				}
+
 				break;
 
 			case "invite":
@@ -796,6 +806,7 @@ export class IrssiClient {
 					);
 					return translated;
 				}
+
 				break;
 
 			case "banlist":
@@ -820,6 +831,7 @@ export class IrssiClient {
 						return translated;
 					}
 				}
+
 				break;
 
 			case "op":
@@ -852,6 +864,7 @@ export class IrssiClient {
 					);
 					return translated;
 				}
+
 				break;
 
 			case "me":
@@ -860,9 +873,11 @@ export class IrssiClient {
 				// /slap nick → /action #channel slaps nick around a bit with a large trout
 				if (channel.type === ChanType.CHANNEL || channel.type === ChanType.QUERY) {
 					let text = args.join(" ");
+
 					if (command === "slap" && args.length > 0) {
 						text = `slaps ${args[0]} around a bit with a large trout`;
 					}
+
 					const translated = `action ${channel.name} ${text}`;
 					log.info(
 						`[CommandTranslator] /${command} ${args.join(" ")} → /${translated} on ${
@@ -871,6 +886,7 @@ export class IrssiClient {
 					);
 					return translated;
 				}
+
 				break;
 
 			case "msg":
@@ -902,10 +918,12 @@ export class IrssiClient {
 							log.error("[CommandTranslator] feWebAdapter not initialized");
 							return null;
 						}
+
 						queryChannel.id = this.feWebAdapter.getNextChannelId();
 
 						// Add to network using sorted insertion
 						const Network = (await import("./models/network")).default;
+
 						if (network instanceof Network) {
 							network.addChannel(queryChannel);
 						} else {
@@ -946,14 +964,16 @@ export class IrssiClient {
 							)} → /${translated} on ${network.serverTag}`
 						);
 						return translated;
-					} else {
+					}
+ 
 						// No message - query window already created and synced to irssi
 						log.info(
 							`[CommandTranslator] /${command} ${targetNick} → query window created and synced`
 						);
 						return false; // Don't send to irssi (already sent above if needed)
-					}
+					
 				}
+
 				break;
 
 			case "quit":
@@ -965,6 +985,7 @@ export class IrssiClient {
 					// irssi command: /disconnect <server_tag>
 					return `disconnect ${network.serverTag}`;
 				}
+
 				// /quit in channel/query → pass through (normal IRC quit)
 				break;
 
@@ -980,6 +1001,7 @@ export class IrssiClient {
 					);
 					return translated;
 				}
+
 				// If more than 1 arg, pass through (user might be doing /whois server nick)
 				break;
 		}
@@ -1002,6 +1024,7 @@ export class IrssiClient {
 
 		for (const network of this.networks) {
 			const channel = network.channels.find((c) => c.id === data.target);
+
 			if (channel) {
 				targetChannel = channel;
 				targetNetwork = network;
@@ -1167,8 +1190,10 @@ export class IrssiClient {
 				log.info(
 					`[IrssiClient] Unread markers not loaded yet, loading from storage (defensive check)...`
 				);
+
 				try {
 					const markers = await this.messageStorage.loadUnreadMarkers();
+
 					for (const [key, lastReadTime] of markers) {
 						const [networkUuid, channelName] = key.split(":");
 						this.unreadMarkers.set(key, {
@@ -1180,6 +1205,7 @@ export class IrssiClient {
 							dataLevel: DataLevel.NONE,
 						});
 					}
+
 					log.info(
 						`[IrssiClient] Loaded ${markers.size} unread markers (defensive check)`
 					);
@@ -1342,6 +1368,7 @@ export class IrssiClient {
 					if (marker && marker.dataLevel > DataLevel.NONE) {
 						// Count unread from DB (messages after lastReadTime)
 						let unreadCount = marker.unreadCount;
+
 						if (this.messageStorage) {
 							try {
 								unreadCount = await this.messageStorage.getUnreadCount(
@@ -1407,31 +1434,37 @@ export class IrssiClient {
 				if (adapter.handleMsgEvent) {
 					adapter.handleMsgEvent(args[0]);
 				}
+
 				break;
 			case "names":
 				if (adapter.handleNamesEvent) {
 					adapter.handleNamesEvent(args[0]);
 				}
+
 				break;
 			case "join":
 				if (adapter.handleJoinEvent) {
 					adapter.handleJoinEvent(args[0]);
 				}
+
 				break;
 			case "part":
 				if (adapter.handlePartEvent) {
 					adapter.handlePartEvent(args[0]);
 				}
+
 				break;
 			case "topic":
 				if (adapter.handleTopicEvent) {
 					adapter.handleTopicEvent(args[0]);
 				}
+
 				break;
 			case "activity_update":
 				if (adapter.handleActivityUpdateEvent) {
 					adapter.handleActivityUpdateEvent(args[0]);
 				}
+
 				break;
 			case "network":
 				// New network added - could trigger buffer_opened for server buffer
@@ -1468,6 +1501,7 @@ export class IrssiClient {
 		for (const [socketId, session] of this.attachedBrowsers) {
 			session.socket.disconnect(true);
 		}
+
 		this.attachedBrowsers.clear();
 
 		// Stop WeeChat Relay server
@@ -1527,6 +1561,7 @@ export class IrssiClient {
 			if (err) {
 				throw err;
 			}
+
 			callback(buf.toString("hex"));
 		});
 	}
@@ -1623,6 +1658,7 @@ export class IrssiClient {
 
 		// Find network by server_tag
 		const network = this.networks.find((n) => n.serverTag === serverTag);
+
 		if (!network) {
 			log.warn(`[IrssiClient] ACTIVITY_UPDATE for unknown server: ${serverTag}`);
 			return;
@@ -1632,6 +1668,7 @@ export class IrssiClient {
 		const channel = network.channels.find(
 			(c) => c.name.toLowerCase() === channelName.toLowerCase()
 		);
+
 		if (!channel) {
 			log.warn(
 				`[IrssiClient] ACTIVITY_UPDATE for unknown channel: ${channelName} on ${serverTag}`
@@ -1642,6 +1679,7 @@ export class IrssiClient {
 		// Check if channel is open in any browser (for 1:1 sync)
 		// If channel is open anywhere, ignore activity_update from irssi
 		const isChannelOpen = this.isChannelOpenInAnyBrowser(channel.id);
+
 		if (isChannelOpen) {
 			log.debug(
 				`[IrssiClient] Ignoring activity_update for ${network.name}/${channel.name} (channel is open in browser)`
@@ -1689,7 +1727,8 @@ export class IrssiClient {
 				highlight: 0,
 			});
 			return; // Done - no need to query DB
-		} else {
+		}
+ 
 			// New activity (level > 0) - this channel is NO LONGER active in irssi!
 			// Clear activeWindowInIrssi if it was pointing to this channel
 			if (this.activeWindowInIrssi === key) {
@@ -1698,6 +1737,7 @@ export class IrssiClient {
 				);
 				this.activeWindowInIrssi = null;
 			}
+
 			// New activity - count unread from message storage
 			if (this.messageStorage) {
 				this.messageStorage
@@ -1732,11 +1772,12 @@ export class IrssiClient {
 						});
 					});
 				return; // Don't broadcast yet - wait for DB query
-			} else {
+			}
+ 
 				// No message storage - fallback to increment
 				marker.unreadCount++;
-			}
-		}
+			
+		
 
 		this.unreadMarkers.set(key, marker);
 
@@ -1762,6 +1803,7 @@ export class IrssiClient {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -1771,6 +1813,7 @@ export class IrssiClient {
 	 */
 	open(socketId: string, channelId: number): void {
 		const session = this.attachedBrowsers.get(socketId);
+
 		if (!session) {
 			log.warn(`[IrssiClient] open() called for unknown browser ${socketId}`);
 			return;
@@ -1784,6 +1827,7 @@ export class IrssiClient {
 		// Find network and channel by channel ID
 		for (const network of this.networks) {
 			const channel = network.channels.find((c) => c.id === channelId);
+
 			if (channel) {
 				log.debug(
 					`[IrssiClient] Found channel ${network.name}/${channel.name} for ID ${channelId}, calling markAsRead()`
@@ -1839,8 +1883,10 @@ export class IrssiClient {
 
 		// Find network and channel IDs for broadcast
 		const net = this.networks.find((n) => n.uuid === network);
+
 		if (net) {
 			const chan = net.channels.find((c) => c.name.toLowerCase() === channel.toLowerCase());
+
 			if (chan) {
 				// Broadcast to all browsers
 				this.broadcastToAllBrowsers("activity_update" as any, {
@@ -1855,6 +1901,7 @@ export class IrssiClient {
 					log.debug(
 						`[IrssiClient] Preparing to send mark_read to irssi (connection exists, fromIrssi=${fromIrssi})`
 					);
+
 					// Check if actually connected before sending
 					if (this.irssiConnection.isConnected()) {
 						this.irssiConnection.send({
@@ -1912,6 +1959,7 @@ export class IrssiClient {
 
 		// Find network by server_tag
 		const network = this.networks.find((n) => n.serverTag === serverTag);
+
 		if (!network) {
 			log.warn(`[IrssiClient] query_closed for unknown server: ${serverTag}`);
 			return;
@@ -1934,6 +1982,7 @@ export class IrssiClient {
 
 		// Remove query from network
 		const index = network.channels.indexOf(query);
+
 		if (index !== -1) {
 			network.channels.splice(index, 1);
 		}
@@ -2099,6 +2148,7 @@ export class IrssiClient {
 	): Promise<void> {
 		// Find network + channel
 		const network = this.networks.find((n) => n.uuid === data.networkUuid);
+
 		if (!network) {
 			log.warn(
 				`User ${colors.bold(this.name)}: Network ${
@@ -2109,6 +2159,7 @@ export class IrssiClient {
 		}
 
 		const channel = network.channels.find((c) => c.id === data.channelId);
+
 		if (!channel) {
 			log.debug(
 				`User ${colors.bold(this.name)}: Channel ${
@@ -2128,6 +2179,7 @@ export class IrssiClient {
 
 		// STEP 1: Remove from cache IMMEDIATELY
 		const index = network.channels.indexOf(channel);
+
 		if (index !== -1) {
 			network.channels.splice(index, 1);
 		}
@@ -2218,6 +2270,7 @@ export class IrssiClient {
 		// Load unread markers from storage FIRST (persistent read status across restarts!)
 		if (this.messageStorage) {
 			log.info(`[IrssiClient] Loading unread markers from storage...`);
+
 			try {
 				const markers = await this.messageStorage.loadUnreadMarkers();
 
@@ -2421,12 +2474,14 @@ export class IrssiClient {
 	 */
 	private handleCommandResult(msg: FeWebMessage): void {
 		const requestId = msg.response_to;
+
 		if (!requestId) {
 			log.warn("[IrssiClient] Received command_result without response_to");
 			return;
 		}
 
 		const pending = this.pendingRequests.get(requestId);
+
 		if (!pending) {
 			log.warn(`[IrssiClient] Received command_result for unknown request ${requestId}`);
 			return;
@@ -2447,12 +2502,14 @@ export class IrssiClient {
 	 */
 	private handleNetworkListResponse(msg: FeWebMessage): void {
 		const requestId = msg.response_to;
+
 		if (!requestId) {
 			log.warn("[IrssiClient] Received network_list_response without response_to");
 			return;
 		}
 
 		const pending = this.pendingListRequests.get(requestId);
+
 		if (!pending) {
 			log.warn(
 				`[IrssiClient] Received network_list_response for unknown request ${requestId}`
@@ -2472,12 +2529,14 @@ export class IrssiClient {
 	 */
 	private handleServerListResponse(msg: FeWebMessage): void {
 		const requestId = msg.response_to;
+
 		if (!requestId) {
 			log.warn("[IrssiClient] Received server_list_response without response_to");
 			return;
 		}
 
 		const pending = this.pendingListRequests.get(requestId);
+
 		if (!pending) {
 			log.warn(
 				`[IrssiClient] Received server_list_response for unknown request ${requestId}`
@@ -2659,9 +2718,11 @@ export class IrssiClient {
 			} for user ${this.name}`
 		);
 		const data: any = {address, port};
+
 		if (chatnet) {
 			data.chatnet = chatnet;
 		}
+
 		return await this.sendIrssiRequest("server_remove", data);
 	}
 
@@ -2837,6 +2898,7 @@ export class IrssiClient {
 
 			// Get relay client
 			const relayClient = this.weechatRelayServer.getClient(clientId);
+
 			if (!relayClient) {
 				log.error(`Relay client not found: ${clientId}`);
 				return;
@@ -2889,12 +2951,15 @@ export class IrssiClient {
 
 				// Add tags_array (array of strings)
 				const tags = ["irc_privmsg", "notify_message", "prefix_nick_white", "log1"];
+
 				if (data.self) {
 					tags.push("self_msg");
 				}
+
 				if (data.highlight) {
 					tags.push("notify_highlight");
 				}
+
 				// addArray(type, values) - type is "str" for strings
 				msg.addArray("str", tags);
 
@@ -2923,6 +2988,7 @@ export class IrssiClient {
 
 			// Cleanup adapters and handlers
 			const relayClient = this.weechatRelayServer.getClient(clientId);
+
 			if (relayClient) {
 				// Remove line_data handler
 				if ((relayClient as any)._lineDataHandler) {

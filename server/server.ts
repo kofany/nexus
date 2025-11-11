@@ -113,17 +113,21 @@ export default async function (
 		const filename = req.params.file;
 		if (!filename.endsWith(".css")) return next();
 		const publicPath = Utils.getFileFromRelativeToRoot("public", "themes", filename);
+
 		try {
 			if (fs.existsSync(publicPath)) {
 				return res.sendFile(publicPath);
 			}
 		} catch {}
+
 		const clientPath = Utils.getFileFromRelativeToRoot("client", "themes", filename);
+
 		try {
 			if (fs.existsSync(clientPath)) {
 				return res.sendFile(clientPath);
 			}
 		} catch {}
+
 		return next();
 	});
 
@@ -217,7 +221,7 @@ export default async function (
 		};
 	}
 
-	// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+	 
 	server.on("error", (err) => log.error(`${err}`));
 
 	server.listen(listenParams, () => {
@@ -258,7 +262,7 @@ export default async function (
 		});
 
 		sockets.on("connect", (socket) => {
-			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+			 
 			socket.on("error", (err) => log.error(`io socket error: ${err}`));
 
 			if (Config.values.public) {
@@ -279,6 +283,7 @@ export default async function (
 			const candidate = `${Config.values.theme}.css`;
 			const publicPath = Utils.getFileFromRelativeToRoot("public", "themes", candidate);
 			const clientPath = Utils.getFileFromRelativeToRoot("client", "themes", candidate);
+
 			if (!(fs.existsSync(publicPath) || fs.existsSync(clientPath))) {
 				log.warn(
 					`The specified default theme "${colors.red(
@@ -1345,6 +1350,7 @@ function initializeIrssiClient(
 		// Find network and channel by channel ID
 		for (const network of client.networks) {
 			const channel = network.channels.find((c) => c.id === data.target);
+
 			if (channel) {
 				client.markAsRead(network.uuid, channel.name);
 				return;
@@ -1793,6 +1799,7 @@ function initializeIrssiClient(
 	socket.on("irssi:command", (data, callback) => {
 		try {
 			const {command, server} = data;
+
 			if (!command) {
 				callback({success: false, message: "Command is required"});
 				return;

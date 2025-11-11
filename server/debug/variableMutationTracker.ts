@@ -82,6 +82,7 @@ export class VariableMutationTracker<T> extends EventEmitter {
 
 		// Capture stack trace
 		let stack: string | undefined;
+
 		if (this.captureStackTrace) {
 			stack = this.getStackTrace();
 		}
@@ -92,6 +93,7 @@ export class VariableMutationTracker<T> extends EventEmitter {
 
 		if (this.validator) {
 			const result = this.validator(newValue);
+
 			if (typeof result === "boolean") {
 				isValid = result;
 				validationError = result ? undefined : "Validation failed";
@@ -202,6 +204,7 @@ export class VariableMutationTracker<T> extends EventEmitter {
 				if (prop === property) {
 					return tracker.currentValue;
 				}
+
 				return Reflect.get(obj, prop);
 			},
 
@@ -210,6 +213,7 @@ export class VariableMutationTracker<T> extends EventEmitter {
 					tracker.setValue(value);
 					return true;
 				}
+
 				return Reflect.set(obj, prop, value);
 			},
 		}) as O;

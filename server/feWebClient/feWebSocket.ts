@@ -209,12 +209,15 @@ export class FeWebSocket extends EventEmitter {
 				if (this.config.rejectUnauthorized !== undefined) {
 					wsOptions.rejectUnauthorized = this.config.rejectUnauthorized;
 				}
+
 				if (this.config.ca) {
 					wsOptions.ca = this.config.ca;
 				}
+
 				if (this.config.cert) {
 					wsOptions.cert = this.config.cert;
 				}
+
 				if (this.config.key) {
 					wsOptions.key = this.config.key;
 				}
@@ -405,6 +408,7 @@ export class FeWebSocket extends EventEmitter {
 
 		if (handlers) {
 			const index = handlers.indexOf(handler);
+
 			if (index !== -1) {
 				handlers.splice(index, 1);
 			}

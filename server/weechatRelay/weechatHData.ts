@@ -58,6 +58,7 @@ export function buildHData(
 			if (f.type === "arr" && f.arrayType) {
 				return `${f.name}:${f.type}:${f.arrayType}`;
 			}
+
 			return `${f.name}:${f.type}`;
 		})
 		.join(",");
@@ -105,6 +106,7 @@ export function buildHData(
 					} else {
 						throw new Error(`Array field ${field.name} missing arrayType`);
 					}
+
 					break;
 				case "htb":
 					msg.addHashtable(value ?? null);
@@ -132,10 +134,12 @@ export function buildEmptyHData(msg: WeeChatMessage): void {
 export function stringToPointer(str: string): bigint {
 	// Simple hash function to generate consistent pointers
 	let hash = 0n;
+
 	for (let i = 0; i < str.length; i++) {
 		hash = (hash << 5n) - hash + BigInt(str.charCodeAt(i));
 		hash = hash & 0xffffffffffffffffn; // Keep it 64-bit
 	}
+
 	// Ensure it's non-zero and positive
 	return hash === 0n ? 1n : hash < 0n ? -hash : hash;
 }
@@ -144,6 +148,7 @@ export function stringToPointer(str: string): bigint {
  * Helper: Generate unique pointer
  */
 let pointerCounter = 0x1000000n;
+
 export function generatePointer(): bigint {
 	return pointerCounter++;
 }

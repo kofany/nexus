@@ -101,8 +101,10 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 	// SPECIAL CASE: If we're receiving networks after disconnect (store is empty),
 	// don't try to merge - just create fresh networks
 	const currentNetworks = store.state.networks;
+
 	if (currentNetworks.length === 0 && newNetworks.length > 0) {
 		console.log("[MERGE] ⚠️ Store is empty, creating FRESH networks (NO MERGE)");
+
 		for (const sharedNet of newNetworks) {
 			console.log(
 				`[MERGE] Creating fresh network: ${sharedNet.name} (uuid: ${sharedNet.uuid})`
@@ -116,6 +118,7 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 			};
 			result.push(newNet);
 		}
+
 		console.log(`[MERGE] ✅ Returning FRESH networks, count: ${result.length}`);
 		return result;
 	}

@@ -192,6 +192,7 @@ ${sanEntries
 		fs.unlinkSync(caConfigPath);
 		fs.unlinkSync(serverConfigPath);
 		fs.unlinkSync(serverCsrPath);
+
 		if (fs.existsSync(path.join(certsDir, `${username}-ca-cert.srl`))) {
 			fs.unlinkSync(path.join(certsDir, `${username}-ca-cert.srl`));
 		}

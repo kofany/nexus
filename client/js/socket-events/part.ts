@@ -18,6 +18,7 @@ socket.on("part", async function (data) {
 
 	// Remove channel from network
 	const index = channel.network.channels.findIndex((c) => c.id === data.chan);
+
 	if (index !== -1) {
 		channel.network.channels.splice(index, 1);
 	}

@@ -159,6 +159,7 @@ async function advancedLdapLoadUsers(users: string[], callbackLoadUser) {
 
 		for (const entry of searchEntries) {
 			const attribute = entry[config.ldap.primaryKey];
+
 			if (attribute) {
 				const user = Array.isArray(attribute) ? attribute[0] : attribute;
 				const userString = typeof user === "string" ? user : String(user);

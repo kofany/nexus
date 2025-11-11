@@ -498,7 +498,7 @@ export default defineComponent({
 		};
 
 		watch(
-			// eslint-disable-next-line
+			 
 			() => props.defaults?.commands,
 			() => {
 				void nextTick(() => {
@@ -508,7 +508,7 @@ export default defineComponent({
 		);
 
 		watch(
-			// eslint-disable-next-line
+			 
 			() => props.defaults?.tls,
 			(isSecureChecked) => {
 				const ports = [6667, 6697];

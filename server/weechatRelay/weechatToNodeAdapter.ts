@@ -87,6 +87,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			);
 			this.nodeAdapter.removeListener(eventName, handler);
 		}
+
 		this.eventHandlers.clear();
 
 		// Remove all listeners from this adapter
@@ -174,6 +175,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 					data.bufferPtr
 				}, syncAll=${this.syncAll}`
 			);
+
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				// Extract buffer and msg from data
 				const buffer = {
@@ -192,6 +194,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 					data.users.length
 				}`
 			);
+
 			if (this.syncAll || this.syncedBuffers.has(data.bufferPtr)) {
 				this.sendNicklistDiff(data);
 			}
@@ -252,6 +255,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			// Parse line count
 			let count = 25;
 			const countMatch = path.match(/last_line\((-?\d+)\)/);
+
 			if (countMatch) {
 				count = Math.abs(parseInt(countMatch[1], 10));
 			}
@@ -286,12 +290,14 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			// PER-BUFFER LINES REQUEST (weechat-android ONLY)
 			// Example: "buffer:0x12345/own_lines/last_line(-100)/data id,date,displayed,prefix,message,highlight,notify,tags_array"
 			const match = path.match(/buffer:0x([0-9a-f]+)/i);
+
 			if (match) {
 				const bufferPtr = BigInt("0x" + match[1]);
 
 				// Parse line count
 				let count = 100;
 				const countMatch = path.match(/last_line\((-?\d+)\)/);
+
 				if (countMatch) {
 					count = Math.abs(parseInt(countMatch[1], 10));
 				}
@@ -317,12 +323,14 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			// Request message history (Lith ONLY)
 			// Parse buffer pointer from path (e.g., "buffer:0x12345/lines/...")
 			const match = path.match(/buffer:0x([0-9a-f]+)/i);
+
 			if (match) {
 				const bufferPtr = BigInt("0x" + match[1]);
 
 				// Parse line count (e.g., "last_line(-100)")
 				let count = 100;
 				const countMatch = path.match(/last_line\((-?\d+)\)/);
+
 				if (countMatch) {
 					count = Math.abs(parseInt(countMatch[1], 10));
 				}
@@ -386,6 +394,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		// Get network and channel
 		const network = this.irssiClient.networks.find((n) => n.uuid === buffer.networkUuid);
+
 		if (!network) {
 			const msg = new WeeChatMessage(id);
 			buildEmptyHData(msg);
@@ -394,6 +403,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		}
 
 		const channel = network.channels.find((c) => c.id === buffer.channelId);
+
 		if (!channel || buffer.type !== "channel") {
 			// No nicklist for non-channel buffers
 			const msg = new WeeChatMessage(id);
@@ -420,6 +430,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	 */
 	private sendNicklistForBuffer(bufferPtr: bigint): void {
 		const buffer = this.nodeAdapter.getBufferByPointer(bufferPtr);
+
 		if (!buffer || !buffer.channel) {
 			log.warn(
 				`${colors.yellow("[WeeChat->Node]")} Buffer not found for nicklist: ${bufferPtr}`
@@ -428,6 +439,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		}
 
 		const channel = buffer.channel;
+
 		if (buffer.type !== "channel" || channel.users.size === 0) {
 			log.debug(
 				`${colors.cyan("[WeeChat->Node]")} No nicklist for buffer ${
@@ -475,12 +487,14 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 					network.channels.length
 				} channels`
 			);
+
 			for (const channel of network.channels) {
 				log.info(
 					`${colors.cyan("[WeeChat->Node]")} Channel ${channel.name}: type="${
 						channel.type
 					}", users=${channel.users.size}`
 				);
+
 				if (channel.type !== "channel" || channel.users.size === 0) {
 					continue;
 				}
@@ -623,6 +637,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		// Log first 3 items for debugging
 		if (allItems.length > 0) {
 			log.info(`${colors.cyan("[WeeChat->Node]")} First 3 items:`);
+
 			for (let i = 0; i < Math.min(3, allItems.length); i++) {
 				const item = allItems[i];
 				log.info(
@@ -852,6 +867,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		// Parse: "0x12345 /command" or "0x12345 message"
 		const spaceIdx = args.indexOf(" ");
+
 		if (spaceIdx < 0) {
 			return;
 		}
@@ -861,6 +877,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		// Parse buffer pointer
 		const match = bufferPtrStr.match(/0x([0-9a-f]+)/i);
+
 		if (!match) {
 			return;
 		}
@@ -875,6 +892,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		// Find network and channel
 		const network = this.irssiClient.networks.find((n) => n.uuid === buffer.networkUuid);
+
 		if (!network) {
 			log.warn(
 				`${colors.yellow("[WeeChat->Node]")} Network not found: ${buffer.networkUuid}`
@@ -883,6 +901,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		}
 
 		const channel = network.channels.find((c) => c.id === buffer.channelId);
+
 		if (!channel) {
 			log.warn(`${colors.yellow("[WeeChat->Node]")} Channel not found: ${buffer.channelId}`);
 			return;
@@ -989,6 +1008,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		} else {
 			// Sync specific buffer
 			const match = target.match(/0x([0-9a-f]+)/i);
+
 			if (match) {
 				const bufferPtr = BigInt("0x" + match[1]);
 				this.syncedBuffers.add(bufferPtr);
@@ -1018,6 +1038,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		} else {
 			// Desync specific buffer
 			const match = target.match(/0x([0-9a-f]+)/i);
+
 			if (match) {
 				const bufferPtr = BigInt("0x" + match[1]);
 				this.syncedBuffers.delete(bufferPtr);
@@ -1121,9 +1142,11 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	 */
 	private getNickColor(nick: string): number {
 		let hash = 0;
+
 		for (let i = 0; i < nick.length; i++) {
 			hash += nick.charCodeAt(i);
 		}
+
 		return 1 + (hash % 32); // color-1 to color-32
 	}
 
@@ -1227,6 +1250,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			const isWeechatAndroid = this.clientUsesHDataHistory;
 
 			let header: string;
+
 			if (isWeechatAndroid) {
 				// Weechat-android format (from Spec.kt:173-174)
 				header =
@@ -1236,6 +1260,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 				header =
 					"buffer:ptr,id:ptr,date:tim,date_usec:int,date_printed:tim,date_usec_printed:int,displayed:chr,notify_level:int,highlight:chr,tags_array:arr,prefix:str,message:str";
 			}
+
 			msg.addString(header);
 			msg.addInt(1); // count: 1 line
 
@@ -1259,6 +1284,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 			// Calculate notify level
 			let notifyLevel = 1; // default: normal message
+
 			if (message.highlight) {
 				notifyLevel = 3; // highlight (mention)
 			} else if (
@@ -1303,7 +1329,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 			// Apply color formatting to prefix (for normal messages)
 			let prefix = formatted.prefix;
-			let messageText = formatted.message;
+			const messageText = formatted.message;
 
 			// Only apply nick colors for normal messages (not for JOIN/PART/etc)
 			if (
@@ -1313,6 +1339,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			) {
 				if (nick) {
 					const nickColor = this.getNickColor(nick);
+
 					if (message.highlight) {
 						prefix = this.formatWithColor(nick, "red", true);
 					} else if (message.self) {
@@ -1325,6 +1352,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 			// Build tags array
 			const tags: string[] = [];
+
 			if (message.type === "message") {
 				tags.push("irc_privmsg");
 				if (!message.self) tags.push("notify_message");
@@ -1365,6 +1393,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 				if (message.from?.nick) tags.push(`nick_${message.from.nick}`);
 				tags.push("log4");
 			}
+
 			if (message.highlight) {
 				tags.push("notify_highlight");
 			}
@@ -1429,10 +1458,12 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			msg.addString("default");
 
 			let prefix = "";
+
 			if (user.mode) {
 				if (user.mode.includes("o")) prefix = "@";
 				else if (user.mode.includes("v")) prefix = "+";
 			}
+
 			msg.addString(prefix);
 			msg.addString(prefix ? "lightgreen" : "default");
 		}
@@ -1451,6 +1482,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 
 		// Find buffer
 		const buffer = this.nodeAdapter.getBufferByPointer(data.bufferPtr);
+
 		if (!buffer || !buffer.channel) {
 			log.warn(`${colors.yellow("[WeeChat->Node]")} Buffer not found for nicklist diff`);
 			return;
@@ -1462,6 +1494,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		log.info(
 			`${colors.cyan("[WeeChat->Node]")} Nicklist: ${channel.name} has ${users.length} users`
 		);
+
 		if (users.length > 0) {
 			log.info(
 				`${colors.cyan("[WeeChat->Node]")} First 3 users: ${users
@@ -1523,6 +1556,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 			// Determine prefix based on mode
 			let prefix = " ";
 			let prefixColor = "";
+
 			if (user.mode) {
 				if (user.mode.includes("@")) {
 					prefix = "@";
@@ -1532,6 +1566,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 					prefixColor = "yellow";
 				}
 			}
+
 			msg.addString(prefix);
 			msg.addString(prefixColor);
 		}

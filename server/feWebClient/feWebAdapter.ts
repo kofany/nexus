@@ -248,6 +248,7 @@ export class FeWebAdapter {
 		const nick = msg.nick!;
 
 		let channel = this.findChannel(network, channelName);
+
 		if (!channel) {
 			// Create channel - first join (our own)
 			// Set network.nick if not already set (from first channel join during state_dump)
@@ -447,12 +448,14 @@ export class FeWebAdapter {
 		);
 
 		const network = this.getOrCreateNetwork(msg.server!);
+
 		if (!network) {
 			log.error(`[FeWebAdapter] Network not found for server: ${msg.server}`);
 			return;
 		}
 
 		const channel = this.findChannel(network, msg.channel!);
+
 		if (!channel) {
 			log.error(
 				`[FeWebAdapter] Channel not found: ${msg.channel} on ${
@@ -524,12 +527,14 @@ export class FeWebAdapter {
 		);
 
 		const network = this.getOrCreateNetwork(msg.server!);
+
 		if (!network) {
 			log.error(`[FeWebAdapter] Network not found for server: ${msg.server}`);
 			return;
 		}
 
 		const channel = this.findChannel(network, msg.channel!);
+
 		if (!channel) {
 			log.error(`[FeWebAdapter] Channel not found: ${msg.channel} on ${msg.server}`);
 			return;
@@ -558,6 +563,7 @@ export class FeWebAdapter {
 			case "change":
 				// Nick change - rename user in ALL channels of this network
 				const newNick = msg.extra?.new_nick;
+
 				if (!newNick) {
 					log.error(`[FeWebAdapter] Nick change missing new_nick in extra`);
 					return;
@@ -586,6 +592,7 @@ export class FeWebAdapter {
 				let updatedChannels = 0;
 				network.channels.forEach((ch) => {
 					const user = ch.users.get(nick.toLowerCase());
+
 					if (user) {
 						ch.users.delete(nick.toLowerCase());
 						user.nick = newNick;
@@ -618,6 +625,7 @@ export class FeWebAdapter {
 			case "-h":
 				// Mode change
 				const targetUser = channel.users.get(nick.toLowerCase());
+
 				if (!targetUser) {
 					log.warn(`[FeWebAdapter] User ${nick} not found for mode change ${task}`);
 					return;
@@ -628,6 +636,7 @@ export class FeWebAdapter {
 
 				// Convert mode character to symbol using PREFIX
 				const modeSymbol = network.serverOptions.PREFIX.modeToSymbol[modeChar];
+
 				if (!modeSymbol) {
 					log.warn(`[FeWebAdapter] Unknown mode character: ${modeChar}`);
 					return;
@@ -694,6 +703,7 @@ export class FeWebAdapter {
 		// Update nick in all channels
 		network.channels.forEach((channel) => {
 			const user = channel.users.get(oldNick.toLowerCase());
+
 			if (user) {
 				// Remove old entry and add new one
 				channel.users.delete(oldNick.toLowerCase());
@@ -755,6 +765,7 @@ export class FeWebAdapter {
 		// Update away status in all channels
 		network.channels.forEach((channel) => {
 			const user = channel.users.get(nick.toLowerCase());
+
 			if (user) {
 				user.away = awayMessage;
 			}
@@ -880,6 +891,7 @@ export class FeWebAdapter {
 
 		// Check if query already exists
 		let channel = this.findChannel(network, nick);
+
 		if (channel) {
 			log.debug(`[FeWebAdapter] Query ${nick} already exists`);
 			return;
@@ -948,12 +960,14 @@ export class FeWebAdapter {
 		}
 
 		const network = this.serverTagToNetworkMap.get(serverTag);
+
 		if (!network) {
 			log.warn(`[FeWebAdapter] Network ${serverTag} not found for mark_read`);
 			return;
 		}
 
 		const channel = this.findChannel(network, channelName);
+
 		if (!channel) {
 			log.warn(
 				`[FeWebAdapter] Channel ${channelName} not found for mark_read on ${serverTag}`
@@ -1098,6 +1112,7 @@ export class FeWebAdapter {
 	private addUserToChannel(channel: Chan, nick: string): void {
 		// Check if user already exists
 		const existingUser = channel.users.get(nick.toLowerCase());
+
 		if (!existingUser) {
 			const user = new User({nick});
 			channel.users.set(nick.toLowerCase(), user);
@@ -1114,6 +1129,7 @@ export class FeWebAdapter {
 	 */
 	private getOrCreateNetworkUuid(serverTag: string): string {
 		let uuid = this.networkUuidMap.get(serverTag);
+
 		if (!uuid) {
 			uuid = `network-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 			this.networkUuidMap.set(serverTag, uuid);
@@ -1121,6 +1137,7 @@ export class FeWebAdapter {
 		} else {
 			log.info(`[FeWebAdapter] Using existing UUID for server ${serverTag}: ${uuid}`);
 		}
+
 		return uuid;
 	}
 

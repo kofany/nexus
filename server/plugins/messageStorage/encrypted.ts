@@ -35,11 +35,13 @@ class LRUCache<K, V> {
 
 	get(key: K): V | undefined {
 		const value = this.cache.get(key);
+
 		if (value !== undefined) {
 			// Move to end (most recently used)
 			this.cache.delete(key);
 			this.cache.set(key, value);
 		}
+
 		return value;
 	}
 
@@ -47,6 +49,7 @@ class LRUCache<K, V> {
 		// Remove oldest if at capacity
 		if (this.cache.size >= this.maxSize) {
 			const firstKey = this.cache.keys().next().value;
+
 			if (firstKey !== undefined) {
 				this.cache.delete(firstKey);
 			}
@@ -418,6 +421,7 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 
 		// Check cache first
 		const cached = this.cache.get(cacheKey);
+
 		if (cached && cached.length > 0) {
 			// Regenerate IDs
 			return cached.map((msg) => {
@@ -814,6 +818,7 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 		);
 
 		const markers = new Map<string, number>();
+
 		for (const row of rows) {
 			const key = `${row.network}:${row.channel}`;
 			markers.set(key, row.last_read_time);
