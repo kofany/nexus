@@ -5,15 +5,15 @@ import fs from "fs";
 import path from "path";
 
 import Auth from "./plugins/auth.js";
-import Client, {UserConfig} from "./client.js";
 import {IrssiClient, IrssiUserConfig} from "./irssiClient.js";
 import Config from "./config.js";
 import WebPush from "./plugins/webpush.js";
 import log from "./log.js";
 import {Server} from "./server.js";
 
+// SINGLE MODE: Only IrssiClient is supported (no legacy Client)
 class ClientManager {
-	clients: (Client | IrssiClient)[];
+	clients: IrssiClient[];
 	sockets!: Server;
 	identHandler: any;
 	webPush!: WebPush;
@@ -161,7 +161,7 @@ class ClientManager {
 
 			// Note: IrssiClient.login() will be called after authentication
 			this.clients.push(irssiClient);
-			client = irssiClient as any; // Type cast for compatibility
+			client = irssiClient;
 		}
 
 		return client;
@@ -171,10 +171,9 @@ class ClientManager {
 	 * Login user - called after successful authentication
 	 * SINGLE MODE: All clients are IrssiClient
 	 */
-	async loginUser(client: Client | IrssiClient, password: string): Promise<void> {
-		const irssiClient = client as IrssiClient;
-		log.info(`Logging in irssi user ${colors.bold(irssiClient.name)}...`);
-		await irssiClient.login(password);
+	async loginUser(client: IrssiClient, password: string): Promise<void> {
+		log.info(`Logging in irssi user ${colors.bold(client.name)}...`);
+		await client.login(password);
 	}
 
 	getUsers = function () {
@@ -260,13 +259,11 @@ class ClientManager {
 		return true;
 	}
 
-	getDataToSave(client: Client) {
-		// IrssiClient doesn't have Network[] with export() method
-		// Instead, it stores networks in irssi - we only save networkUuidMap
-		const isIrssiClient = (client as any).irssiConnection !== undefined;
-
+	getDataToSave(client: IrssiClient) {
+		// IrssiClient stores networks in irssi - we only save networkUuidMap
+		// No need to export networks
 		const json = Object.assign({}, client.config, {
-			networks: isIrssiClient ? [] : client.networks.map((n) => n.export()),
+			networks: [],
 		});
 		const newUser = JSON.stringify(json, null, "\t");
 		const newHash = crypto.createHash("sha256").update(newUser).digest("hex");
@@ -274,7 +271,7 @@ class ClientManager {
 		return {newUser, newHash};
 	}
 
-	saveUser(client: Client, callback?: (err?: any) => void) {
+	saveUser(client: IrssiClient, callback?: (err?: any) => void) {
 		const {newUser, newHash} = this.getDataToSave(client);
 
 		// Do not write to disk if the exported data hasn't actually changed
@@ -326,7 +323,7 @@ class ClientManager {
 
 		try {
 			const data = fs.readFileSync(userPath, "utf-8");
-			return JSON.parse(data) as UserConfig;
+			return JSON.parse(data) as IrssiUserConfig;
 		} catch (e: any) {
 			log.error(`Failed to read user ${colors.bold(name)}: ${e}`);
 		}

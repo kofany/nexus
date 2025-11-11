@@ -4,7 +4,9 @@ import fs from "fs";
 import path from "path";
 import WebPushAPI from "web-push";
 import Config from "../config.js";
-import Client from "../client.js";
+// LEGACY: WebPush plugin was designed for legacy Client class
+// IrssiClient doesn't implement push subscription methods
+// Using 'any' type for now - webpush may not work in SINGLE MODE
 import * as os from "os";
 class WebPush {
 	vapidKeys?: {
@@ -69,7 +71,7 @@ class WebPush {
 		);
 	}
 
-	push(client: Client, payload: any, onlyToOffline: boolean) {
+	push(client: any, payload: any, onlyToOffline: boolean) {
 		_.forOwn(client.config.sessions, ({pushSubscription}, token) => {
 			if (pushSubscription) {
 				if (onlyToOffline && _.find(client.attachedClients, {token}) !== undefined) {
@@ -81,7 +83,7 @@ class WebPush {
 		});
 	}
 
-	pushSingle(client: Client, subscription: WebPushAPI.PushSubscription, payload: any) {
+	pushSingle(client: any, subscription: WebPushAPI.PushSubscription, payload: any) {
 		WebPushAPI.sendNotification(subscription, JSON.stringify(payload)).catch((error) => {
 			if (error.statusCode >= 400 && error.statusCode < 500) {
 				log.warn(

@@ -4,7 +4,8 @@ import Config from "../config.js";
 import User from "./user.js";
 import Msg from "./msg.js";
 import storage from "../plugins/storage.js";
-import Client from "../client.js";
+// LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
+// import Client from "../client.js";
 import Network from "./network.js";
 import Prefix from "./prefix.js";
 import {MessageType, SharedMsg} from "../../shared/types/msg.js";
@@ -61,7 +62,7 @@ class Chan {
 		this.dereferencePreviews(this.messages);
 	}
 
-	pushMessage(client: Client, msg: Msg, increasesUnread = false) {
+	pushMessage(client: any, msg: Msg, increasesUnread = false) {
 		const chanId = this.id;
 		msg.id = client.idMsg++;
 
@@ -228,7 +229,7 @@ class Chan {
 		// 	}
 	}
 
-	writeUserLog(client: Client, msg: Msg) {
+	writeUserLog(client: any, msg: Msg) {
 		this.messages.push(msg);
 
 		// Are there any logs enabled
@@ -261,7 +262,7 @@ class Chan {
 		}
 	}
 
-	loadMessages(client: Client, network: Network) {
+	loadMessages(client: any, network: Network) {
 		if (!this.isLoggable()) {
 			return;
 		}

@@ -6,10 +6,9 @@ import semver from "semver";
 import Helper from "../../helper.js";
 import Config from "../../config.js";
 import themes from "./themes.js";
-import inputs from "../inputs/index.js";
 import fs from "fs";
 import Utils from "../../command-line/utils.js";
-import Client from "../../client.js";
+import {IrssiClient} from "../../irssiClient.js";
 import {createRequire} from "module";
 
 const require = createRequire(import.meta.url);
@@ -59,9 +58,14 @@ const packageApis = function (packageInfo: PackageInfo) {
             add: addFile.bind(packageApis, packageInfo.packageName),
         },
         Commands: {
-            add: inputs.addPluginCommand.bind(packageApis, packageInfo),
-            runAsUser: (command: string, targetId: number, client: Client) =>
-                client.inputLine({target: targetId, text: command}),
+            // SINGLE MODE: Command plugins not supported (no inputs system)
+            add: () => {
+                log.warn(`[${packageInfo.packageName}] Command registration not supported in irssi proxy mode`);
+            },
+            runAsUser: (command: string, targetId: number, client: IrssiClient) => {
+                // In irssi proxy mode, send command directly to irssi
+                log.warn(`[${packageInfo.packageName}] runAsUser not implemented for irssi proxy mode`);
+            },
         },
         Config: {
             getConfig: () => Config.values,

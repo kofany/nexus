@@ -1,11 +1,12 @@
 import colors from "chalk";
-import Client from "../client.js";
+// LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
+import {IrssiClient} from "../irssiClient.js";
 import ClientManager from "../clientManager.js";
 import log from "../log.js";
 
 export type AuthHandler = (
 	manager: ClientManager,
-	client: Client,
+	client: IrssiClient,
 	user: string,
 	password: string,
 	callback: (success: boolean) => void

@@ -1,6 +1,15 @@
 import _ from "lodash";
 import {v4 as uuidv4} from "uuid";
-import IrcFramework, {Client as IRCClient} from "irc-framework";
+// LEGACY: irc-framework removed (SINGLE MODE uses IrssiClient only)
+// import IrcFramework, {Client as IRCClient} from "irc-framework";
+// Stubbed types for legacy code compatibility
+type IRCClient = any;
+namespace IrcFramework {
+    export type MessageTags = any;
+    export type Client = any;
+}
+// Stubbed IrcFramework default export
+const IrcFramework = null as any;
 import Chan, {ChanConfig, Channel} from "./chan.js";
 import Msg from "./msg.js";
 import Prefix from "./prefix.js";
@@ -8,7 +17,8 @@ import Helper, {Hostmask} from "../helper.js";
 import Config, {WebIRC} from "../config.js";
 import STSPolicies from "../plugins/sts.js";
 import ClientCertificate, {ClientCertificateType} from "../plugins/clientCertificate.js";
-import Client from "../client.js";
+// LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
+// Avoiding circular dependency - use any type for client parameters
 import {MessageType} from "../../shared/types/msg.js";
 import {ChanType} from "../../shared/types/chan.js";
 import {SharedNetwork} from "../../shared/types/network.js";
@@ -196,7 +206,7 @@ class Network {
 		);
 	}
 
-	validate(this: Network, client: Client) {
+	validate(this: Network, client: any) {
 		// Remove !, :, @ and whitespace characters from nicknames and usernames
 		const cleanNick = (str: string) => str.replace(/[\x00\s:!@]/g, "_").substring(0, 100);
 
@@ -282,7 +292,7 @@ class Network {
 		return true;
 	}
 
-	async createIrcFramework(this: NetworkWithIrcFramework, client: Client) {
+	async createIrcFramework(this: NetworkWithIrcFramework, client: any) {
 		this.irc = new IrcFramework.Client({
 			version: false, // We handle it ourselves
 			outgoing_addr: Config.values.bind,
@@ -306,7 +316,7 @@ class Network {
 		]);
 	}
 
-	async setIrcFrameworkOptions(this: NetworkWithIrcFramework, client: Client) {
+	async setIrcFrameworkOptions(this: NetworkWithIrcFramework, client: any) {
 		this.irc.options.host = this.host;
 		this.irc.options.port = this.port;
 		this.irc.options.password = this.password;
@@ -350,7 +360,7 @@ class Network {
 		}
 	}
 
-	createWebIrc(client: Client) {
+	createWebIrc(client: any) {
 		if (
 			!Config.values.webirc ||
 			!Object.prototype.hasOwnProperty.call(Config.values.webirc, this.host)
@@ -382,7 +392,7 @@ class Network {
 		return webircObject;
 	}
 
-	async edit(this: NetworkWithIrcFramework, client: Client, args: any) {
+	async edit(this: NetworkWithIrcFramework, client: any, args: any) {
 		const oldNetworkName = this.name;
 		const oldNick = this.nick;
 		const oldRealname = this.realname;
