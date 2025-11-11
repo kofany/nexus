@@ -1,7 +1,8 @@
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import {md, pki} from "node-forge";
+import nodeForge from "node-forge";
+const {md, pki} = nodeForge;
 import log from "../log.js";
 import Config from "../config.js";
 

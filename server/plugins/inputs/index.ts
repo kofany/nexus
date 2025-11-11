@@ -73,7 +73,7 @@ const builtInInputs = [
 ];
 
 for (const input of builtInInputs) {
-	import(`./${input}`)
+	import(`./${input}.js`)
 		.then(
 			(plugin: {
 				default: {
