@@ -28,57 +28,57 @@ VueApp.mount("#app");
 socket.open();
 
 store.watch(
-	(state) => state.sidebarOpen,
-	(sidebarOpen) => {
-		if (window.innerWidth > constants.mobileViewportPixels) {
-			storage.set("nexuslounge.state.sidebar", sidebarOpen.toString());
-			eventbus.emit("resize");
-		}
-	}
+    (state) => state.sidebarOpen as boolean,
+    (sidebarOpen) => {
+        if (window.innerWidth > constants.mobileViewportPixels) {
+            storage.set("nexuslounge.state.sidebar", sidebarOpen.toString());
+            eventbus.emit("resize");
+        }
+    }
 );
 
 store.watch(
-	(state) => state.userlistOpen,
-	(userlistOpen) => {
-		storage.set("nexuslounge.state.userlist", userlistOpen.toString());
-		eventbus.emit("resize");
-	}
+    (state) => state.userlistOpen as boolean,
+    (userlistOpen) => {
+        storage.set("nexuslounge.state.userlist", userlistOpen.toString());
+        eventbus.emit("resize");
+    }
 );
 
 store.watch(
-	(_, getters: CallableGetters) => getters.title,
-	(title) => {
-		document.title = title;
-	}
+    (_, getters: CallableGetters) => getters.title,
+    (title) => {
+        document.title = title;
+    }
 );
 
 // Toggles the favicon to red when there are unread notifications
 store.watch(
-	(_, getters: CallableGetters) => getters.highlightCount,
-	(highlightCount) => {
-		favicon?.setAttribute("href", highlightCount > 0 ? faviconAlerted : faviconNormal);
+    (_, getters: CallableGetters) => getters.highlightCount,
+    (highlightCount) => {
+        favicon?.setAttribute("href", highlightCount > 0 ? faviconAlerted : faviconNormal);
 
-		const nav: LoungeWindow["navigator"] = window.navigator;
+        const nav: LoungeWindow["navigator"] = window.navigator;
 
-		if (nav.setAppBadge) {
-			if (highlightCount > 0) {
-				nav.setAppBadge(highlightCount).catch(() => {});
-			} else {
-				if (nav.clearAppBadge) {
-					nav.clearAppBadge().catch(() => {});
-				}
-			}
-		}
-	}
+        if (nav.setAppBadge) {
+            if (highlightCount > 0) {
+                nav.setAppBadge(highlightCount).catch(() => {});
+            } else {
+                if (nav.clearAppBadge) {
+                    nav.clearAppBadge().catch(() => {});
+                }
+            }
+        }
+    }
 );
 
 VueApp.config.errorHandler = function (e) {
-	if (e instanceof Error) {
-		store.commit("currentUserVisibleError", `Vue error: ${e.message}`);
-	} else {
-		store.commit("currentUserVisibleError", `Vue error: ${String(e)}`);
-	}
+    if (e instanceof Error) {
+        store.commit("currentUserVisibleError", `Vue error: ${e.message}`);
+    } else {
+        store.commit("currentUserVisibleError", `Vue error: ${String(e)}`);
+    }
 
-	// eslint-disable-next-line no-console
-	console.error(e);
+    // eslint-disable-next-line no-console
+    console.error(e);
 };

@@ -1,5 +1,4 @@
 import {fileURLToPath} from "url";
-import {dirname} from "path";
 import {createRequire} from "module";
 import path from "path";
 import fs, {Stats} from "fs";
@@ -15,7 +14,7 @@ import Network from "./models/network.js";
 import defaultConfig from "../defaults/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
 // Keep createRequire for legacy user config.js support (CommonJS format)
 // New users should use ESM format, but existing configs may use module.exports

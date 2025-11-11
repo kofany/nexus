@@ -1,7 +1,6 @@
 // https://vuejs.github.io/vetur/guide/setup.html#vue3
 declare module "*.vue" {
-	import type {DefineComponent} from "vue";
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	const component: DefineComponent<{}, {}, any>;
-	export default component;
+    import type {DefineComponent} from "vue";
+    const component: DefineComponent<Record<string, never>, Record<string, never>, any>;
+    export default component;
 }

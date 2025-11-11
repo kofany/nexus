@@ -155,7 +155,7 @@ const vueRules = {
 export default [
     // 1. Ignore patterns (replaces .eslintignore)
     {
-        ignores: ["public/**", "coverage/**", "dist/**", "xyz/**"],
+        ignores: ["public/**", "coverage/**", "dist/**", "xyz/**", "defaults/config.d.ts"],
     },
 
     // 2. ESLint recommended config for all files

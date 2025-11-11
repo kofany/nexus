@@ -50,35 +50,52 @@ export default {
 
 // TODO: verify binds worked. Used to be 'this' instead of 'packageApis'
 const packageApis = function (packageInfo: PackageInfo) {
+    const addStylesheetForPackage = (filename: string) => addStylesheet(packageInfo.packageName, filename);
+    const addPublicFileForPackage = (filename: string) => addFile(packageInfo.packageName, filename);
+    const getStorageDirForPackage = () => getPersistentStorageDir(packageInfo.packageName);
+
     return {
         Stylesheets: {
-            addFile: addStylesheet.bind(packageApis, packageInfo.packageName),
+            addFile(filename: string) {
+                addStylesheetForPackage(filename);
+            },
         },
         PublicFiles: {
-            add: addFile.bind(packageApis, packageInfo.packageName),
+            add(filename: string) {
+                addPublicFileForPackage(filename);
+            },
         },
         Commands: {
             // SINGLE MODE: Command plugins not supported (no inputs system)
-            add: () => {
+            add() {
                 log.warn(`[${packageInfo.packageName}] Command registration not supported in irssi proxy mode`);
             },
-            runAsUser: (command: string, targetId: number, client: IrssiClient) => {
+            runAsUser(command: string, targetId: number, client: IrssiClient) {
                 // In irssi proxy mode, send command directly to irssi
                 log.warn(`[${packageInfo.packageName}] runAsUser not implemented for irssi proxy mode`);
             },
         },
         Config: {
-            getConfig: () => Config.values,
-            getPersistentStorageDir: getPersistentStorageDir.bind(
-                packageApis,
-                packageInfo.packageName
-            ),
+            getConfig() {
+                return Config.values;
+            },
+            getPersistentStorageDir() {
+                return getStorageDirForPackage();
+            },
         },
         Logger: {
-            error: (...args: string[]) => log.error(`[${packageInfo.packageName}]`, ...args),
-            warn: (...args: string[]) => log.warn(`[${packageInfo.packageName}]`, ...args),
-            info: (...args: string[]) => log.info(`[${packageInfo.packageName}]`, ...args),
-            debug: (...args: string[]) => log.debug(`[${packageInfo.packageName}]`, ...args),
+            error(...args: string[]) {
+                log.error(`[${packageInfo.packageName}]`, ...args);
+            },
+            warn(...args: string[]) {
+                log.warn(`[${packageInfo.packageName}]`, ...args);
+            },
+            info(...args: string[]) {
+                log.info(`[${packageInfo.packageName}]`, ...args);
+            },
+            debug(...args: string[]) {
+                log.debug(`[${packageInfo.packageName}]`, ...args);
+            },
         },
     };
 };

@@ -56,8 +56,8 @@ async function fetch() {
         // Add expiration date to the data to send to the client for later refresh
         versions.expiresAt = time + TIME_TO_LIVE;
     } catch (error) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        log.error(`Failed to fetch changelog: ${error}`);
+        const message = error instanceof Error ? error.message : String(error);
+        log.error(`Failed to fetch changelog: ${message}`);
     }
 
     return versions;

@@ -29,11 +29,15 @@ program
         try {
             await Utils.executeYarnCommand("remove", packageName);
             log.info(`${colors.green(packageName)} has been successfully uninstalled.`);
-        } catch (code_1) {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            log.error(`Failed to uninstall ${colors.green(packageName)}. Exit code: ${code_1}`);
+        } catch (error) {
+            const message =
+                typeof error === "number"
+                    ? `Exit code: ${error}`
+                    : `Reason: ${error instanceof Error ? error.message : String(error)}`;
+
+            log.error(`Failed to uninstall ${colors.green(packageName)}. ${message}`);
             process.exit(1);
         }
-    });
+        });
 
 export default program;

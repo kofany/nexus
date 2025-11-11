@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import fs from "fs/promises";
 import path from "path";
 import filenamify from "filenamify";
@@ -19,14 +18,14 @@ class TextFileMessageStorage implements MessageStorage {
         this.isEnabled = false;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    async enable() {
+    enable() {
         this.isEnabled = true;
+        return Promise.resolve();
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    async close() {
+    close() {
         this.isEnabled = false;
+        return Promise.resolve();
     }
 
     async index(network: Network, channel: Channel, msg: Message) {
@@ -42,8 +41,9 @@ class TextFileMessageStorage implements MessageStorage {
 
         try {
             await fs.mkdir(logPath, {recursive: true});
-        } catch (e) {
-            throw new Error(`Unable to create logs directory: ${e}`);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Unable to create logs directory: ${message}`);
         }
 
         let line = `[${msg.time.toISOString()}] `;
@@ -107,8 +107,9 @@ class TextFileMessageStorage implements MessageStorage {
                 path.join(logPath, TextFileMessageStorage.getChannelFileName(channel)),
                 line
             );
-        } catch (e) {
-            throw new Error(`Failed to write user log: ${e}`);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to write user log: ${message}`);
         }
     }
 

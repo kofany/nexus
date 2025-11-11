@@ -922,8 +922,6 @@ export class IrssiClient {
                         queryChannel.id = this.feWebAdapter.getNextChannelId();
 
                         // Add to network using sorted insertion
-                        const Network = (await import("./models/network.js")).default;
-
                         if (network instanceof Network) {
                             network.addChannel(queryChannel);
                         } else {

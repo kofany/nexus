@@ -6,12 +6,11 @@ import Helper from "../helper.js";
 import Config from "../config.js";
 import path from "path";
 import {fileURLToPath} from "url";
-import {dirname} from "path";
 import {spawn} from "child_process";
 import {createRequire} from "module";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 let home: string;
 

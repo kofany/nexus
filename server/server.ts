@@ -128,7 +128,9 @@ export default async function (
             if (fs.existsSync(publicPath)) {
                 return res.sendFile(publicPath);
             }
-        } catch {}
+        } catch {
+            // File not accessible, continue to next location
+        }
 
         const clientPath = Utils.getFileFromRelativeToRoot("client", "themes", filename);
 
@@ -136,7 +138,9 @@ export default async function (
             if (fs.existsSync(clientPath)) {
                 return res.sendFile(clientPath);
             }
-        } catch {}
+        } catch {
+            // File not accessible, continue
+        }
 
         return next();
     });
@@ -266,10 +270,14 @@ export default async function (
         });
 
         sockets.on("connect", (socket) => {
+            const handlePerformAuthentication = (data: AuthPerformData) => {
+                void performAuthentication.call(socket, data);
+            };
 
             socket.on("error", (err) => log.error(`io socket error: ${err}`));
 
-            socket.on("auth:perform", performAuthentication);
+            socket.data.authPerformHandler = handlePerformAuthentication;
+            socket.on("auth:perform", handlePerformAuthentication);
             socket.emit("auth:start", serverHash);
         });
 
@@ -320,7 +328,7 @@ export default async function (
 
             // Close all client and IRC connections
             if (manager) {
-                manager.clients.forEach((client) => client.quit());
+                manager.clients.forEach((client) => void client.quit());
             }
 
             if (Config.values.prefetchStorage) {
@@ -342,17 +350,13 @@ export default async function (
             });
         };
 
-        /* eslint-disable @typescript-eslint/no-misused-promises */
-        process.on("SIGINT", exitGracefully);
-        process.on("SIGTERM", exitGracefully);
-        /* eslint-enable @typescript-eslint/no-misused-promises */
+        process.on("SIGINT", () => void exitGracefully());
+        process.on("SIGTERM", () => void exitGracefully());
 
         // Clear storage folder after server starts successfully
         if (Config.values.prefetchStorage) {
             import("./plugins/storage.js")
-                .then(({default: storage}) => {
-                    storage.emptyDir();
-                })
+                .then(({default: storage}) => storage.emptyDir())
                 .catch((err: Error) => {
                     log.error(`Could not clear storage folder, ${err.message}`);
                 });
@@ -529,7 +533,13 @@ function initializeIrssiClient(
     lastMessage: number,
     openChannel: number
 ) {
-    socket.off("auth:perform", performAuthentication);
+    const authPerformHandler = socket.data.authPerformHandler as ((data: AuthPerformData) => void) | undefined;
+
+    if (authPerformHandler) {
+        socket.off("auth:perform", authPerformHandler);
+        delete socket.data.authPerformHandler;
+    }
+
     socket.emit("auth:success");
 
     void socket.join(client.id);

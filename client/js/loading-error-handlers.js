@@ -8,121 +8,121 @@
  */
 
 (function () {
-	const msg = document.getElementById("loading-page-message");
+    const msg = document.getElementById("loading-page-message");
 
-	if (msg) {
-		msg.textContent = "Loading the app…";
-	}
+    if (msg) {
+        msg.textContent = "Loading the app…";
+    }
 
-	document.getElementById("loading-reload")?.addEventListener("click", () => location.reload());
+    document.getElementById("loading-reload")?.addEventListener("click", () => location.reload());
 
-	const displayReload = () => {
-		const loadingReload = document.getElementById("loading-reload");
+    const displayReload = () => {
+        const loadingReload = document.getElementById("loading-reload");
 
-		if (loadingReload) {
-			loadingReload.style.visibility = "visible";
-		}
-	};
+        if (loadingReload) {
+            loadingReload.style.visibility = "visible";
+        }
+    };
 
-	const loadingSlowTimeout = setTimeout(() => {
-		const loadingSlow = document.getElementById("loading-slow");
+    const loadingSlowTimeout = setTimeout(() => {
+        const loadingSlow = document.getElementById("loading-slow");
 
-		if (loadingSlow) {
-			loadingSlow.style.visibility = "visible";
-		}
+        if (loadingSlow) {
+            loadingSlow.style.visibility = "visible";
+        }
 
-		displayReload();
-	}, 5000);
+        displayReload();
+    }, 5000);
 
-	/**
-	 * @param {ErrorEvent} e
-	 **/
-	const errorHandler = (e) => {
-		if (!msg) {
-			return;
-		}
+    /**
+     * @param {ErrorEvent} e
+     **/
+    const errorHandler = (e) => {
+        if (!msg) {
+            return;
+        }
 
-		msg.textContent = "An error has occurred that prevented the client from loading correctly.";
+        msg.textContent = "An error has occurred that prevented the client from loading correctly.";
 
-		const summary = document.createElement("summary");
-		summary.textContent = "More details";
+        const summary = document.createElement("summary");
+        summary.textContent = "More details";
 
-		const data = document.createElement("pre");
-		data.textContent = e.message; // e is an ErrorEvent
+        const data = document.createElement("pre");
+        data.textContent = e.message; // e is an ErrorEvent
 
-		const info = document.createElement("p");
-		info.textContent = "Open the developer tools of your browser for more information.";
+        const info = document.createElement("p");
+        info.textContent = "Open the developer tools of your browser for more information.";
 
-		const details = document.createElement("details");
-		details.appendChild(summary);
-		details.appendChild(data);
-		details.appendChild(info);
-		msg.parentNode?.insertBefore(details, msg.nextSibling);
+        const details = document.createElement("details");
+        details.appendChild(summary);
+        details.appendChild(data);
+        details.appendChild(info);
+        msg.parentNode?.insertBefore(details, msg.nextSibling);
 
-		window.clearTimeout(loadingSlowTimeout);
-		displayReload();
-	};
+        window.clearTimeout(loadingSlowTimeout);
+        displayReload();
+    };
 
-	window.addEventListener("error", errorHandler);
+    window.addEventListener("error", errorHandler);
 
-	window.g_NexusLoungeRemoveLoading = () => {
-		delete window.g_NexusLoungeRemoveLoading;
-		window.clearTimeout(loadingSlowTimeout);
-		window.removeEventListener("error", errorHandler);
-		document.getElementById("loading")?.remove();
-	};
+    window.g_NexusLoungeRemoveLoading = () => {
+        delete window.g_NexusLoungeRemoveLoading;
+        window.clearTimeout(loadingSlowTimeout);
+        window.removeEventListener("error", errorHandler);
+        document.getElementById("loading")?.remove();
+    };
 
-	// Apply user theme as soon as possible, before any other code loads
-	// This prevents flash of white while other code loads and socket connects
-	try {
-		const userSettings = JSON.parse(localStorage.getItem("settings") || "{}");
-		const themeEl = document.getElementById("theme");
+    // Apply user theme as soon as possible, before any other code loads
+    // This prevents flash of white while other code loads and socket connects
+    try {
+        const userSettings = JSON.parse(localStorage.getItem("settings") || "{}");
+        const themeEl = document.getElementById("theme");
 
-		if (!themeEl) {
-			return;
-		}
+        if (!themeEl) {
+            return;
+        }
 
-		if (
-			typeof userSettings.theme === "string" &&
-			themeEl?.dataset.serverTheme !== userSettings.theme
-		) {
-			themeEl.setAttribute("href", `themes/${userSettings.theme}.css`);
-		}
+        if (
+            typeof userSettings.theme === "string" &&
+            themeEl?.dataset.serverTheme !== userSettings.theme
+        ) {
+            themeEl.setAttribute("href", `themes/${userSettings.theme}.css`);
+        }
 
-		if (
-			typeof userSettings.userStyles === "string" &&
-			!/[?&]nocss/.test(window.location.search)
-		) {
-			const userSpecifiedCSSElement = document.getElementById("user-specified-css");
+        if (
+            typeof userSettings.userStyles === "string" &&
+            !/[?&]nocss/.test(window.location.search)
+        ) {
+            const userSpecifiedCSSElement = document.getElementById("user-specified-css");
 
-			if (!userSpecifiedCSSElement) {
-				return;
-			}
+            if (!userSpecifiedCSSElement) {
+                return;
+            }
 
-			userSpecifiedCSSElement.innerHTML = userSettings.userStyles;
-		}
-	} catch (e) {
-		//
-	}
+            userSpecifiedCSSElement.innerHTML = userSettings.userStyles;
+        }
+    } catch {
+        //
+    }
 
-	// Trigger early service worker registration
-	if ("serviceWorker" in navigator) {
-		navigator.serviceWorker.register("service-worker.js");
+    // Trigger early service worker registration
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js");
 
-		// Handler for messages coming from the service worker
+        // Handler for messages coming from the service worker
 
-		const messageHandler = (/** @type {MessageEvent} */ event) => {
-			if (event.data.type === "fetch-error") {
-				// @ts-expect-error Argument of type '{ message: string; }' is not assignable to parameter of type 'ErrorEvent'.
-				errorHandler({
-					message: `Service worker failed to fetch an url: ${event.data.message}`,
-				});
+        const messageHandler = (/** @type {MessageEvent} */ event) => {
+            if (event.data.type === "fetch-error") {
+                // @ts-expect-error Argument of type '{ message: string; }' is not assignable to parameter of type 'ErrorEvent'.
+                errorHandler({
+                    message: `Service worker failed to fetch an url: ${event.data.message}`,
+                });
 
-				// Display only one fetch error
-				navigator.serviceWorker.removeEventListener("message", messageHandler);
-			}
-		};
+                // Display only one fetch error
+                navigator.serviceWorker.removeEventListener("message", messageHandler);
+            }
+        };
 
-		navigator.serviceWorker.addEventListener("message", messageHandler);
-	}
+        navigator.serviceWorker.addEventListener("message", messageHandler);
+    }
 })();
