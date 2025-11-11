@@ -26,8 +26,8 @@ export function toClientChan(shared: SharedNetworkChan): ClientChan {
 			(shared as any).users && (shared as any).users.length > 0
 				? false
 				: shared.type === ChanType.CHANNEL
-				? true
-				: false,
+					? true
+					: false,
 		moreHistoryAvailable: shared.totalMessages > shared.messages.length,
 		inputHistory: history,
 		messages: sharedMsgToClientMsg(messages),

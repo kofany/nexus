@@ -5,6 +5,10 @@ test/fixtures/.thelounge/logs/
 test/fixtures/.thelounge/certificates/
 test/fixtures/.thelounge/storage/
 test/fixtures/.thelounge/sts-policies.json
+test/fixtures/.nexuslounge/logs/
+test/fixtures/.nexuslounge/certificates/
+test/fixtures/.nexuslounge/storage/
+test/fixtures/.nexuslounge/sts-policies.json
 *.log
 *.png
 *.svg
@@ -20,9 +24,17 @@ yarn.lock
 .npmignore
 .prettierignore
 .thelounge_home
+.nexuslounge_home
 .editorconfig
 .eslintignore
 .gitattributes
 .browserslistrc
 
 *.css
+*.woff2
+*.crt
+*.pem
+xyz/
+check-theme.html
+scrollbar-test.html
+test/client/index.html

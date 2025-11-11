@@ -10,13 +10,13 @@ import Utils from "./utils";
 
 const program = new Command("nexuslounge");
 program
-    .version(Helper.getVersion(), "-v, --version")
-    .option(
-        "-c, --config <key=value>",
-        "override entries of the configuration file, must be specified for each entry that needs to be overriden",
-        Utils.parseConfigOptions
-    )
-    .on("--help", Utils.extraHelp);
+	.version(Helper.getVersion(), "-v, --version")
+	.option(
+		"-c, --config <key=value>",
+		"override entries of the configuration file, must be specified for each entry that needs to be overriden",
+		Utils.parseConfigOptions
+	)
+	.on("--help", Utils.extraHelp);
 
 // Parse options from `argv` returning `argv` void of these options.
 const argvWithoutOptions = program.parseOptions(process.argv);
@@ -25,10 +25,10 @@ Config.setHome(process.env.NEXUSLOUNGE_HOME || process.env.THELOUNGE_HOME || Uti
 
 // Check config file owner and warn if we're running under a different user
 try {
-    verifyFileOwner();
+	verifyFileOwner();
 } catch (e: any) {
-    // We do not care about failures of these checks
-    // fs.statSync will throw if config.js does not exist (e.g. first run)
+	// We do not care about failures of these checks
+	// fs.statSync will throw if config.js does not exist (e.g. first run)
 }
 
 // Create packages/package.json
@@ -45,11 +45,11 @@ program.addCommand(require("./outdated").default);
 program.addCommand(require("./storage").default);
 
 if (!Config.values.public) {
-    require("./users").default.forEach((command: Command) => {
-        if (command) {
-            program.addCommand(command);
-        }
-    });
+	require("./users").default.forEach((command: Command) => {
+		if (command) {
+			program.addCommand(command);
+		}
+	});
 }
 
 // `parse` expects to be passed `process.argv`, but we need to remove to give it
@@ -61,56 +61,56 @@ if (!Config.values.public) {
 program.parse(argvWithoutOptions.operands.concat(argvWithoutOptions.unknown));
 
 function createPackagesFolder() {
-    const packagesPath = Config.getPackagesPath();
-    const packagesConfig = path.join(packagesPath, "package.json");
+	const packagesPath = Config.getPackagesPath();
+	const packagesConfig = path.join(packagesPath, "package.json");
 
-    // Create node_modules folder, otherwise yarn will start walking upwards to find one
-    fs.mkdirSync(path.join(packagesPath, "node_modules"), {recursive: true});
+	// Create node_modules folder, otherwise yarn will start walking upwards to find one
+	fs.mkdirSync(path.join(packagesPath, "node_modules"), {recursive: true});
 
-    // Create package.json with private set to true, if it doesn't exist already
-    if (!fs.existsSync(packagesConfig)) {
-        fs.writeFileSync(
-            packagesConfig,
-            JSON.stringify(
-                {
-                    private: true,
-                    description:
-                        "Packages for Nexus Lounge. Use `nexuslounge install <package>` command to add a package.",
-                    dependencies: {},
-                },
-                null,
-                "\t"
-            )
-        );
-    }
+	// Create package.json with private set to true, if it doesn't exist already
+	if (!fs.existsSync(packagesConfig)) {
+		fs.writeFileSync(
+			packagesConfig,
+			JSON.stringify(
+				{
+					private: true,
+					description:
+						"Packages for Nexus Lounge. Use `nexuslounge install <package>` command to add a package.",
+					dependencies: {},
+				},
+				null,
+				"\t"
+			)
+		);
+	}
 }
 
 function verifyFileOwner() {
-    if (!process.getuid) {
-        return;
-    }
+	if (!process.getuid) {
+		return;
+	}
 
-    const uid = process.getuid();
+	const uid = process.getuid();
 
-    if (uid === 0) {
-        log.warn(
-            `You are currently running Nexus Lounge as root. ${colors.bold.red(
-                "We highly discourage running as root!"
-            )}`
-        );
-    }
+	if (uid === 0) {
+		log.warn(
+			`You are currently running Nexus Lounge as root. ${colors.bold.red(
+				"We highly discourage running as root!"
+			)}`
+		);
+	}
 
-    const configStat = fs.statSync(path.join(Config.getHomePath(), "config.js"));
+	const configStat = fs.statSync(path.join(Config.getHomePath(), "config.js"));
 
-    if (configStat && configStat.uid !== uid) {
-        log.warn(
-            "Config file owner does not match the user you are currently running Nexus Lounge as."
-        );
-        log.warn(
-            "To prevent any issues, please run nexuslounge commands " +
-                "as the correct user that owns the config folder."
-        );
-    }
+	if (configStat && configStat.uid !== uid) {
+		log.warn(
+			"Config file owner does not match the user you are currently running Nexus Lounge as."
+		);
+		log.warn(
+			"To prevent any issues, please run nexuslounge commands " +
+				"as the correct user that owns the config folder."
+		);
+	}
 }
 
 export default program;
