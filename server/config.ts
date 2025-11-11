@@ -125,7 +125,8 @@ export type ConfigType = {
 };
 
 class Config {
-    values = {...defaultConfig} as ConfigType; // Deep copy of ESM default config
+    // Note: themeColor is added later from manifest, so we use intermediate 'any' cast
+    values = {...defaultConfig} as any as ConfigType; // Deep copy of ESM default config
     #homePath = "";
 
     getHomePath() {
