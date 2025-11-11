@@ -8322,7 +8322,7 @@ __metadata:
     sqlite3:
       optional: true
   bin:
-    nexuslounge: index.js
+    nexuslounge: index.mjs
   languageName: unknown
   linkType: soft
 

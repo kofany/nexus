@@ -1,6 +1,6 @@
-import socket from "../socket.js";
-import {store} from "../store.js";
-import {switchToChannel} from "../router.js";
+import socket from "../socket";
+import {store} from "../store";
+import {switchToChannel} from "../router";
 
 socket.on("part", async function (data) {
 	// IDEMPOTENT: Check if channel exists before processing

@@ -1,4 +1,4 @@
-import distance from "./distance.js";
+import distance from "./distance";
 
 // onTwoFingerSwipe will be called with a cardinal direction ("n", "e", "s" or
 // "w") as its only argument.

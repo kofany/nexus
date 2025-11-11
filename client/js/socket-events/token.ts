@@ -1,5 +1,5 @@
-import socket from "../socket.js";
-import storage from "../localStorage.js";
+import socket from "../socket";
+import storage from "../localStorage";
 
 socket.on("token", (token: string) => {
 	console.log("[TOKEN] Received token from server, saving to localStorage");

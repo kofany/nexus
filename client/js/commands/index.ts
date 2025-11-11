@@ -1,7 +1,7 @@
-import {input as collapse} from "./collapse.js";
-import {input as expand} from "./expand.js";
-import {input as join} from "./join.js";
-import {input as search} from "./search.js";
+import {input as collapse} from "./collapse";
+import {input as expand} from "./expand";
+import {input as join} from "./join";
+import {input as search} from "./search";
 
 export const commands = {
 	collapse: collapse,

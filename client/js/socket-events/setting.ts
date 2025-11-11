@@ -1,5 +1,5 @@
-import socket from "../socket.js";
-import {store} from "../store.js";
+import socket from "../socket";
+import {store} from "../store";
 
 socket.on("setting:new", async function (data) {
 	const name = data.name;

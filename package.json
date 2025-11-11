@@ -12,7 +12,7 @@
   },
   "homepage": "https://thelounge.chat/",
   "scripts": {
-    "build:client": "webpack",
+    "build:client": "cross-env NODE_OPTIONS=--loader=ts-node/esm webpack",
     "build:server": "tsc -p server/tsconfig.json",
     "build": "cross-env NODE_NO_WARNINGS=1 run-p --aggregate-output build:client build:server",
     "coverage": "run-s test:* && nyc --nycrc-path=test/.nycrc-report.json report",

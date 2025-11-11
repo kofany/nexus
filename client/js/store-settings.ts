@@ -1,8 +1,8 @@
-import storage from "./localStorage.js";
-import socket from "./socket.js";
-import {config, createState} from "./settings.js";
+import storage from "./localStorage";
+import socket from "./socket";
+import {config, createState} from "./settings";
 import {Store} from "vuex";
-import {State} from "./store.js";
+import {State} from "./store";
 
 export function createSettingsStore(store: Store<State>) {
 	return {

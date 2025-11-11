@@ -1,8 +1,8 @@
 import {nextTick} from "vue";
 
-import socket from "../socket.js";
-import {store} from "../store.js";
-import {MessageType} from "../../../shared/types/msg.js";
+import socket from "../socket";
+import {store} from "../store";
+import {MessageType} from "../../../shared/types/msg";
 
 socket.on("more", async (data) => {
 	const channel = store.getters.findChannel(data.chan)?.channel;

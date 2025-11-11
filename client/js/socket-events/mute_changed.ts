@@ -1,6 +1,6 @@
-import socket from "../socket.js";
-import {store} from "../store.js";
-import {ChanType} from "../../../shared/types/chan.js";
+import socket from "../socket";
+import {store} from "../store";
+import {ChanType} from "../../../shared/types/chan";
 
 socket.on("mute:changed", (response) => {
 	const {target, status} = response;

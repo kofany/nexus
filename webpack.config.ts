@@ -1,4 +1,4 @@
-import * as webpack from "webpack";
+import webpack from "webpack";
 import * as path from "path";
 import {fileURLToPath} from "url";
 import {dirname} from "path";
@@ -8,7 +8,7 @@ import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import {VueLoaderPlugin} from "vue-loader";
 import babelConfig from "./babel.config.cjs";
-import pkg from "./package.json" assert {type: "json"};
+import pkg from "./package.json" with {type: "json"};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,7 +37,7 @@ const config: webpack.Configuration = {
     },
     devtool: "source-map",
     output: {
-        clean: true, // Clean the output directory before emit.
+        clean: true,
         path: path.resolve(__dirname, "public"),
         filename: "[name]",
         publicPath: "/",
@@ -59,8 +59,8 @@ const config: webpack.Configuration = {
                             preserveWhitespace: false,
                         },
                         appendTsSuffixTo: [/\.vue$/],
-                    },
                 },
+            },
             },
             {
                 test: /\.ts$/i,
@@ -110,16 +110,16 @@ const config: webpack.Configuration = {
         },
     },
     externals: {
-        json3: "JSON", // socket.io uses json3.js, but we do not target any browsers that need it
+        json3: "JSON",
     },
     plugins: [
         tsCheckerPlugin,
         vueLoaderPlugin,
+        miniCssExtractPlugin,
         new webpack.DefinePlugin({
             __VUE_PROD_DEVTOOLS__: false,
             __VUE_OPTIONS_API__: false,
         }),
-        miniCssExtractPlugin,
         new CopyPlugin({
             patterns: [
                 {
@@ -151,7 +151,6 @@ const config: webpack.Configuration = {
                     from: path.resolve(__dirname, "./client/service-worker.js"),
                     to: "[name][ext]",
                     transform(content) {
-                        // Inline version cache bust to avoid importing server code
                         const version = `v${pkg.version}`;
                         const hash = crypto.createHash("sha256").update(version).digest("hex");
                         const cacheBust = hash.substring(0, 10);
@@ -175,7 +174,6 @@ const config: webpack.Configuration = {
                 },
             ],
         }),
-        // socket.io uses debug, we don't need it
         new webpack.NormalModuleReplacementPlugin(
             /debug/,
             path.resolve(__dirname, "scripts/noop.js")
@@ -191,35 +189,40 @@ export default (env: any, argv: any) => {
         config.output!.path = path.resolve(__dirname, "test/public");
         config.entry!["testclient.js"] = [path.resolve(__dirname, "test/client/index.ts")];
 
-        // Add the istanbul plugin to babel-loader options
-        for (const rule of config.module!.rules!) {
-            // @ts-expect-error Property 'use' does not exist on type 'RuleSetRule | "..."'.
-            if (rule.use.loader === "babel-loader") {
-                // @ts-expect-error Property 'use' does not exist on type 'RuleSetRule | "..."'.
-                rule.use.options.plugins = ["istanbul"];
+        for (const rawRule of config.module!.rules!) {
+            if (!rawRule || typeof rawRule !== "object") {
+                continue;
+            }
+
+            const rule = rawRule as webpack.RuleSetRule;
+            const use = rule.use;
+
+            if (
+                use &&
+                !Array.isArray(use) &&
+                typeof use === "object" &&
+                "loader" in use &&
+                (use as {loader?: string}).loader === "babel-loader"
+            ) {
+                const options = (use as {options?: Record<string, unknown>}).options ?? {};
+                (use as {options?: Record<string, unknown>}).options = {
+                    ...options,
+                    plugins: ["istanbul"],
+                };
             }
         }
 
-        // `optimization.splitChunks` is incompatible with a `target` of `node`. See:
-        // - https://github.com/zinserjan/mocha-webpack/issues/84
-        // - https://github.com/webpack/webpack/issues/6727#issuecomment-372589122
         config.optimization!.splitChunks = false;
 
-        // Disable plugins like copy files, it is not required
         config.plugins = [
             tsCheckerPlugin,
             vueLoaderPlugin,
             miniCssExtractPlugin,
-            // Client tests that require Vue may end up requireing socket.io
             new webpack.NormalModuleReplacementPlugin(
                 /js(\/|\\)socket\.js/,
                 path.resolve(__dirname, "scripts/noop.js")
             ),
         ];
-    }
-
-    if (argv?.mode === "production") {
-        // ...
     }
 
     return config;

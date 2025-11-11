@@ -1,5 +1,5 @@
-import storage from "./localStorage.js";
-import location from "./location.js";
+import storage from "./localStorage";
+import location from "./location";
 
 export default class Auth {
 	static signout() {

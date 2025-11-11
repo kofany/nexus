@@ -1,4 +1,4 @@
-import storage from "../localStorage.js";
+import storage from "../localStorage";
 
 export default (network, isCollapsed) => {
 	const stored = storage.get("nexuslounge.networks.collapsed");

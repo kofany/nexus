@@ -1,14 +1,14 @@
-import constants from "./constants.js";
+import constants from "./constants";
 
 import "../css/style.css";
 import {createApp} from "vue";
-import {store, CallableGetters, key} from "./store.js";
+import {store, CallableGetters, key} from "./store";
 import App from "../components/App.vue";
-import storage from "./localStorage.js";
-import {router} from "./router.js";
-import socket from "./socket.js";
+import storage from "./localStorage";
+import {router} from "./router";
+import socket from "./socket";
 import "./socket-events"; // this sets up all socket event listeners, do not remove
-import eventbus from "./eventbus.js";
+import eventbus from "./eventbus";
 
 import "./webpush";
 import "./keybinds";

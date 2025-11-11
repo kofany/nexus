@@ -17,7 +17,7 @@ import Config from "../../config.js";
 import Msg, {Message} from "../../models/msg.js";
 import Chan, {Channel} from "../../models/chan.js";
 import Helper from "../../helper.js";
-import type {SearchableMessageStorage, DeletionRequest} from "./types";
+import type {SearchableMessageStorage, DeletionRequest} from "./types.js";
 import Network from "../../models/network.js";
 import {SearchQuery, SearchResponse} from "../../../shared/types/storage.js";
 import {MessageType} from "../../../shared/types/msg.js";

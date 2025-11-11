@@ -19,8 +19,8 @@ program
     .action(async function (options) {
         initalizeConfig();
 
-        const server = await import("../index.js");
-        server.default(options);
+        const {default: runServer} = await import("../server.js");
+        runServer(options);
     });
 
 function initalizeConfig() {

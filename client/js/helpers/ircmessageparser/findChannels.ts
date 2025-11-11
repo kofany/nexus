@@ -2,7 +2,7 @@
 // ")", "[", "]", "{", "}", and "|" in string.
 // See https://lodash.com/docs/#escapeRegExp
 import escapeRegExp from "lodash/escapeRegExp";
-import {Part} from "./merge.js";
+import {Part} from "./merge";
 
 export type ChannelPart = Part & {
 	channel: string;
