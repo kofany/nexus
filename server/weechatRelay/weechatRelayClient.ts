@@ -8,10 +8,10 @@
 import {EventEmitter} from "events";
 import {Socket as NetSocket} from "net";
 import {WebSocket} from "ws";
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
-import {WeeChatMessage, WeeChatParser, OBJ_HASHTABLE, OBJ_STRING} from "./weechatProtocol";
-import {WeeChatRelayServerConfig} from "./weechatRelayServer";
+import {WeeChatMessage, WeeChatParser, OBJ_HASHTABLE, OBJ_STRING} from "./weechatProtocol.js";
+import {WeeChatRelayServerConfig} from "./weechatRelayServer.js";
 import crypto from "crypto";
 
 type ClientSocket = NetSocket | WebSocket;

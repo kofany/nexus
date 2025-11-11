@@ -1,9 +1,9 @@
 import {Client} from "ldapts";
 import colors from "chalk";
 
-import log from "../../log";
-import Config from "../../config";
-import type {AuthHandler} from "../auth";
+import log from "../../log.js";
+import Config from "../../config.js";
+import type {AuthHandler} from "../auth.js";
 
 async function ldapAuthCommon(bindDN: string, password: string): Promise<boolean> {
 	const config = Config.values;

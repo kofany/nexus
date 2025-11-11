@@ -8,9 +8,9 @@
  * Copy & paste the hooks below into the appropriate locations in the adapter.
  */
 
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
-import {VariableMutationTracker} from "./variableMutationTracker";
+import {VariableMutationTracker} from "./variableMutationTracker.js";
 
 /**
  * Debugger configuration - control which hooks are active

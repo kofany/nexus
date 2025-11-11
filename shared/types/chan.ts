@@ -1,6 +1,6 @@
-import {SharedMsg} from "./msg";
-import {SharedUser} from "./user";
-import {SharedNetworkChan} from "./network";
+import {SharedMsg} from "./msg.js";
+import {SharedUser} from "./user.js";
+import {SharedNetworkChan} from "./network.js";
 
 export enum ChanType {
 	CHANNEL = "channel",

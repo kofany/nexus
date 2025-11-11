@@ -2,13 +2,13 @@
 // @ts-nocheck
 
 import {h as createElement, VNode} from "vue";
-import parseStyle from "./ircmessageparser/parseStyle";
-import findChannels from "./ircmessageparser/findChannels";
-import {findLinks} from "../../../shared/linkify";
-import findEmoji from "./ircmessageparser/findEmoji";
-import findNames from "./ircmessageparser/findNames";
-import merge, {MergedParts} from "./ircmessageparser/merge";
-import emojiMap from "./fullnamemap.json";
+import parseStyle from "./ircmessageparser/parseStyle.js";
+import findChannels from "./ircmessageparser/findChannels.js";
+import {findLinks} from "../../../shared/linkify.js";
+import findEmoji from "./ircmessageparser/findEmoji.js";
+import findNames from "./ircmessageparser/findNames.js";
+import merge, {MergedParts} from "./ircmessageparser/merge.js";
+import emojiMap from "./fullnamemap.json" assert {type: "json"};
 import LinkPreviewToggle from "../../components/LinkPreviewToggle.vue";
 import LinkPreviewFileSize from "../../components/LinkPreviewFileSize.vue";
 import InlineChannel from "../../components/InlineChannel.vue";

@@ -1,9 +1,9 @@
-import anyIntersection from "./anyIntersection";
-import fill from "./fill";
-import {ChannelPart} from "./findChannels";
-import {EmojiPart} from "./findEmoji";
-import {LinkPart} from "../../../../shared/linkify";
-import {NamePart} from "./findNames";
+import anyIntersection from "./anyIntersection.js";
+import fill from "./fill.js";
+import {ChannelPart} from "./findChannels.js";
+import {EmojiPart} from "./findEmoji.js";
+import {LinkPart} from "../../../../shared/linkify.js";
+import {NamePart} from "./findNames.js";
 
 export type Part = {
 	start: number;

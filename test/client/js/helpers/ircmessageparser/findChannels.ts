@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import findChannels from "../../../../../client/js/helpers/ircmessageparser/findChannels";
+import findChannels from "../../../../../client/js/helpers/ircmessageparser/findChannels.js";
 
 describe("findChannels", () => {
 	it("should find single letter channel", () => {

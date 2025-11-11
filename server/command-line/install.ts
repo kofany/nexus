@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
 import semver from "semver";
-import Helper from "../helper";
-import Config from "../config";
-import Utils from "./utils";
+import Helper from "../helper.js";
+import Config from "../config.js";
+import Utils from "./utils.js";
 import {Command} from "commander";
 import {FullMetadata} from "package-json";
 

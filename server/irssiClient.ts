@@ -18,19 +18,19 @@ import fs from "fs";
 import path from "path";
 import type {Socket} from "socket.io";
 
-import log from "./log";
-import Chan from "./models/chan";
-import Msg from "./models/msg";
-import User from "./models/user";
-import Network from "./models/network";
-import Config from "./config";
-import {SharedMention} from "../shared/types/mention";
-import ClientManager from "./clientManager";
-import {EncryptedMessageStorage} from "./plugins/messageStorage/encrypted";
+import log from "./log.js";
+import Chan from "./models/chan.js";
+import Msg from "./models/msg.js";
+import User from "./models/user.js";
+import Network from "./models/network.js";
+import Config from "./config.js";
+import {SharedMention} from "../shared/types/mention.js";
+import ClientManager from "./clientManager.js";
+import {EncryptedMessageStorage} from "./plugins/messageStorage/encrypted.js";
 import {ServerToClientEvents} from "../shared/types/socket-events";
-import {FeWebSocket, FeWebConfig, FeWebMessage} from "./feWebClient/feWebSocket";
-import {FeWebEncryption} from "./feWebClient/feWebEncryption";
-import {FeWebAdapter, FeWebAdapterCallbacks, NetworkData} from "./feWebClient/feWebAdapter";
+import {FeWebSocket, FeWebConfig, FeWebMessage} from "./feWebClient/feWebSocket.js";
+import {FeWebEncryption} from "./feWebClient/feWebEncryption.js";
+import {FeWebAdapter, FeWebAdapterCallbacks, NetworkData} from "./feWebClient/feWebAdapter.js";
 import {
 	IrssiNetwork,
 	IrssiServer,
@@ -40,7 +40,7 @@ import {
 	networkFormToIrssi,
 	serverFormToIrssi,
 	snakeToCamel,
-} from "./types/irssi-network";
+} from "./types/irssi-network.js";
 import UAParser from "ua-parser-js";
 
 // irssi connection config (stored in user.json)
@@ -248,7 +248,7 @@ export class IrssiClient {
 
 		// Step 1: Decrypt irssi password using IP+PORT salt
 		// Import decryptIrssiPassword from irssiConfigHelper
-		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
+		const {decryptIrssiPassword} = await import("./irssiConfigHelper.js");
 
 		this.irssiPassword = await decryptIrssiPassword(
 			this.config.irssiConnection.passwordEncrypted,
@@ -312,7 +312,7 @@ export class IrssiClient {
 		}
 
 		// Decrypt irssi password using IP+PORT salt
-		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
+		const {decryptIrssiPassword} = await import("./irssiConfigHelper.js");
 
 		this.irssiPassword = await decryptIrssiPassword(
 			this.config.irssiConnection.passwordEncrypted,
@@ -737,7 +737,7 @@ export class IrssiClient {
 		channel: Chan,
 		network: NetworkData
 	): Promise<string | false | null> {
-		const {ChanType} = await import("../shared/types/chan");
+		const {ChanType} = await import("../shared/types/chan.js");
 
 		switch (command) {
 			case "close":
@@ -906,7 +906,7 @@ export class IrssiClient {
 
 					// If query doesn't exist, create it
 					if (!queryChannel) {
-						const {ChanState} = await import("../shared/types/chan");
+						const {ChanState} = await import("../shared/types/chan.js");
 						queryChannel = new Chan({
 							name: targetNick,
 							type: ChanType.QUERY,
@@ -922,7 +922,7 @@ export class IrssiClient {
 						queryChannel.id = this.feWebAdapter.getNextChannelId();
 
 						// Add to network using sorted insertion
-						const Network = (await import("./models/network")).default;
+						const Network = (await import("./models/network.js")).default;
 
 						if (network instanceof Network) {
 							network.addChannel(queryChannel);
@@ -1966,7 +1966,7 @@ export class IrssiClient {
 		}
 
 		// Import ChanType dynamically
-		const {ChanType} = await import("../shared/types/chan");
+		const {ChanType} = await import("../shared/types/chan.js");
 
 		// Find query by nick
 		const query = network.channels.find(
@@ -2169,7 +2169,7 @@ export class IrssiClient {
 			return; // Already removed - idempotent!
 		}
 
-		const {ChanType} = await import("../shared/types/chan");
+		const {ChanType} = await import("../shared/types/chan.js");
 
 		log.info(
 			`User ${colors.bold(this.name)}: Part channel ${channel.name} on ${
@@ -2305,7 +2305,7 @@ export class IrssiClient {
 			for (const network of networks) {
 				for (const channel of network.channels) {
 					try {
-						const {ChanType} = await import("../shared/types/chan");
+						const {ChanType} = await import("../shared/types/chan.js");
 
 						// Don't load messages for lobby
 						if (channel.type === ChanType.LOBBY) {
@@ -2785,7 +2785,7 @@ export class IrssiClient {
 				this.name
 			)}`
 		);
-		const {decryptIrssiPassword} = await import("./irssiConfigHelper");
+		const {decryptIrssiPassword} = await import("./irssiConfigHelper.js");
 		this.weechatRelayPassword = await decryptIrssiPassword(
 			this.config.weechatRelay.passwordEncrypted,
 			"weechat-relay",
@@ -2797,7 +2797,7 @@ export class IrssiClient {
 		let keyPath: string | undefined;
 
 		if (this.config.weechatRelay.tls) {
-			const Config = (await import("./config")).default;
+			const Config = (await import("./config.js")).default;
 			const certsDir = Config.getClientCertificatesPath();
 
 			certPath = path.join(certsDir, `${this.name}-cert.pem`);
@@ -2809,7 +2809,7 @@ export class IrssiClient {
 			if (useSelfSigned) {
 				// OPTION 1: Self-signed (auto-generate)
 				log.info(`${colors.cyan("[WeeChat Relay]")} Using self-signed certificate...`);
-				const {generateSelfSignedCert} = await import("./weechatRelay/sslCertGenerator");
+				const {generateSelfSignedCert} = await import("./weechatRelay/sslCertGenerator.js");
 				const certInfo = await generateSelfSignedCert(this.name, certsDir);
 				certPath = certInfo.certPath;
 				keyPath = certInfo.keyPath;
@@ -2862,9 +2862,9 @@ export class IrssiClient {
 
 		// Import WeeChat Relay components
 		log.info(`${colors.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
-		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer");
-		const {NodeToWeeChatAdapter} = await import("./weechatRelay/nodeToWeechatAdapter");
-		const {WeeChatToNodeAdapter} = await import("./weechatRelay/weechatToNodeAdapter");
+		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer.js");
+		const {NodeToWeeChatAdapter} = await import("./weechatRelay/nodeToWeechatAdapter.js");
+		const {WeeChatToNodeAdapter} = await import("./weechatRelay/weechatToNodeAdapter.js");
 
 		// Create shared NodeToWeeChatAdapter (one per user, shared by all clients)
 		if (!this.weechatNodeAdapter) {
@@ -2917,7 +2917,7 @@ export class IrssiClient {
 				);
 
 				// Import WeeChatMessage for BINARY protocol
-				const {WeeChatMessage} = await import("./weechatRelay/weechatProtocol");
+				const {WeeChatMessage} = await import("./weechatRelay/weechatProtocol.js");
 
 				// Build BINARY message - EXACTLY like Go bridge!
 				// Path: "line_data" (not "buffer/lines/line/line_data")

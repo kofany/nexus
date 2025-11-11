@@ -12,13 +12,13 @@
  */
 
 import {EventEmitter} from "events";
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
-import {WeeChatMessage, OBJ_STRING, OBJ_HDATA, OBJ_INFO} from "./weechatProtocol";
-import {buildEmptyHData, stringToPointer} from "./weechatHData";
-import {IrssiClient} from "../irssiClient";
-import {NodeToWeeChatAdapter} from "./nodeToWeechatAdapter";
-import {WeeChatRelayClient} from "./weechatRelayClient";
+import {WeeChatMessage, OBJ_STRING, OBJ_HDATA, OBJ_INFO} from "./weechatProtocol.js";
+import {buildEmptyHData, stringToPointer} from "./weechatHData.js";
+import {IrssiClient} from "../irssiClient.js";
+import {NodeToWeeChatAdapter} from "./nodeToWeechatAdapter.js";
+import {WeeChatRelayClient} from "./weechatRelayClient.js";
 
 /**
  * WeeChat to Node Adapter

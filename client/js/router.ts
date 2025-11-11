@@ -1,4 +1,4 @@
-import constants from "./constants";
+import constants from "./constants.js";
 
 import {createRouter, createWebHashHistory} from "vue-router";
 import SignIn from "../components/Windows/SignIn.vue";
@@ -10,7 +10,7 @@ import NetworkEdit from "../components/Windows/NetworkEdit.vue";
 import NetworkManager from "../components/Windows/NetworkManager.vue";
 import SearchResults from "../components/Windows/SearchResults.vue";
 import RoutedChat from "../components/RoutedChat.vue";
-import {store} from "./store";
+import {store} from "./store.js";
 
 import AppearanceSettings from "../components/Settings/Appearance.vue";
 import GeneralSettings from "../components/Settings/General.vue";

@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {condensedTypes} from "../../shared/irc";
+import {condensedTypes} from "../../shared/irc.js";
 
 describe(".condensedTypes", function () {
 	it("should be a non-empty array", function () {

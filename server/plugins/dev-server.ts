@@ -2,7 +2,7 @@ import webpackDevMiddleware from "webpack-dev-middleware";
 import webpackHotMiddleware from "webpack-hot-middleware";
 import express from "express";
 
-import log from "../log";
+import log from "../log.js";
 
 import webpack from "webpack";
 import config from "../../webpack.config";

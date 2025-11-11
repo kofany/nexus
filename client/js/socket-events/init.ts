@@ -1,11 +1,11 @@
-import socket from "../socket";
-import storage from "../localStorage";
-import {toClientChan} from "../chan";
-import {router, switchToChannel, navigate} from "../router";
-import {store} from "../store";
-import parseIrcUri from "../helpers/parseIrcUri";
+import socket from "../socket.js";
+import storage from "../localStorage.js";
+import {toClientChan} from "../chan.js";
+import {router, switchToChannel, navigate} from "../router.js";
+import {store} from "../store.js";
+import parseIrcUri from "../helpers/parseIrcUri.js";
 import {ClientNetwork, ClientChan} from "../types";
-import {SharedNetwork, SharedNetworkChan} from "../../../shared/types/network";
+import {SharedNetwork, SharedNetworkChan} from "../../../shared/types/network.js";
 
 socket.on("init", async function (data) {
 	console.log("[INIT] Received init event");

@@ -9,8 +9,8 @@
 
 import WebSocket from "ws";
 import {EventEmitter} from "events";
-import {FeWebEncryption} from "./feWebEncryption";
-import log from "../log";
+import {FeWebEncryption} from "./feWebEncryption.js";
+import log from "../log.js";
 
 // Message types from CLIENT-SPEC.md
 export interface FeWebMessage {

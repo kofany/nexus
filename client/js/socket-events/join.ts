@@ -1,8 +1,8 @@
-import socket from "../socket";
-import {store} from "../store";
-import {switchToChannel} from "../router";
+import socket from "../socket.js";
+import {store} from "../store.js";
+import {switchToChannel} from "../router.js";
 import {ClientChan} from "../types";
-import {toClientChan} from "../chan";
+import {toClientChan} from "../chan.js";
 
 socket.on("join", function (data) {
 	const network = store.getters.findNetwork(data.network);

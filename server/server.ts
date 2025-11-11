@@ -8,24 +8,24 @@ import dns from "dns";
 import colors from "chalk";
 import net from "net";
 
-import log from "./log";
-import Client from "./client";
-import {IrssiClient} from "./irssiClient";
-import ClientManager from "./clientManager";
-import Uploader from "./plugins/uploader";
-import Helper from "./helper";
-import Config, {ConfigType} from "./config";
-import Identification from "./identification";
-import changelog from "./plugins/changelog";
-import inputs from "./plugins/inputs";
-import Auth from "./plugins/auth";
+import log from "./log.js";
+import Client from "./client.js";
+import {IrssiClient} from "./irssiClient.js";
+import ClientManager from "./clientManager.js";
+import Uploader from "./plugins/uploader.js";
+import Helper from "./helper.js";
+import Config, {ConfigType} from "./config.js";
+import Identification from "./identification.js";
+import changelog from "./plugins/changelog.js";
+import inputs from "./plugins/inputs/index.js";
+import Auth from "./plugins/auth.js";
 
-import themes from "./plugins/packages/themes";
+import themes from "./plugins/packages/themes.js";
 themes.loadLocalThemes();
 
-import packages from "./plugins/packages/index";
-import {NetworkWithIrcFramework} from "./models/network";
-import Utils from "./command-line/utils";
+import packages from "./plugins/packages/index.js";
+import {NetworkWithIrcFramework} from "./models/network.js";
+import Utils from "./command-line/utils.js";
 import type {
 	ClientToServerEvents,
 	ServerToClientEvents,
@@ -33,13 +33,13 @@ import type {
 	SocketData,
 	AuthPerformData,
 } from "../shared/types/socket-events";
-import {ChanType} from "../shared/types/chan";
+import {ChanType} from "../shared/types/chan.js";
 import {
 	LockedSharedConfiguration,
 	SharedConfiguration,
 	ConfigNetDefaults,
 	LockedConfigNetDefaults,
-} from "../shared/types/config";
+} from "../shared/types/config.js";
 
 type ServerOptions = {
 	dev: boolean;
@@ -94,7 +94,7 @@ export default async function (
 	const app = express();
 
 	if (options.dev) {
-		(await import("./plugins/dev-server")).default(app);
+		(await import("./plugins/dev-server.js")).default(app);
 	}
 
 	app.set("env", "production")
@@ -326,7 +326,7 @@ export default async function (
 			if (Config.values.prefetchStorage) {
 				log.info("Clearing prefetch storage folder, this might take a while...");
 
-				(await import("./plugins/storage")).default.emptyDir();
+				(await import("./plugins/storage.js")).default.emptyDir();
 			}
 
 			// Forcefully exit after 3 seconds
@@ -349,7 +349,7 @@ export default async function (
 
 		// Clear storage folder after server starts successfully
 		if (Config.values.prefetchStorage) {
-			import("./plugins/storage")
+			import("./plugins/storage.js")
 				.then(({default: storage}) => {
 					storage.emptyDir();
 				})
@@ -845,7 +845,7 @@ function initializeClient(
 
 			try {
 				// Import helper functions
-				const {updateIrssiConnection} = await import("./irssiConfigHelper");
+				const {updateIrssiConnection} = await import("./irssiConfigHelper.js");
 
 				// Update config with new connection settings
 				irssiClient.config = await updateIrssiConnection(
@@ -903,7 +903,7 @@ function initializeClient(
 
 			try {
 				// Import FeWebSocket
-				const {FeWebSocket} = await import("./feWebClient/feWebSocket");
+				const {FeWebSocket} = await import("./feWebClient/feWebSocket.js");
 
 				// Create temporary connection for testing
 				const testSocket = new FeWebSocket({
@@ -1024,7 +1024,7 @@ function initializeClient(
 
 			try {
 				// Import helper
-				const {encryptIrssiPassword} = await import("./irssiConfigHelper");
+				const {encryptIrssiPassword} = await import("./irssiConfigHelper.js");
 
 				// Stop existing WeeChat Relay if running
 				if (irssiClient.weechatRelayServer) {
@@ -1466,7 +1466,7 @@ function initializeIrssiClient(
 
 		try {
 			// Import helper functions
-			const {updateIrssiConnection} = await import("./irssiConfigHelper");
+			const {updateIrssiConnection} = await import("./irssiConfigHelper.js");
 
 			// Update config with new connection settings
 			client.config = await updateIrssiConnection(
@@ -1485,7 +1485,7 @@ function initializeIrssiClient(
 			client.save();
 
 			// Decrypt irssi password using IP+PORT salt (same as login())
-			const {decryptIrssiPassword} = await import("./irssiConfigHelper");
+			const {decryptIrssiPassword} = await import("./irssiConfigHelper.js");
 
 			client.irssiPassword = await decryptIrssiPassword(
 				client.config.irssiConnection.passwordEncrypted,
@@ -1545,7 +1545,7 @@ function initializeIrssiClient(
 
 		try {
 			// Import FeWebSocket
-			const {FeWebSocket} = await import("./feWebClient/feWebSocket");
+			const {FeWebSocket} = await import("./feWebClient/feWebSocket.js");
 
 			// Create temporary connection for testing
 			const testSocket = new FeWebSocket({
@@ -1664,7 +1664,7 @@ function initializeIrssiClient(
 
 		try {
 			// Import helper
-			const {encryptIrssiPassword} = await import("./irssiConfigHelper");
+			const {encryptIrssiPassword} = await import("./irssiConfigHelper.js");
 
 			// Stop existing WeeChat Relay if running
 			if (client.weechatRelayServer) {

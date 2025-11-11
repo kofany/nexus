@@ -1,4 +1,4 @@
-import constants from "./constants";
+import constants from "./constants.js";
 
 import Mousetrap from "mousetrap";
 import {Textcomplete, StrategyProps} from "@textcomplete/core";
@@ -6,9 +6,9 @@ import {TextareaEditor} from "@textcomplete/textarea";
 
 import fuzzy from "fuzzy";
 
-import emojiMap from "./helpers/simplemap.json";
-import {store} from "./store";
-import {ChanType} from "../../shared/types/chan";
+import emojiMap from "./helpers/simplemap.json" assert {type: "json"};
+import {store} from "./store.js";
+import {ChanType} from "../../shared/types/chan.js";
 
 export default enableAutocomplete;
 

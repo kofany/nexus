@@ -24,10 +24,10 @@ import * as https from "https";
 import * as fs from "fs";
 import {Server as WebSocketServer, WebSocket} from "ws";
 import {EventEmitter} from "events";
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
-import {WeeChatMessage, WeeChatParser} from "./weechatProtocol";
-import {WeeChatRelayClient} from "./weechatRelayClient";
+import {WeeChatMessage, WeeChatParser} from "./weechatProtocol.js";
+import {WeeChatRelayClient} from "./weechatRelayClient.js";
 
 export interface WeeChatRelayServerConfig {
 	// Port (single port per user)
