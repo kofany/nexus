@@ -6,30 +6,34 @@ import sinon from "ts-sinon";
 
 describe("Custom highlights", function () {
 	let userLoadedLog = "";
-	const logInfoStub = sinon.stub(log, "info");
-	logInfoStub.callsFake(TestUtil.sanitizeLog((str) => (userLoadedLog += str)));
+	let client: Client;
 
-	const client = new Client(
-		{
-			clients: [],
-			getDataToSave() {
-				return {
-					newUser: "",
-					newHash: "",
-				};
-			},
-		} as any,
-		"test",
-		{
-			clientSettings: {
-				highlights: "foo, @all,   sp ace   , 고",
-				highlightExceptions: "foo bar, bar @all, test sp ace test",
-			},
-		} as any
-	);
-	client.connect();
-	logInfoStub.restore();
-	expect(userLoadedLog).to.equal("User test loaded\n");
+	before(async function () {
+		const logInfoStub = sinon.stub(log, "info");
+		logInfoStub.callsFake(TestUtil.sanitizeLog((str) => (userLoadedLog += str)));
+
+		client = new Client(
+			{
+				clients: [],
+				getDataToSave() {
+					return {
+						newUser: "",
+						newHash: "",
+					};
+				},
+			} as any,
+			"test",
+			{
+				clientSettings: {
+					highlights: "foo, @all,   sp ace   , 고",
+					highlightExceptions: "foo bar, bar @all, test sp ace test",
+				},
+			} as any
+		);
+		await client.connect();
+		logInfoStub.restore();
+		expect(userLoadedLog).to.equal("User test loaded\n");
+	});
 
 	it("should NOT highlight", function () {
 		const teststrings = [

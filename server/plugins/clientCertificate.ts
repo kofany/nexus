@@ -126,7 +126,7 @@ async function generate(): Promise<ClientCertificateType> {
 					[x509.ExtendedKeyUsage.clientAuth],
 					false
 				),
-				await x509.KeyUsageExtension.create(
+				new x509.KeyUsagesExtension(
 					x509.KeyUsageFlags.digitalSignature | x509.KeyUsageFlags.keyEncipherment,
 					false
 				),

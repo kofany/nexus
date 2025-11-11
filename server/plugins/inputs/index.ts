@@ -11,7 +11,7 @@ export type PluginInputHandler = (
 	chan: Channel,
 	cmd: string,
 	args: string[]
-) => void;
+) => void | boolean | Promise<void | boolean>;
 
 type Plugin = {
 	commands: string[];

@@ -311,12 +311,12 @@ describe("Network", function () {
 	});
 
 	describe("#edit(client, args)", function () {
-		it("should enforce correct types", function () {
+		it("should enforce correct types", async function () {
 			let saveCalled = false;
 			let nameEmitCalled = false;
 
 			const network = new Network();
-			(network as any).edit(
+			await (network as any).edit(
 				{
 					emit(name, data) {
 						if (name === "network:name") {

@@ -181,14 +181,16 @@ class Client {
         });
     }
 
-    connect() {
+    async connect() {
         const client = this;
 
         if (client.networks.length !== 0) {
             throw new Error(`${client.name} is already connected`);
         }
 
-        (client.config.networks || []).forEach((network) => client.connectToNetwork(network, true));
+        await Promise.all(
+            (client.config.networks || []).map((network) => client.connectToNetwork(network, true))
+        );
 
         // Networks are stored directly in the client object
         // We don't need to keep it in the config object
@@ -335,7 +337,7 @@ class Client {
         });
     }
 
-    connectToNetwork(args: Record<string, any>, isStartup = false) {
+    async connectToNetwork(args: Record<string, any>, isStartup = false) {
         const client = this;
 
         // Get channel id for lobby before creating other channels for nicer ids
@@ -355,7 +357,7 @@ class Client {
             return;
         }
 
-        (network as NetworkWithIrcFramework).createIrcFramework(client);
+        await (network as NetworkWithIrcFramework).createIrcFramework(client);
 
         // TODO
         // eslint-disable-next-line @typescript-eslint/no-misused-promises

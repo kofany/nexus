@@ -512,14 +512,14 @@ function initializeClient(
         }
     });
 
-    socket.on("network:new", (data) => {
+    socket.on("network:new", async (data) => {
         if (_.isPlainObject(data)) {
             // prevent people from overriding webirc settings
             data.uuid = null;
             data.commands = null;
             data.ignoreList = null;
 
-            client.connectToNetwork(data);
+            await client.connectToNetwork(data);
         }
     });
 
@@ -537,7 +537,7 @@ function initializeClient(
         socket.emit("network:info", network.exportForEdit());
     });
 
-    socket.on("network:edit", (data) => {
+    socket.on("network:edit", async (data) => {
         if (!_.isPlainObject(data)) {
             return;
         }
@@ -548,7 +548,7 @@ function initializeClient(
             return;
         }
 
-        (network as NetworkWithIrcFramework).edit(client, data);
+        await (network as NetworkWithIrcFramework).edit(client, data);
     });
 
     socket.on("history:clear", (data) => {
@@ -1820,7 +1820,7 @@ function initializeIrssiClient(
     );
 }
 
-function performAuthentication(this: Socket, data: AuthPerformData) {
+async function performAuthentication(this: Socket, data: AuthPerformData) {
     if (!_.isPlainObject(data)) {
         return;
     }
@@ -1898,7 +1898,7 @@ function performAuthentication(this: Socket, data: AuthPerformData) {
 
     if (Config.values.public) {
         client = new Client(manager!);
-        client.connect();
+        await client.connect();
         manager!.clients.push(client);
 
         const cb_client = client; // ensure TS can see we never have a nil client
