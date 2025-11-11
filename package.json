@@ -24,7 +24,7 @@
     "lint:prettier": "prettier --ignore-unknown --list-different \"**/*.*\"",
     "lint:stylelint": "stylelint --color \"client/**/*.css\"",
     "lint": "run-p --aggregate-output --continue-on-error lint:check-eslint lint:eslint lint:prettier lint:stylelint",
-    "start": "node index start",
+    "start": "node index.mjs start",
     "test": "run-p --aggregate-output --continue-on-error lint:check-eslint lint:eslint lint:prettier lint:stylelint test:mocha",
     "test:mocha": "webpack --mode=development && cross-env NODE_ENV=test TS_NODE_PROJECT='./test/tsconfig.json' mocha --config=test/.mocharc.yml 'test/**/*.ts'",
     "test:nospec": "webpack --mode=development && cross-env NODE_ENV=test TS_NODE_PROJECT='./test/tsconfig.json' mocha --config=test/.mocharc.yml",
