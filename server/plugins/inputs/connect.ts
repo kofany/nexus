@@ -1,11 +1,11 @@
-import Msg from "../../models/msg";
-import {PluginInputHandler} from "./index";
-import {MessageType} from "../../../shared/types/msg";
+import Msg from "../../models/msg.js";
+import {PluginInputHandler} from "./index.js";
+import {MessageType} from "../../../shared/types/msg.js";
 
 const commands = ["connect", "server"];
 const allowDisconnected = true;
 
-const input: PluginInputHandler = function (network, chan, cmd, args) {
+const input: PluginInputHandler = async function (network, chan, cmd, args) {
 	if (args.length === 0) {
 		network.userDisconnected = false;
 		this.save();
@@ -40,7 +40,7 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 	}
 
 	const host = args[0];
-	this.connectToNetwork({host, port, tls});
+	await this.connectToNetwork({host, port, tls});
 
 	return true;
 };

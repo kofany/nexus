@@ -4,13 +4,13 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-import Auth from "./plugins/auth";
-import Client, {UserConfig} from "./client";
-import {IrssiClient, IrssiUserConfig} from "./irssiClient";
-import Config from "./config";
-import WebPush from "./plugins/webpush";
-import log from "./log";
-import {Server} from "./server";
+import Auth from "./plugins/auth.js";
+import Client, {UserConfig} from "./client.js";
+import {IrssiClient, IrssiUserConfig} from "./irssiClient.js";
+import Config from "./config.js";
+import WebPush from "./plugins/webpush.js";
+import log from "./log.js";
+import {Server} from "./server.js";
 
 class ClientManager {
 	clients: (Client | IrssiClient)[];

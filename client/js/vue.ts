@@ -21,7 +21,8 @@ const faviconAlerted = favicon?.dataset.other || "";
 export const VueApp = createApp(App);
 
 VueApp.use(router);
-VueApp.use(store, key);
+VueApp.use(store as any); // TypedStore needs type casting for Vue plugin compatibility
+VueApp.provide(key, store); // Provide store with injection key for useStore()
 
 VueApp.mount("#app");
 socket.open();

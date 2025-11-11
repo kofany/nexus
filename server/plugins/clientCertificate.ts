@@ -1,9 +1,14 @@
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import {md, pki} from "node-forge";
-import log from "../log";
-import Config from "../config";
+import {Crypto} from "@peculiar/webcrypto";
+import * as x509 from "@peculiar/x509";
+import log from "../log.js";
+import Config from "../config.js";
+
+// Setup Web Crypto API
+const webcrypto = new Crypto();
+x509.cryptoProvider.set(webcrypto);
 
 export default {
 	get,
@@ -15,7 +20,7 @@ export type ClientCertificateType = {
 	certificate: string;
 };
 
-function get(uuid: string): ClientCertificateType | null {
+async function get(uuid: string): Promise<ClientCertificateType | null> {
 	if (Config.values.public) {
 		return null;
 	}
@@ -24,7 +29,7 @@ function get(uuid: string): ClientCertificateType | null {
 	const paths = getPaths(folderPath, uuid);
 
 	if (!fs.existsSync(paths.privateKeyPath) || !fs.existsSync(paths.certificatePath)) {
-		return generateAndWrite(folderPath, paths);
+		return await generateAndWrite(folderPath, paths);
 	}
 
 	try {
@@ -59,8 +64,11 @@ function remove(uuid: string) {
 	}
 }
 
-function generateAndWrite(folderPath: string, paths: {privateKeyPath: any; certificatePath: any}) {
-	const certificate = generate();
+async function generateAndWrite(
+	folderPath: string,
+	paths: {privateKeyPath: any; certificatePath: any}
+): Promise<ClientCertificateType | null> {
+	const certificate = await generate();
 
 	try {
 		fs.mkdirSync(folderPath, {recursive: true});
@@ -80,53 +88,74 @@ function generateAndWrite(folderPath: string, paths: {privateKeyPath: any; certi
 	return null;
 }
 
-function generate() {
-	const keys = pki.rsa.generateKeyPair(2048);
-	const cert = pki.createCertificate();
-
-	cert.publicKey = keys.publicKey;
-	cert.serialNumber = crypto.randomBytes(16).toString("hex").toUpperCase();
-
-	// Set notBefore a day earlier just in case the time between
-	// the client and server is not perfectly in sync
-	cert.validity.notBefore = new Date();
-	cert.validity.notBefore.setDate(cert.validity.notBefore.getDate() - 1);
-
-	// Set notAfter 100 years into the future just in case
-	// the server actually validates this field
-	cert.validity.notAfter = new Date();
-	cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 100);
-
-	const attrs = [
+async function generate(): Promise<ClientCertificateType> {
+	// Generate RSA key pair
+	const keys = await webcrypto.subtle.generateKey(
 		{
-			name: "commonName",
-			value: "The Lounge IRC Client",
+			name: "RSASSA-PKCS1-v1_5",
+			modulusLength: 2048,
+			publicExponent: new Uint8Array([1, 0, 1]),
+			hash: "SHA-256",
 		},
-	];
-	cert.setSubject(attrs);
-	cert.setIssuer(attrs);
+		true,
+		["sign", "verify"]
+	);
 
-	// Set extensions that indicate this is a client authentication certificate
-	cert.setExtensions([
+	// Create certificate
+	const cert = await x509.X509CertificateGenerator.createSelfSigned(
 		{
-			name: "extKeyUsage",
-			clientAuth: true,
+			name: "CN=The Lounge IRC Client",
+			keys,
+			notBefore: (() => {
+				const date = new Date();
+				date.setDate(date.getDate() - 1);
+				return date;
+			})(),
+			notAfter: (() => {
+				const date = new Date();
+				date.setFullYear(date.getFullYear() + 100);
+				return date;
+			})(),
+			serialNumber: crypto.randomBytes(16).toString("hex").toUpperCase(),
+			signingAlgorithm: {
+				name: "RSASSA-PKCS1-v1_5",
+				hash: "SHA-256",
+			},
+			extensions: [
+				new x509.ExtendedKeyUsageExtension(
+					[x509.ExtendedKeyUsage.clientAuth],
+					false
+				),
+				new x509.KeyUsagesExtension(
+					x509.KeyUsageFlags.digitalSignature | x509.KeyUsageFlags.keyEncipherment,
+					false
+				),
+			],
 		},
-		{
-			name: "nsCertType",
-			client: true,
-		},
-	]);
+		webcrypto
+	);
 
-	// Sign this certificate with a SHA256 signature
-	cert.sign(keys.privateKey, md.sha256.create());
+	// Export to PEM format
+	const privateKeyPem = await webcrypto.subtle.exportKey("pkcs8", keys.privateKey);
+	const privateKeyPemString = toPem(privateKeyPem, "PRIVATE KEY");
 
 	const pem: ClientCertificateType = {
-		private_key: pki.privateKeyToPem(keys.privateKey),
-		certificate: pki.certificateToPem(cert),
+		private_key: privateKeyPemString,
+		certificate: cert.toString("pem"),
 	};
 
 	return pem;
+}
+
+function toPem(buffer: ArrayBuffer, type: string): string {
+	const base64 = Buffer.from(buffer).toString("base64");
+	const lines: string[] = [];
+
+	for (let i = 0; i < base64.length; i += 64) {
+		lines.push(base64.substring(i, i + 64));
+	}
+
+	return `-----BEGIN ${type}-----\n${lines.join("\n")}\n-----END ${type}-----\n`;
 }
 
 function getPaths(folderPath: string, uuid: string) {

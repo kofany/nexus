@@ -8,7 +8,7 @@
  */
 
 import crypto from "crypto";
-import {IrssiUserConfig, IrssiConnectionConfig} from "./irssiClient";
+import {IrssiUserConfig, IrssiConnectionConfig} from "./irssiClient.js";
 
 /**
  * Encrypt irssi password using IP+PORT as salt (for autoconnect)

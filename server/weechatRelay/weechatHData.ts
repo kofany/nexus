@@ -24,7 +24,7 @@ import {
 	OBJ_CHAR,
 	OBJ_BUFFER,
 	OBJ_ARRAY,
-} from "./weechatProtocol";
+} from "./weechatProtocol.js";
 
 export interface HDataField {
 	name: string;

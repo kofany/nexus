@@ -25,9 +25,9 @@
  */
 
 import {EventEmitter} from "events";
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
-import {WeeChatMessage, OBJ_HDATA, OBJ_STRING} from "./weechatProtocol";
+import {WeeChatMessage, OBJ_HDATA, OBJ_STRING} from "./weechatProtocol.js";
 import {
 	buildHData,
 	buildEmptyHData,
@@ -35,13 +35,13 @@ import {
 	HDataObject,
 	stringToPointer,
 	generatePointer,
-} from "./weechatHData";
-import {IrssiClient} from "../irssiClient";
-import {NetworkData} from "../feWebClient/feWebAdapter";
-import Chan from "../models/chan";
-import Msg from "../models/msg";
-import User from "../models/user";
-import {ChanType} from "../../shared/types/chan";
+} from "./weechatHData.js";
+import {IrssiClient} from "../irssiClient.js";
+import {NetworkData} from "../feWebClient/feWebAdapter.js";
+import Chan from "../models/chan.js";
+import Msg from "../models/msg.js";
+import User from "../models/user.js";
+import {ChanType} from "../../shared/types/chan.js";
 
 /**
  * Node to WeeChat Adapter

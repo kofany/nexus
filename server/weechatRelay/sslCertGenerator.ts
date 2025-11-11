@@ -8,7 +8,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import {execSync} from "child_process";
-import log from "../log";
+import log from "../log.js";
 import colors from "chalk";
 
 export interface CertificateInfo {

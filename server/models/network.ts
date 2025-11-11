@@ -1,17 +1,17 @@
 import _ from "lodash";
 import {v4 as uuidv4} from "uuid";
 import IrcFramework, {Client as IRCClient} from "irc-framework";
-import Chan, {ChanConfig, Channel} from "./chan";
-import Msg from "./msg";
-import Prefix from "./prefix";
-import Helper, {Hostmask} from "../helper";
-import Config, {WebIRC} from "../config";
-import STSPolicies from "../plugins/sts";
-import ClientCertificate, {ClientCertificateType} from "../plugins/clientCertificate";
-import Client from "../client";
-import {MessageType} from "../../shared/types/msg";
-import {ChanType} from "../../shared/types/chan";
-import {SharedNetwork} from "../../shared/types/network";
+import Chan, {ChanConfig, Channel} from "./chan.js";
+import Msg from "./msg.js";
+import Prefix from "./prefix.js";
+import Helper, {Hostmask} from "../helper.js";
+import Config, {WebIRC} from "../config.js";
+import STSPolicies from "../plugins/sts.js";
+import ClientCertificate, {ClientCertificateType} from "../plugins/clientCertificate.js";
+import Client from "../client.js";
+import {MessageType} from "../../shared/types/msg.js";
+import {ChanType} from "../../shared/types/chan.js";
+import {SharedNetwork} from "../../shared/types/network.js";
 
 type NetworkIrcOptions = {
 	host: string;
@@ -289,7 +289,7 @@ class Network {
 		return true;
 	}
 
-	createIrcFramework(this: NetworkWithIrcFramework, client: Client) {
+	async createIrcFramework(this: NetworkWithIrcFramework, client: Client) {
 		this.irc = new IrcFramework.Client({
 			version: false, // We handle it ourselves
 			outgoing_addr: Config.values.bind,
@@ -305,7 +305,7 @@ class Network {
 			// TODO: this type should be set after setIrcFrameworkOptions
 		}) as NetworkWithIrcFramework["irc"];
 
-		this.setIrcFrameworkOptions(client);
+		await this.setIrcFrameworkOptions(client);
 
 		this.irc.requestCap([
 			"znc.in/self-message", // Legacy echo-message for ZNC
@@ -313,7 +313,7 @@ class Network {
 		]);
 	}
 
-	setIrcFrameworkOptions(this: NetworkWithIrcFramework, client: Client) {
+	async setIrcFrameworkOptions(this: NetworkWithIrcFramework, client: Client) {
 		this.irc.options.host = this.host;
 		this.irc.options.port = this.port;
 		this.irc.options.password = this.password;
@@ -347,7 +347,7 @@ class Network {
 		} else if (this.sasl === "external") {
 			this.irc.options.sasl_mechanism = "EXTERNAL";
 			this.irc.options.account = {};
-			this.irc.options.client_certificate = ClientCertificate.get(this.uuid);
+			this.irc.options.client_certificate = await ClientCertificate.get(this.uuid);
 		} else if (this.sasl === "plain") {
 			delete this.irc.options.sasl_mechanism;
 			this.irc.options.account = {
@@ -389,7 +389,7 @@ class Network {
 		return webircObject;
 	}
 
-	edit(this: NetworkWithIrcFramework, client: Client, args: any) {
+	async edit(this: NetworkWithIrcFramework, client: Client, args: any) {
 		const oldNetworkName = this.name;
 		const oldNick = this.nick;
 		const oldRealname = this.realname;
@@ -460,7 +460,7 @@ class Network {
 				this.irc.raw("SETNAME", this.realname);
 			}
 
-			this.setIrcFrameworkOptions(client);
+			await this.setIrcFrameworkOptions(client);
 
 			if (this.irc.options?.username) {
 				this.irc.user.username = this.irc.options.username;

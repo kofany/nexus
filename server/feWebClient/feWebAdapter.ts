@@ -11,14 +11,14 @@
  * - Server-side types (Chan, Msg, Network from server/models)
  */
 
-import type {FeWebSocket, FeWebMessage} from "./feWebSocket";
-import Chan from "../models/chan";
-import Msg from "../models/msg";
-import User from "../models/user";
-import Prefix from "../models/prefix";
-import {ChanType, ChanState} from "../../shared/types/chan";
-import {MessageType} from "../../shared/types/msg";
-import log from "../log";
+import type {FeWebSocket, FeWebMessage} from "./feWebSocket.js";
+import Chan from "../models/chan.js";
+import Msg from "../models/msg.js";
+import User from "../models/user.js";
+import Prefix from "../models/prefix.js";
+import {ChanType, ChanState} from "../../shared/types/chan.js";
+import {MessageType} from "../../shared/types/msg.js";
+import log from "../log.js";
 import colors from "chalk";
 
 // Callback types for IrssiClient integration

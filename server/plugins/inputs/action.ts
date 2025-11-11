@@ -1,7 +1,7 @@
-import {PluginInputHandler} from "./index";
-import Msg from "../../models/msg";
-import {MessageType} from "../../../shared/types/msg";
-import {ChanType} from "../../../shared/types/chan";
+import {PluginInputHandler} from "./index.js";
+import Msg from "../../models/msg.js";
+import {MessageType} from "../../../shared/types/msg.js";
+import {ChanType} from "../../../shared/types/chan.js";
 
 const commands = ["slap", "me"];
 
@@ -36,7 +36,7 @@ const input: PluginInputHandler = function ({irc}, chan, cmd, args) {
 			// If the IRCd does not support echo-message, simulate the message
 			// being sent back to us.
 			if (!irc.network.cap.isEnabled("echo-message")) {
-				irc.emit("action", {
+				(irc as any).emit("action", {
 					nick: irc.user.nick,
 					target: chan.name,
 					message: text,

@@ -12,7 +12,7 @@
  */
 
 import crypto from "crypto";
-import log from "../log";
+import log from "../log.js";
 
 /**
  * FIXED salt for fe-web v1.5 protocol

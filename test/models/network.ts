@@ -1,13 +1,13 @@
 import {expect} from "chai";
 import sinon from "ts-sinon";
-import Chan from "../../server/models/chan";
-import {ChanType} from "../../shared/types/chan";
-import Msg from "../../server/models/msg";
-import User from "../../server/models/user";
-import Network from "../../server/models/network";
-import Config from "../../server/config";
-import STSPolicies from "../../server/plugins/sts";
-import ClientCertificate from "../../server/plugins/clientCertificate";
+import Chan from "../../server/models/chan.js";
+import {ChanType} from "../../shared/types/chan.js";
+import Msg from "../../server/models/msg.js";
+import User from "../../server/models/user.js";
+import Network from "../../server/models/network.js";
+import Config from "../../server/config.js";
+import STSPolicies from "../../server/plugins/sts.js";
+import ClientCertificate from "../../server/plugins/clientCertificate.js";
 
 describe("Network", function () {
 	let stsPoliciesRefreshStub: sinon.SinonStub<unknown[], void>;
@@ -311,12 +311,12 @@ describe("Network", function () {
 	});
 
 	describe("#edit(client, args)", function () {
-		it("should enforce correct types", function () {
+		it("should enforce correct types", async function () {
 			let saveCalled = false;
 			let nameEmitCalled = false;
 
 			const network = new Network();
-			(network as any).edit(
+			await (network as any).edit(
 				{
 					emit(name, data) {
 						if (name === "network:name") {
