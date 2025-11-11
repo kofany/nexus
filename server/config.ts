@@ -122,7 +122,7 @@ export type ConfigType = {
 
 class Config {
     values = require(
-        path.resolve(path.join(__dirname, "..", "defaults", "config.js"))
+        path.resolve(path.join(__dirname, "..", "defaults", "config.cjs"))
     ) as ConfigType;
     #homePath = "";
 
