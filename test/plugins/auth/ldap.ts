@@ -95,7 +95,9 @@ describe("LDAP authentication plugin", function () {
 				.callsFake(TestUtil.sanitizeLog((str) => (errorMessage += str)));
 
 			let errorMessage = "";
-			sandbox.stub(Client.prototype, "bind").rejects(new Error("InsufficientAccessRightsError"));
+			sandbox
+				.stub(Client.prototype, "bind")
+				.rejects(new Error("InsufficientAccessRightsError"));
 			sandbox.stub(Client.prototype, "unbind").resolves();
 
 			const valid = await runAuth(sandbox, manager, client, user, wrongPassword);
@@ -195,9 +197,7 @@ describe("LDAP authentication plugin", function () {
 			const valid = await runAuth(sandbox, manager, client, wrongUser, correctPassword);
 
 			expect(valid).to.equal(false);
-			expect(warningMessage).to.equal(
-				"LDAP Search did not find anything for: eve\n"
-			);
+			expect(warningMessage).to.equal("LDAP Search did not find anything for: eve\n");
 			expect(warnLogStub.calledOnce).to.equal(true);
 		});
 	});

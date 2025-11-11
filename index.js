@@ -10,28 +10,28 @@ process.chdir(__dirname);
 const pkg = require("./package.json");
 
 if (!require("semver").satisfies(process.version, pkg.engines.node)) {
-    /* eslint-disable no-console */
-    console.error(
-        "Nexus Lounge requires Node.js " +
-            pkg.engines.node +
-            " (current version: " +
-            process.version +
-            ")"
-    );
-    console.error("Please upgrade Node.js in order to use Nexus Lounge");
-    console.error();
+	/* eslint-disable no-console */
+	console.error(
+		"Nexus Lounge requires Node.js " +
+			pkg.engines.node +
+			" (current version: " +
+			process.version +
+			")"
+	);
+	console.error("Please upgrade Node.js in order to use Nexus Lounge");
+	console.error();
 
-    process.exit(1);
+	process.exit(1);
 }
 
 const fs = require("fs");
 
 if (fs.existsSync("./dist/server/index.js")) {
-    require("./dist/server/index.js");
+	require("./dist/server/index.js");
 } else {
-    console.error(
-        "Files in ./dist/server/ not found. Please run `yarn build` before trying to run `node index.js`."
-    );
+	console.error(
+		"Files in ./dist/server/ not found. Please run `yarn build` before trying to run `node index.js`."
+	);
 
-    process.exit(1);
+	process.exit(1);
 }

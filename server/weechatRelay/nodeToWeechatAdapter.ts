@@ -932,8 +932,8 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			const notifyLevel = m.highlight
 				? 3
 				: m.type === "join" || m.type === "part" || m.type === "quit"
-				? 0
-				: 1;
+					? 0
+					: 1;
 
 			// Format message text based on type (like Vue does)
 			const {prefix, message} = this.formatMessageForWeechat(m);
@@ -1051,7 +1051,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 						{name: "tags_array", type: "arr", arrayType: "str"},
 						{name: "prefix", type: "str"},
 						{name: "message", type: "str"},
-				  ];
+					];
 
 		const objects: HDataObject[] = [];
 		const messages = channel.messages.slice(-count);
