@@ -142,6 +142,7 @@ export class WeeChatMessage {
 			this.addInt(-1);
 		} else {
 			this.addInt(value.length);
+
 			if (value.length > 0) {
 				this.addBytes(value);
 			}
@@ -191,6 +192,7 @@ export class WeeChatMessage {
 			this.addBytes(Buffer.from("str", "ascii")); // key type
 			this.addBytes(Buffer.from("str", "ascii")); // value type
 			this.addInt(entries.length);
+
 			for (const [key, val] of entries) {
 				this.addString(key);
 				this.addString(val);
@@ -258,7 +260,8 @@ export class WeeChatMessage {
 			compressed.copy(result, 5);
 
 			return result;
-		} else {
+		}
+ 
 			// Build final message without compression
 			const result = Buffer.alloc(this.offset);
 			result.writeUInt32BE(this.offset, 0);
@@ -266,7 +269,7 @@ export class WeeChatMessage {
 			this.buffer.copy(result, 5, 5, this.offset);
 
 			return result;
-		}
+		
 	}
 }
 
@@ -338,13 +341,15 @@ export class WeeChatParser {
 	 */
 	readString(): string | null {
 		const length = this.readInt();
+
 		if (length === -1) {
 			return null;
 		} else if (length === 0) {
 			return "";
-		} else {
-			return this.readBytes(length).toString("utf8");
 		}
+ 
+			return this.readBytes(length).toString("utf8");
+		
 	}
 
 	/**
@@ -352,13 +357,15 @@ export class WeeChatParser {
 	 */
 	readBuffer(): Buffer | null {
 		const length = this.readInt();
+
 		if (length === -1) {
 			return null;
 		} else if (length === 0) {
 			return Buffer.alloc(0);
-		} else {
-			return this.readBytes(length);
 		}
+ 
+			return this.readBytes(length);
+		
 	}
 
 	/**

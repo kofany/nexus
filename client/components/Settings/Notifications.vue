@@ -169,7 +169,7 @@ export default defineComponent({
 			const pop = new Audio();
 			pop.src = "audio/pop.wav";
 
-			// eslint-disable-next-line
+			 
 			pop.play();
 		};
 

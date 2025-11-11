@@ -93,10 +93,12 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	private findChannel(channelId: number): {network: NetworkData; channel: Chan} | null {
 		for (const network of this.irssiClient.networks) {
 			const channel = network.channels.find((c) => c.id === channelId);
+
 			if (channel) {
 				return {network, channel};
 			}
 		}
+
 		return null;
 	}
 
@@ -106,6 +108,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 */
 	public handleMsgEvent(data: {chan: number; msg: Msg; unread: number; highlight: number}): void {
 		const found = this.findChannel(data.chan);
+
 		if (!found) {
 			log.warn(
 				`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for msg event`
@@ -165,6 +168,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 */
 	public handleNamesEvent(data: {id: number; users: User[]}): void {
 		const found = this.findChannel(data.id);
+
 		if (!found) {
 			log.warn(
 				`${colors.yellow("[Node->WeeChat]")} Channel ${data.id} not found for names event`
@@ -201,6 +205,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		shouldOpen: boolean;
 	}): void {
 		const network = this.irssiClient.networks.find((n) => n.uuid === data.network);
+
 		if (!network) {
 			log.warn(
 				`${colors.yellow("[Node->WeeChat]")} Network ${
@@ -211,6 +216,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		const channel = network.channels.find((c) => c.id === data.chan.id);
+
 		if (!channel) {
 			log.warn(
 				`${colors.yellow("[Node->WeeChat]")} Channel ${
@@ -257,6 +263,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 */
 	public handleTopicEvent(data: {chan: number; topic: string}): void {
 		const found = this.findChannel(data.chan);
+
 		if (!found) {
 			log.warn(
 				`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for topic event`
@@ -288,6 +295,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		highlight: number;
 	}): void {
 		const found = this.findChannel(data.chan);
+
 		if (!found) {
 			log.warn(
 				`${colors.yellow("[Node->WeeChat]")} Channel ${
@@ -631,40 +639,52 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 					if (requestedKeys.length === 0 || requestedKeys.includes("buffer")) {
 						values.buffer = bufferPtr;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("id")) {
 						// Use a simple increasing integer as line id (per message)
 						values.id = totalLines; // int id
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("date")) {
 						values.date = timestamp;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("date_usec")) {
 						values.date_usec = 0;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("date_printed")) {
 						values.date_printed = timestamp;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("date_usec_printed")) {
 						values.date_usec_printed = 0;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("displayed")) {
 						values.displayed = 1;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("notify_level")) {
 						values.notify_level = m.highlight ? 3 : 1;
 					}
+
 					if (requestedKeys.includes("notify")) {
 						values.notify = m.highlight ? 3 : 1;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("highlight")) {
 						values.highlight = m.highlight ? 1 : 0;
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("tags_array")) {
 						values.tags_array = this.buildMessageTags(m);
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("prefix")) {
 						values.prefix = m.from?.nick || "";
 					}
+
 					if (requestedKeys.length === 0 || requestedKeys.includes("message")) {
 						values.message = m.text;
 					}
@@ -993,14 +1013,17 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		// Resolve buffer and channel from pointer
 		const buffer = this.getBufferByPointer(bufferPtr);
+
 		if (!buffer || !buffer.channel) {
 			buildEmptyHData(msg);
 			return msg;
 		}
+
 		const channel = buffer.channel as Chan;
 
 		// Parse requested keys
 		const requestedKeys = keys ? keys.split(",").map((k) => k.trim()) : [];
+
 		const typeForKey = (k: string): HDataField => {
 			switch (k) {
 				case "buffer":
@@ -1057,6 +1080,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const messages = channel.messages.slice(-count);
 		const linesPtr = generatePointer();
 		let idx = 0;
+
 		for (const m of messages) {
 			const linePtr = generatePointer();
 			const lineDataPtr = generatePointer();
@@ -1094,6 +1118,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		} else {
 			buildEmptyHData(msg);
 		}
+
 		return msg;
 	}
 

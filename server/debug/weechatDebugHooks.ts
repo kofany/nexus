@@ -89,6 +89,7 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 
 		// EARLY WARNING: Suspicious field counts
 		const newKeys = event.newValue ? event.newValue.split(",") : [];
+
 		if (event.oldValue && newKeys.length === 0) {
 			log.error(
 				`${colors.red("[BUG RISK]")} lineRequestedKeys was cleared! Old value had ${
@@ -96,6 +97,7 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 				} fields`
 			);
 		}
+
 		if (
 			newKeys.length > 0 &&
 			newKeys.length < 3 &&
@@ -293,6 +295,7 @@ export class RequestHistoryTracker {
 			lines.push(`[${i}] ${time} ${entry.type}`);
 			lines.push(`    args: ${entry.args.substring(0, 100)}`);
 			lines.push(`    lineRequestedKeys: "${entry.lineRequestedKeys}" (${keyCount} fields)`);
+
 			if (entry.clientUsesHDataHistory !== undefined) {
 				lines.push(`    clientUsesHDataHistory: ${entry.clientUsesHDataHistory}`);
 			}
@@ -369,6 +372,7 @@ export function createDiagnosticReport(state: Record<string, any>): string {
 	for (const [key, value] of Object.entries(state)) {
 		if (typeof value === "string" && value.length > 100) {
 			lines.push(`║ ${key}:`);
+
 			for (const line of value.split("\n")) {
 				lines.push(`║   ${line}`);
 			}

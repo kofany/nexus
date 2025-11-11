@@ -98,6 +98,7 @@ export class WeeChatRelayClient extends EventEmitter {
 		// WeeChat Relay uses TEXT protocol (line-based)
 		// Parse lines ending with \n
 		let newlineIndex: number;
+
 		while ((newlineIndex = this.buffer.indexOf("\n")) !== -1) {
 			// Extract line (without \n)
 			const line = this.buffer.slice(0, newlineIndex).toString("utf8").trim();
@@ -135,6 +136,7 @@ export class WeeChatRelayClient extends EventEmitter {
 		// Check for message ID: (id) command args
 		if (line.startsWith("(")) {
 			const endIdx = line.indexOf(")");
+
 			if (endIdx !== -1) {
 				msgID = line.substring(1, endIdx);
 				line = line.substring(endIdx + 1).trim();
@@ -143,6 +145,7 @@ export class WeeChatRelayClient extends EventEmitter {
 
 		// Parse command and arguments (only first space, rest is args)
 		const spaceIdx = line.indexOf(" ");
+
 		if (spaceIdx !== -1) {
 			cmd = line.substring(0, spaceIdx);
 			args = line.substring(spaceIdx + 1).trim();
@@ -228,6 +231,7 @@ export class WeeChatRelayClient extends EventEmitter {
 			commandId = messageId.substring(1, closeParen);
 			const rest = messageId.substring(closeParen + 1).trim();
 			const spaceIdx = rest.indexOf(" ");
+
 			if (spaceIdx > 0) {
 				command = rest.substring(0, spaceIdx);
 				args = rest.substring(spaceIdx + 1);
@@ -237,6 +241,7 @@ export class WeeChatRelayClient extends EventEmitter {
 		} else {
 			// No ID: "command args"
 			const spaceIdx = messageId.indexOf(" ");
+
 			if (spaceIdx > 0) {
 				command = messageId.substring(0, spaceIdx);
 				args = messageId.substring(spaceIdx + 1);
@@ -309,10 +314,13 @@ export class WeeChatRelayClient extends EventEmitter {
 
 		// Parse options (format: "key=value,key=value")
 		const options: Record<string, string> = {};
+
 		if (args) {
 			const pairs = args.split(",");
+
 			for (const pair of pairs) {
 				const [key, value] = pair.split("=");
+
 				if (key && value) {
 					options[key.trim()] = value.trim();
 				}
@@ -321,6 +329,7 @@ export class WeeChatRelayClient extends EventEmitter {
 
 		// Check password_hash_algo
 		let selectedAlgo = "plain";
+
 		if (options.password_hash_algo) {
 			const requestedAlgos = options.password_hash_algo.split(":");
 			const supportedAlgos = this.config.passwordHashAlgo || ["plain"];
@@ -339,6 +348,7 @@ export class WeeChatRelayClient extends EventEmitter {
 		// Check compression
 		if (options.compression) {
 			const requestedComp = options.compression.split(",");
+
 			if (requestedComp.includes("zlib") && this.config.compression) {
 				this.compression = true;
 			}
@@ -368,6 +378,7 @@ export class WeeChatRelayClient extends EventEmitter {
 		// Compression is enabled AFTER handshake response is sent.
 		// See: https://weechat.org/files/doc/devel/weechat_relay_protocol.en.html#command_handshake
 		const data = msg.build(false); // Force no compression for handshake
+
 		if (this.socket instanceof WebSocket) {
 			this.socket.send(data);
 		} else {
@@ -385,10 +396,13 @@ export class WeeChatRelayClient extends EventEmitter {
 
 		// Parse options
 		const options: Record<string, string> = {};
+
 		if (args) {
 			const pairs = args.split(",");
+
 			for (const pair of pairs) {
 				const [key, value] = pair.split("=");
+
 				if (key && value) {
 					options[key.trim()] = value.trim();
 				}
@@ -402,6 +416,7 @@ export class WeeChatRelayClient extends EventEmitter {
 		// Check compression (IMPORTANT: Must be set BEFORE authentication!)
 		if (options.compression) {
 			const requestedComp = options.compression.split(",");
+
 			if (requestedComp.includes("zlib") && this.config.compression) {
 				this.compression = true;
 				log.info(`${colors.green("[WeeChat Relay Client]")} Compression enabled: zlib`);

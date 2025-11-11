@@ -31,6 +31,7 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 					})
 				);
 			}
+
 			return cmd === "query" ? undefined : true;
 		}
 

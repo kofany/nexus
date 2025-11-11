@@ -4,6 +4,7 @@ console.log("Testing WebSocket TLS connection to irssi...");
 
 // Test 1: Without TLS options (should fail)
 console.log("\n=== Test 1: Without TLS options ===");
+
 try {
 	const ws1 = new WebSocket("wss://localhost:9001/?password=Pulinek1708");
 
@@ -23,6 +24,7 @@ try {
 setTimeout(() => {
 	// Test 2: With TLS options as 2nd parameter (WRONG!)
 	console.log("\n=== Test 2: TLS options as 2nd parameter (WRONG) ===");
+
 	try {
 		const wsOptions = {
 			rejectUnauthorized: false,
@@ -49,6 +51,7 @@ setTimeout(() => {
 setTimeout(() => {
 	// Test 3: With TLS options as 3rd parameter (CORRECT!)
 	console.log("\n=== Test 3: TLS options as 3rd parameter (CORRECT) ===");
+
 	try {
 		const wsOptions = {
 			rejectUnauthorized: false,

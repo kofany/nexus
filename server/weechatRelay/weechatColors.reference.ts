@@ -1,6 +1,6 @@
-/****************************/
+/** **************************/
 /* Weechat colors and style */
-/****************************/
+/** **************************/
 
 /* style options, foreground */
 export const cof: Record<string, Record<string, string>> = {

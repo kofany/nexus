@@ -45,16 +45,16 @@
 								<button
 									type="button"
 									class="btn btn-edit"
-									@click="editNetwork(network)"
 									:disabled="isLoading"
+									@click="editNetwork(network)"
 								>
 									Edit
 								</button>
 								<button
 									type="button"
 									class="btn btn-remove"
-									@click="removeNetwork(network.name)"
 									:disabled="isLoading"
+									@click="removeNetwork(network.name)"
 								>
 									Remove
 								</button>
@@ -90,18 +90,18 @@
 											<button
 												type="button"
 												class="btn btn-small btn-connect"
-												@click="connectToServer(network, server)"
 												:disabled="isLoading"
 												title="Connect to this server"
+												@click="connectToServer(network, server)"
 											>
 												Connect
 											</button>
 											<button
 												type="button"
 												class="btn btn-small btn-remove"
-												@click="removeServer(server, network.name)"
 												:disabled="isLoading"
 												title="Remove this server"
+												@click="removeServer(server, network.name)"
 											>
 												Remove
 											</button>
@@ -120,7 +120,7 @@
 			<!-- Add/Edit Network Section -->
 			<section class="add-network">
 				<h2>{{ isEditing ? `Edit Network: ${editingNetworkName}` : "Add New Network" }}</h2>
-				<form @submit.prevent="addNewNetwork" class="network-form">
+				<form class="network-form" @submit.prevent="addNewNetwork">
 					<!-- Basic Network Settings -->
 					<fieldset>
 						<legend>Basic Settings</legend>
@@ -490,8 +490,8 @@
 								v-if="newNetwork.servers.length > 1"
 								type="button"
 								class="btn btn-small btn-remove-server"
-								@click="removeServerFromForm(index)"
 								title="Remove this server"
+								@click="removeServerFromForm(index)"
 							>
 								×
 							</button>
@@ -513,8 +513,8 @@
 						<button
 							type="button"
 							class="btn btn-secondary"
-							@click="resetForm"
 							:disabled="actionInProgress"
+							@click="resetForm"
 						>
 							{{ isEditing ? "Cancel" : "Clear" }}
 						</button>
@@ -1107,6 +1107,7 @@ export default defineComponent({
 				const exists = savedNetworks.value.some(
 					(net) => net.name.toLowerCase() === newNetwork.value.name.toLowerCase()
 				);
+
 				if (exists) {
 					errorMessage.value = `Network '${newNetwork.value.name}' already exists. Use Edit to modify it.`;
 					return;
@@ -1119,6 +1120,7 @@ export default defineComponent({
 
 			socket.emit("network:add_irssi", newNetwork.value, (result: any) => {
 				isLoading.value = false;
+
 				if (result.success) {
 					successMessage.value = result.message;
 					resetForm();
@@ -1150,6 +1152,7 @@ export default defineComponent({
 
 			socket.emit("network:remove_irssi", {name: networkName}, (result: any) => {
 				isLoading.value = false;
+
 				if (result.success) {
 					successMessage.value = result.message;
 					loadNetworks();
@@ -1207,6 +1210,7 @@ export default defineComponent({
 				},
 				(result: any) => {
 					isLoading.value = false;
+
 					if (result.success) {
 						successMessage.value = result.message;
 						loadNetworks();

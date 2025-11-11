@@ -56,6 +56,7 @@ function getAll() {
 		if (theme.name === "default") {
 			continue; // hide built-in default theme from the list
 		}
+
 		filteredThemes.push(_.pick(theme, ["displayName", "name", "themeColor"]));
 	}
 

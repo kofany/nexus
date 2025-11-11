@@ -296,6 +296,7 @@ export default defineComponent({
 			if (!config.value.enabled) {
 				return true; // Can save to disable
 			}
+
 			// If enabled, require port and password
 			return (
 				config.value.port >= 1024 &&
@@ -308,6 +309,7 @@ export default defineComponent({
 			if (typeof window !== "undefined") {
 				return window.location.hostname || "your-server-address";
 			}
+
 			return "your-server-address";
 		});
 

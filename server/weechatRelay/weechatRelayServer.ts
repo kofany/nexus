@@ -362,6 +362,7 @@ export class WeeChatRelayServer extends EventEmitter {
 		for (const client of this.clients.values()) {
 			client.close();
 		}
+
 		this.clients.clear();
 
 		// Close main server (TCP/TLS or HTTPS for WSS)

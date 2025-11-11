@@ -1,7 +1,8 @@
 !(function () {
 	"use strict";
+
 	!(function (t) {
-		var e = t.screen,
+		const e = t.screen,
 			n = e.width,
 			r = e.height,
 			a = t.navigator.language,
@@ -13,12 +14,13 @@
 			s = i.pathname,
 			l = i.search,
 			d = u.currentScript;
+
 		if (d) {
 			var m = "data-",
 				h = d.getAttribute.bind(d),
 				v = h(m + "website-id"),
 				p = h(m + "host-url"),
-				g = "false" !== h(m + "auto-track"),
+				g = h(m + "auto-track") !== "false",
 				y = h(m + "do-not-track"),
 				b = h(m + "domains") || "",
 				S = b.split(",").map(function (t) {
@@ -32,7 +34,8 @@
 				T = m + "umami-event",
 				j = 300,
 				A = function (t, e, n) {
-					var r = t[e];
+					const r = t[e];
+
 					return function () {
 						for (var e = [], a = arguments.length; a--; ) e[a] = arguments[a];
 						return n.apply(null, e), r.apply(t, e);
@@ -54,7 +57,7 @@
 						(o && o.getItem("umami.disabled")) ||
 						(y &&
 							(function () {
-								var e = t.doNotTrack,
+								const e = t.doNotTrack,
 									n = t.navigator,
 									r = t.external,
 									a = "msTrackingProtectionEnabled",
@@ -63,7 +66,7 @@
 										n.doNotTrack ||
 										n.msDoNotTrack ||
 										(r && a in r && r[a]());
-								return "1" == i || "yes" === i;
+								return i == "1" || i === "yes";
 							})()) ||
 						(b && !S.includes(f))
 					);
@@ -81,7 +84,7 @@
 				},
 				L = function (t, e) {
 					if ((void 0 === e && (e = "event"), !E())) {
-						var n = {"Content-Type": "application/json"};
+						const n = {"Content-Type": "application/json"};
 						return (
 							void 0 !== K && (n["x-umami-cache"] = K),
 							fetch(k, {
@@ -101,22 +104,23 @@
 				},
 				D = function (t, e) {
 					return L(
-						"string" == typeof t
+						typeof t === "string"
 							? Object.assign({}, x(), {
 									name: t,
-									data: "object" == typeof e ? e : void 0,
+									data: typeof e === "object" ? e : void 0,
 							  })
-							: "object" == typeof t
+							: typeof t === "object"
 							? t
-							: "function" == typeof t
+							: typeof t === "function"
 							? t(x())
 							: x()
 					);
 				};
+
 			t.umami ||
 				(t.umami = {
 					track: D,
-					identify: function (t) {
+					identify (t) {
 						return L(Object.assign({}, x(), {data: t}), "identify");
 					},
 				});
@@ -128,46 +132,50 @@
 				I = "" + s + l,
 				J = u.referrer,
 				M = u.title;
+
 			if (g && !E()) {
 				(c.pushState = A(c, "pushState", O)),
 					(c.replaceState = A(c, "replaceState", O)),
 					(C = function (t) {
-						var e = t.getAttribute.bind(t),
+						const e = t.getAttribute.bind(t),
 							n = e(T);
+
 						if (n) {
-							var r = {};
+							const r = {};
 							return (
 								t.getAttributeNames().forEach(function (t) {
-									var n = t.match(N);
+									const n = t.match(N);
 									n && (r[n[1]] = e(t));
 								}),
 								D(n, r)
 							);
 						}
+
 						return Promise.resolve();
 					}),
 					u.addEventListener(
 						"click",
 						function (t) {
-							var e = t.target,
+							const e = t.target,
 								n =
-									"A" === e.tagName
+									e.tagName === "A"
 										? e
 										: (function (t, e) {
-												for (var n = t, r = 0; r < e; r++) {
-													if ("A" === n.tagName) return n;
+												for (let n = t, r = 0; r < e; r++) {
+													if (n.tagName === "A") return n;
 													if (!(n = n.parentElement)) return null;
 												}
+
 												return null;
 										  })(e, 10);
 							if (n) {
-								var r = n.href,
+								const r = n.href,
 									a =
-										"_blank" === n.target ||
+										n.target === "_blank" ||
 										t.ctrlKey ||
 										t.shiftKey ||
 										t.metaKey ||
-										(t.button && 1 === t.button);
+										(t.button && t.button === 1);
 								if (n.getAttribute(T) && r)
 									return (
 										a || t.preventDefault(),
@@ -180,14 +188,16 @@
 						!0
 					),
 					(_ = new MutationObserver(function (t) {
-						var e = t[0];
+						const e = t[0];
 						M = e && e.target ? e.target.text : void 0;
 					})),
 					(q = u.querySelector("head > title")) &&
 						_.observe(q, {subtree: !0, characterData: !0, childList: !0});
-				var R = function () {
-					"complete" !== u.readyState || P || (D(), (P = !0));
+
+				const R = function () {
+					u.readyState !== "complete" || P || (D(), (P = !0));
 				};
+
 				u.addEventListener("readystatechange", R, !0), R();
 			}
 		}
