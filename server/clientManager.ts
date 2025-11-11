@@ -27,14 +27,12 @@ class ClientManager {
 		this.identHandler = identHandler;
 		this.webPush = new WebPush();
 
-		if (!Config.values.public) {
-			this.loadUsers();
+		this.loadUsers();
 
-			// LDAP does not have user commands, and users are dynamically
-			// created upon logon, so we don't need to watch for new files
-			if (!Config.values.ldap.enable) {
-				this.autoloadUsers();
-			}
+		// LDAP does not have user commands, and users are dynamically
+		// created upon logon, so we don't need to watch for new files
+		if (!Config.values.ldap.enable) {
+			this.autoloadUsers();
 		}
 	}
 

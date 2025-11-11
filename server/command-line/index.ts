@@ -51,13 +51,11 @@ program.addCommand(upgradeCmd);
 program.addCommand(outdatedCmd);
 program.addCommand(storageCmd);
 
-if (!Config.values.public) {
-    usersCmds.forEach((command: Command) => {
-        if (command) {
-            program.addCommand(command);
-        }
-    });
-}
+usersCmds.forEach((command: Command) => {
+    if (command) {
+        program.addCommand(command);
+    }
+});
 
 // `parse` expects to be passed `process.argv`, but we need to remove to give it
 // a version of `argv` that does not contain options already parsed by

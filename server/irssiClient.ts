@@ -273,7 +273,7 @@ export class IrssiClient {
         }
 
         // Step 3: Initialize encrypted message storage (if not already enabled by autoconnect)
-        if (this.config.log && !Config.values.public && !this.messageStorage) {
+        if (this.config.log && !this.messageStorage) {
             this.messageStorage = new EncryptedMessageStorage(this.name, this.encryptionKey);
             await this.messageStorage.enable();
             log.info(`Encrypted message storage enabled for user ${colors.bold(this.name)}`);
@@ -335,7 +335,7 @@ export class IrssiClient {
         log.info(`Message storage encryption key derived for user ${colors.bold(this.name)}`);
 
         // Initialize encrypted message storage
-        if (this.config.log && !Config.values.public) {
+        if (this.config.log) {
             this.messageStorage = new EncryptedMessageStorage(this.name, this.encryptionKey);
             await this.messageStorage.enable();
             log.info(`Encrypted message storage enabled for user ${colors.bold(this.name)}`);

@@ -165,12 +165,6 @@ export default async function (
         return res.sendFile(path.join(packagePath, fileName));
     });
 
-    if (Config.values.public && (Config.values.ldap || {}).enable) {
-        log.warn(
-            "Server is public and set to use LDAP. Set to private mode if trying to use LDAP authentication."
-        );
-    }
-
     let server: import("http").Server | import("https").Server;
 
     if (!Config.values.https.enable) {
@@ -243,7 +237,7 @@ export default async function (
                 log.info(
                     "Available at " +
                         colors.green(`${protocol}://${address.address}:${address.port}/`) +
-                        ` in ${colors.bold(Config.values.public ? "public" : "private")} mode`
+                        ` in ${colors.bold("private")} mode`
                 );
             }
         }
@@ -264,15 +258,11 @@ export default async function (
         });
 
         sockets.on("connect", (socket) => {
-             
+
             socket.on("error", (err) => log.error(`io socket error: ${err}`));
 
-            if (Config.values.public) {
-                performAuthentication.call(socket, {});
-            } else {
-                socket.on("auth:perform", performAuthentication);
-                socket.emit("auth:start", serverHash);
-            }
+            socket.on("auth:perform", performAuthentication);
+            socket.emit("auth:start", serverHash);
         });
 
         manager = new ClientManager();
@@ -557,7 +547,7 @@ function initializeClient(
         }
     });
 
-    if (!Config.values.public && !Config.values.ldap.enable) {
+    if (!Config.values.ldap.enable) {
         socket.on("change-password", (data) => {
             if (_.isPlainObject(data)) {
                 const old = data.old_password;
@@ -644,10 +634,7 @@ function initializeClient(
             });
     });
 
-    // In public mode only one client can be connected,
-    // so there's no need to handle msg:preview:toggle
-    if (!Config.values.public) {
-        socket.on("msg:preview:toggle", (data) => {
+    socket.on("msg:preview:toggle", (data) => {
             if (_.isPlainObject(data)) {
                 return;
             }
@@ -686,7 +673,6 @@ function initializeClient(
                 preview.shown = newState;
             }
         });
-    }
 
     socket.on("mentions:get", () => {
         socket.emit("mentions:list", client.mentions);
@@ -707,8 +693,7 @@ function initializeClient(
         client.mentions = [];
     });
 
-    if (!Config.values.public) {
-        socket.on("push:register", (subscription) => {
+    socket.on("push:register", (subscription) => {
             if (!Object.prototype.hasOwnProperty.call(client.config.sessions, token)) {
                 return;
             }
@@ -728,8 +713,7 @@ function initializeClient(
             }
         });
 
-        socket.on("push:unregister", () => client.unregisterPushSubscription(token));
-    }
+    socket.on("push:unregister", () => client.unregisterPushSubscription(token));
 
     const sendSessionList = () => {
         // TODO: this should use the ClientSession type currently in client
@@ -754,8 +738,7 @@ function initializeClient(
 
     socket.on("sessions:get", sendSessionList);
 
-    if (!Config.values.public) {
-        socket.on("setting:set", (newSetting) => {
+    socket.on("setting:set", (newSetting) => {
             if (!_.isPlainObject(newSetting)) {
                 return;
             }
@@ -1131,7 +1114,6 @@ function initializeClient(
 
             client.save();
         });
-    }
 
     socket.on("sign-out", (tokenToSignOut) => {
         // If no token provided, sign same client out
@@ -1178,9 +1160,7 @@ function initializeClient(
         socket.emit("commands", inputs.getCommands());
     };
 
-    if (Config.values.public) {
-        sendInitEvent();
-    } else if (!token) {
+    if (!token) {
         client.generateToken((newToken) => {
             token = client.calculateTokenHash(newToken);
             client.attachedClients[socket.id].token = token;
@@ -1204,7 +1184,6 @@ function getClientConfiguration(): SharedConfiguration | LockedSharedConfigurati
         gitCommit: Helper.getGitCommit(),
         themes: themes.getAll(),
         defaultTheme: Config.values.theme,
-        public: Config.values.public,
         useHexIp: Config.values.useHexIp,
         prefetch: Config.values.prefetch,
         fileUploadMaxFileSize: Uploader ? Uploader.getMaxFileSize() : undefined, // TODO can't be undefined?
@@ -1288,17 +1267,13 @@ function initializeIrssiClient(
         }
     };
 
-    // Handle token generation for non-public mode
-    if (!Config.values.public) {
-        client.generateToken((newToken) => {
-            const tokenHash = client.calculateTokenHash(newToken);
-            client.updateSession(tokenHash, getClientIp(socket), socket.request);
-            // Continue with init, passing token to attachBrowser
-            continueInit(newToken);
-        });
-    } else {
-        continueInit();
-    }
+    // Handle token generation (always required in private mode)
+    client.generateToken((newToken) => {
+        const tokenHash = client.calculateTokenHash(newToken);
+        client.updateSession(tokenHash, getClientIp(socket), socket.request);
+        // Continue with init, passing token to attachBrowser
+        continueInit(newToken);
+    });
 
     // Handle disconnect
     socket.on("disconnect", function () {
@@ -1385,7 +1360,7 @@ function initializeIrssiClient(
     });
 
     // Handle password change (The Lounge login password, NOT irssi password!)
-    if (!Config.values.public && !Config.values.ldap.enable) {
+    if (!Config.values.ldap.enable) {
         socket.on("change-password", (data) => {
             if (_.isPlainObject(data)) {
                 const old = data.old_password;
@@ -1895,22 +1870,6 @@ async function performAuthentication(this: Socket, data: AuthPerformData) {
             finalInit();
         });
     };
-
-    if (Config.values.public) {
-        client = new Client(manager!);
-        await client.connect();
-        manager!.clients.push(client);
-
-        const cb_client = client; // ensure TS can see we never have a nil client
-        socket.on("disconnect", function () {
-            manager!.clients = _.without(manager!.clients, cb_client);
-            cb_client.quit();
-        });
-
-        initClient();
-
-        return;
-    }
 
     if (typeof data.user !== "string") {
         return;

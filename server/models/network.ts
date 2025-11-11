@@ -247,19 +247,12 @@ class Network {
 		if (Config.values.lockNetwork) {
 			// This check is needed to prevent invalid user configurations
 			if (
-				!Config.values.public &&
 				this.host &&
 				this.host.length > 0 &&
 				this.host !== Config.values.defaults.host
 			) {
 				error(this, `The hostname you specified (${this.host}) is not allowed.`);
 				return false;
-			}
-
-			if (Config.values.public) {
-				this.name = Config.values.defaults.name;
-				// Sync lobby channel name
-				this.getLobby().name = Config.values.defaults.name;
 			}
 
 			this.host = Config.values.defaults.host;

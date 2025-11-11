@@ -130,7 +130,7 @@ class Client {
         client.config.log = Boolean(client.config.log);
         client.config.password = String(client.config.password);
 
-        if (!Config.values.public && client.config.log) {
+        if (client.config.log) {
             if (Config.values.messageStorage.includes("sqlite")) {
                 client.messageProvider = new SqliteMessageStorage(client.name);
 
@@ -856,10 +856,6 @@ class Client {
 
     save = _.debounce(
         function SaveClient(this: Client) {
-            if (Config.values.public) {
-                return;
-            }
-
             const client = this;
             client.manager.saveUser(client);
         },

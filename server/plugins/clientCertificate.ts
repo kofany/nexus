@@ -21,10 +21,6 @@ export type ClientCertificateType = {
 };
 
 async function get(uuid: string): Promise<ClientCertificateType | null> {
-	if (Config.values.public) {
-		return null;
-	}
-
 	const folderPath = Config.getClientCertificatesPath();
 	const paths = getPaths(folderPath, uuid);
 
@@ -45,10 +41,6 @@ async function get(uuid: string): Promise<ClientCertificateType | null> {
 }
 
 function remove(uuid: string) {
-	if (Config.values.public) {
-		return null;
-	}
-
 	const paths = getPaths(Config.getClientCertificatesPath(), uuid);
 
 	try {

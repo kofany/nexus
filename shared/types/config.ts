@@ -4,7 +4,6 @@ export type ConfigTheme = {
 	themeColor: string | null;
 };
 type SharedConfigurationBase = {
-	public: boolean;
 	useHexIp: boolean;
 	prefetch: boolean;
 	fileUpload: boolean;

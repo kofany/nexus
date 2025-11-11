@@ -203,7 +203,7 @@ function ldapLoadUsers(users: string[], callbackLoadUser) {
 }
 
 function isLdapEnabled() {
-	return !Config.values.public && Config.values.ldap.enable;
+	return Config.values.ldap.enable;
 }
 
 export default {

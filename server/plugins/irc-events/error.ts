@@ -37,7 +37,7 @@ export default <IrcEventHandler>function (irc, network) {
 	irc.on("nick in use", function (data) {
 		let message = data.nick + ": " + (data.reason || "Nickname is already in use.");
 
-		if (irc.connection.registered === false && !Config.values.public) {
+		if (irc.connection.registered === false) {
 			message += " An attempt to use it will be made when this nick quits.";
 
 			// Clients usually get nick in use on connect when reconnecting to a network

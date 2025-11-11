@@ -94,7 +94,6 @@ type StoragePolicy = {
 };
 
 export type ConfigType = {
-    public: boolean;
     host: string | undefined;
     port: number;
     bind: string | undefined;

@@ -89,12 +89,6 @@ class Chan {
 
 		client.emit("msg", {chan: chanId, msg, unread: this.unread, highlight: this.highlight});
 
-		// Never store messages in public mode as the session
-		// is completely destroyed when the page gets closed
-		if (Config.values.public) {
-			return;
-		}
-
 		// showInActive is only processed on "msg", don't need it on page reload
 		if (msg.showInActive) {
 			delete msg.showInActive;
