@@ -1,6 +1,6 @@
 "use strict";
 
-import config from "../../../defaults/config.cjs";
+import config from "../../../defaults/config.js";
 
 config.defaults.name = "Example IRC Server";
 config.defaults.host = "irc.example.com";
