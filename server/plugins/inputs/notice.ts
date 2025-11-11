@@ -29,7 +29,7 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 			message = "{to " + args[0] + "} " + message;
 		}
 
-		network.irc.emit("notice", {
+		(network.irc as any).emit("notice", {
 			nick: network.irc.user.nick,
 			target: targetName,
 			group: targetGroup,

@@ -12,7 +12,7 @@
   },
   "homepage": "https://thelounge.chat/",
   "scripts": {
-    "build:client": "cross-env NODE_OPTIONS=--loader=ts-node/esm webpack",
+    "build:client": "yarn webpack",
     "build:server": "tsc -p server/tsconfig.json",
     "build": "cross-env NODE_NO_WARNINGS=1 run-p --aggregate-output build:client build:server",
     "coverage": "run-s test:* && nyc --nycrc-path=test/.nycrc-report.json report",
@@ -161,6 +161,7 @@
     "ts-loader": "9.5.1",
     "ts-node": "10.9.2",
     "ts-sinon": "2.0.2",
+    "tsx": "^4.20.6",
     "typescript": "5.9.3",
     "undate": "0.3.0",
     "vue": "3.5.22",

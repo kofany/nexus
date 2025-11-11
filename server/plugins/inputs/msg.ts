@@ -113,7 +113,7 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 		const channel = network.getChannel(targetName);
 
 		if (typeof channel !== "undefined") {
-			network.irc.emit("privmsg", {
+			(network.irc as any).emit("privmsg", {
 				nick: network.irc.user.nick,
 				ident: network.irc.user.username,
 				hostname: network.irc.user.host,

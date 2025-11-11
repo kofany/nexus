@@ -36,7 +36,7 @@ const input: PluginInputHandler = function ({irc}, chan, cmd, args) {
 			// If the IRCd does not support echo-message, simulate the message
 			// being sent back to us.
 			if (!irc.network.cap.isEnabled("echo-message")) {
-				irc.emit("action", {
+				(irc as any).emit("action", {
 					nick: irc.user.nick,
 					target: chan.name,
 					message: text,
