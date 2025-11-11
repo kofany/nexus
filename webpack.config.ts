@@ -7,7 +7,7 @@ import CopyPlugin from "copy-webpack-plugin";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import {VueLoaderPlugin} from "vue-loader";
-import babelConfig from "./babel.config.cjs";
+import babelConfig from "./babel.config.js";
 import pkg from "./package.json" with {type: "json"};
 
 const __filename = fileURLToPath(import.meta.url);
