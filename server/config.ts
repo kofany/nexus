@@ -12,9 +12,13 @@ import log from "./log.js";
 import Helper from "./helper.js";
 import Utils from "./command-line/utils.js";
 import Network from "./models/network.js";
+import defaultConfig from "../defaults/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Keep createRequire for legacy user config.js support (CommonJS format)
+// New users should use ESM format, but existing configs may use module.exports
 const require = createRequire(import.meta.url);
 
 // TODO: Type this
@@ -121,9 +125,7 @@ export type ConfigType = {
 };
 
 class Config {
-    values = require(
-        path.resolve(path.join(__dirname, "..", "defaults", "config.cjs"))
-    ) as ConfigType;
+    values = {...defaultConfig} as ConfigType; // Deep copy of ESM default config
     #homePath = "";
 
     getHomePath() {
