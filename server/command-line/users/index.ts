@@ -8,7 +8,7 @@ import reset from "./reset.js";
 const commands = [list, remove, edit];
 
 if (!Config.values.ldap.enable) {
-    commands.push(add, reset);
+	commands.push(add, reset);
 }
 
 export default commands;

@@ -54,7 +54,6 @@ export default defineComponent({
 
 		const hover = () => {
 			if (props.onHover) {
-				 
 				return props.onHover(props.user as UserInMessage);
 			}
 

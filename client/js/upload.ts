@@ -215,9 +215,9 @@ class Uploader {
 			};
 
 			// readAsDataURL returns a string data URL, not ArrayBuffer
-		if (typeof fileReader.result === "string") {
-			img.src = fileReader.result;
-		}
+			if (typeof fileReader.result === "string") {
+				img.src = fileReader.result;
+			}
 		};
 
 		fileReader.readAsDataURL(file);

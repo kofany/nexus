@@ -114,10 +114,7 @@ async function generate(): Promise<ClientCertificateType> {
 				hash: "SHA-256",
 			},
 			extensions: [
-				new x509.ExtendedKeyUsageExtension(
-					[x509.ExtendedKeyUsage.clientAuth],
-					false
-				),
+				new x509.ExtendedKeyUsageExtension([x509.ExtendedKeyUsage.clientAuth], false),
 				new x509.KeyUsagesExtension(
 					x509.KeyUsageFlags.digitalSignature | x509.KeyUsageFlags.keyEncipherment,
 					false

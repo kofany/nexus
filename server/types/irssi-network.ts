@@ -153,7 +153,9 @@ export function snakeToCamel(obj: any): any {
 
 		for (const key in obj) {
 			if (Object.hasOwn(obj, key)) {
-				const camelKey = key.replace(/_([a-z])/g, (_: string, letter: string): string => letter.toUpperCase());
+				const camelKey = key.replace(/_([a-z])/g, (_: string, letter: string): string =>
+					letter.toUpperCase()
+				);
 				result[camelKey] = snakeToCamel(obj[key]);
 			}
 		}
