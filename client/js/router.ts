@@ -2,12 +2,9 @@ import constants from "./constants";
 
 import {createRouter, createWebHashHistory} from "vue-router";
 import SignIn from "../components/Windows/SignIn.vue";
-import Connect from "../components/Windows/Connect.vue";
 import Settings from "../components/Windows/Settings.vue";
 import Help from "../components/Windows/Help.vue";
 import Changelog from "../components/Windows/Changelog.vue";
-import NetworkEdit from "../components/Windows/NetworkEdit.vue";
-import NetworkManager from "../components/Windows/NetworkManager.vue";
 import SearchResults from "../components/Windows/SearchResults.vue";
 import RoutedChat from "../components/RoutedChat.vue";
 import {store} from "./store";
@@ -40,17 +37,6 @@ const router = createRouter({
 
 				next();
 			},
-		},
-		{
-			name: "Connect",
-			path: "/connect",
-			component: Connect,
-			props: (route) => ({queryParams: route.query}),
-		},
-		{
-			name: "NetworkManager",
-			path: "/network-manager",
-			component: NetworkManager,
 		},
 		{
 			path: "/settings",
@@ -100,11 +86,6 @@ const router = createRouter({
 			component: Changelog,
 		},
 		{
-			name: "NetworkEdit",
-			path: "/edit-network/:uuid",
-			component: NetworkEdit,
-		},
-		{
 			name: "RoutedChat",
 			path: "/chan-:id",
 			component: RoutedChat,
@@ -140,11 +121,6 @@ router.beforeEach((to, from) => {
 
 	// Disallow navigating to invalid channels
 	if (to.name === "RoutedChat" && !store.getters.findChannel(Number(to.params.id))) {
-		return false;
-	}
-
-	// Disallow navigating to invalid networks
-	if (to.name === "NetworkEdit" && !store.getters.findNetwork(String(to.params.uuid))) {
 		return false;
 	}
 

@@ -128,26 +128,20 @@ class Chan {
 		});
 	}
 
-	getSortedUsers(irc?: Network["irc"]) {
+	getSortedUsers() {
 		const users = Array.from(this.users.values());
 
-		if (!irc || !irc.network || !irc.network.options || !irc.network.options.PREFIX) {
-			return users;
-		}
-
-		const userModeSortPriority = {};
-		irc.network.options.PREFIX.forEach((prefix, index) => {
-			userModeSortPriority[prefix.symbol] = index;
-		});
-
-		userModeSortPriority[""] = 99; // No mode is lowest
-
+		// Simple alphabetical sort by nick (proxy mode)
 		return users.sort(function (a, b) {
 			if (a.mode === b.mode) {
 				return a.nick.toLowerCase() < b.nick.toLowerCase() ? -1 : 1;
 			}
 
-			return userModeSortPriority[a.mode] - userModeSortPriority[b.mode];
+			// Sort by mode priority: @ > + > (no mode)
+			const modePriority = {"@": 0, "+": 1, "": 2};
+			const aPriority = modePriority[a.mode] ?? 2;
+			const bPriority = modePriority[b.mode] ?? 2;
+			return aPriority - bPriority;
 		});
 	}
 
@@ -267,21 +261,8 @@ class Chan {
 			return;
 		}
 
-		if (!network.irc) {
-			// Network created, but misconfigured
-			log.warn(
-				`Failed to load messages for ${client.name}, network ${network.name} is not initialized.`
-			);
-			return;
-		}
-
 		if (!client.messageProvider) {
-			if (network.irc.network.cap.isEnabled("znc.in/playback")) {
-				// if we do have a message provider we might be able to only fetch partial history,
-				// so delay the cap in this case.
-				requestZncPlayback(this, network, 0);
-			}
-
+			// In proxy mode, message history is handled by messageProvider
 			return;
 		}
 
@@ -289,10 +270,6 @@ class Chan {
 			.getMessages(network, this, () => client.idMsg++)
 			.then((messages) => {
 				if (messages.length === 0) {
-					if (network.irc!.network.cap.isEnabled("znc.in/playback")) {
-						requestZncPlayback(this, network, 0);
-					}
-
 					return;
 				}
 
@@ -307,12 +284,6 @@ class Chan {
 					messages: messages.slice(-100),
 					totalMessages: messages.length,
 				});
-
-				if (network.irc!.network.cap.isEnabled("znc.in/playback")) {
-					const from = Math.floor(messages[messages.length - 1].time.getTime() / 1000);
-
-					requestZncPlayback(this, network, from);
-				}
 			})
 			.catch((err: Error) =>
 				log.error(`Failed to load messages for ${client.name}: ${err.toString()}`)
@@ -326,16 +297,6 @@ class Chan {
 	setMuteStatus(muted: boolean) {
 		this.muted = !!muted;
 	}
-}
-
-function requestZncPlayback(channel: Chan, network: Network, from: number) {
-	if (!network.irc) {
-		throw new Error(
-			`requestZncPlayback: no irc field on network "${network.name}", this is a bug`
-		);
-	}
-
-	network.irc.raw("ZNC", "*playback", "PLAY", channel.name, from.toString());
 }
 
 export default Chan;
