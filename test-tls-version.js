@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const tls = require("tls");
 
 console.log("Testing TLS connection to irssi...\n");

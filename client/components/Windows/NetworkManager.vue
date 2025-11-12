@@ -965,6 +965,7 @@ fieldset legend {
 import {defineComponent, ref, onMounted} from "vue";
 import socket from "../../js/socket";
 import SidebarToggle from "../SidebarToggle.vue";
+import eventbus from "../../js/eventbus";
 
 interface IrssiServer {
 	address: string;
@@ -1092,14 +1093,44 @@ export default defineComponent({
 			});
 		};
 
+		const resetForm = () => {
+			isEditing.value = false;
+			editingNetworkName.value = "";
+			newNetwork.value = {
+				name: "",
+				nick: "",
+				alternateNick: "",
+				username: "",
+				realname: "",
+				ownHost: "",
+				autosendcmd: "",
+				usermode: "",
+				saslMechanism: "",
+				saslUsername: "",
+				saslPassword: "",
+				servers: [
+					{
+						address: "",
+						port: 6697,
+						autoConnect: false,
+						useTLS: true,
+						tlsVerify: true,
+						family: 0,
+						noCap: false,
+						noProxy: false,
+					},
+				],
+			};
+		};
+
 		const addNewNetwork = () => {
 			if (!newNetwork.value.name || newNetwork.value.servers.length === 0) {
-				alert("Network name and at least one server are required");
+				errorMessage.value = "Network name and at least one server are required";
 				return;
 			}
 
 			if (!newNetwork.value.servers[0].address) {
-				alert("Server address is required");
+				errorMessage.value = "Server address is required";
 				return;
 			}
 
@@ -1142,27 +1173,37 @@ export default defineComponent({
 		};
 
 		const removeNetwork = (networkName: string) => {
-			if (!confirm(`Are you sure you want to remove network '${networkName}'?`)) {
-				return;
-			}
+			eventbus.emit(
+				"confirm-dialog",
+				{
+					title: "Remove Network",
+					text: `Are you sure you want to remove network '${networkName}'?`,
+					button: "Remove",
+				},
+				(result: boolean) => {
+					if (!result) {
+						return;
+					}
 
-			isLoading.value = true;
-			errorMessage.value = "";
-			successMessage.value = "";
+					isLoading.value = true;
+					errorMessage.value = "";
+					successMessage.value = "";
 
-			socket.emit("network:remove_irssi", {name: networkName}, (result: any) => {
-				isLoading.value = false;
+					socket.emit("network:remove_irssi", {name: networkName}, (response: any) => {
+						isLoading.value = false;
 
-				if (result.success) {
-					successMessage.value = result.message;
-					loadNetworks();
-					setTimeout(() => {
-						successMessage.value = "";
-					}, 5000);
-				} else {
-					errorMessage.value = result.message || "Failed to remove network";
+						if (response.success) {
+							successMessage.value = response.message;
+							loadNetworks();
+							setTimeout(() => {
+								successMessage.value = "";
+							}, 5000);
+						} else {
+							errorMessage.value = response.message || "Failed to remove network";
+						}
+					});
 				}
-			});
+			);
 		};
 
 		const connectToServer = (network: IrssiNetwork, server: any) => {
@@ -1189,37 +1230,43 @@ export default defineComponent({
 		};
 
 		const removeServer = (server: any, chatnet: string) => {
-			if (
-				!confirm(
-					`Are you sure you want to remove server ${server.address}:${server.port} from ${chatnet}?`
-				)
-			) {
-				return;
-			}
-
-			isLoading.value = true;
-			errorMessage.value = "";
-			successMessage.value = "";
-
-			socket.emit(
-				"server:remove_irssi",
+			eventbus.emit(
+				"confirm-dialog",
 				{
-					address: server.address,
-					port: server.port,
-					chatnet: chatnet,
+					title: "Remove Server",
+					text: `Are you sure you want to remove server ${server.address}:${server.port} from ${chatnet}?`,
+					button: "Remove",
 				},
-				(result: any) => {
-					isLoading.value = false;
-
-					if (result.success) {
-						successMessage.value = result.message;
-						loadNetworks();
-						setTimeout(() => {
-							successMessage.value = "";
-						}, 5000);
-					} else {
-						errorMessage.value = result.message || "Failed to remove server";
+				(result: boolean) => {
+					if (!result) {
+						return;
 					}
+
+					isLoading.value = true;
+					errorMessage.value = "";
+					successMessage.value = "";
+
+					socket.emit(
+						"server:remove_irssi",
+						{
+							address: server.address,
+							port: server.port,
+							chatnet: chatnet,
+						},
+						(response: any) => {
+							isLoading.value = false;
+
+							if (response.success) {
+								successMessage.value = response.message;
+								loadNetworks();
+								setTimeout(() => {
+									successMessage.value = "";
+								}, 5000);
+							} else {
+								errorMessage.value = response.message || "Failed to remove server";
+							}
+						}
+					);
 				}
 			);
 		};
@@ -1239,36 +1286,6 @@ export default defineComponent({
 
 		const removeServerFromForm = (index: number) => {
 			newNetwork.value.servers.splice(index, 1);
-		};
-
-		const resetForm = () => {
-			isEditing.value = false;
-			editingNetworkName.value = "";
-			newNetwork.value = {
-				name: "",
-				nick: "",
-				alternateNick: "",
-				username: "",
-				realname: "",
-				ownHost: "",
-				autosendcmd: "",
-				usermode: "",
-				saslMechanism: "",
-				saslUsername: "",
-				saslPassword: "",
-				servers: [
-					{
-						address: "",
-						port: 6697,
-						autoConnect: false,
-						useTLS: true,
-						tlsVerify: true,
-						family: 0,
-						noCap: false,
-						noProxy: false,
-					},
-				],
-			};
 		};
 
 		onMounted(() => {

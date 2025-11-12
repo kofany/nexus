@@ -314,11 +314,6 @@ export default defineComponent({
 		});
 
 		const saveSettings = () => {
-			console.log("[WeeChatRelay] saveSettings called", {
-				canSave: canSave.value,
-				config: config.value,
-			});
-
 			if (!canSave.value) {
 				status.value = {
 					type: "error",
@@ -341,26 +336,19 @@ export default defineComponent({
 				compression: config.value.compression,
 			};
 
-			console.log("[WeeChatRelay] Emitting weechat:config:save", payload);
 			socket.emit("weechat:config:save", payload);
 		};
 
 		const loadCurrentConfig = () => {
-			console.log(
-				"[WeeChatRelay] Loading current config, socket connected:",
-				socket.connected
-			);
 			socket.emit("weechat:config:get");
 		};
 
 		onMounted(() => {
-			console.log("[WeeChatRelay] Component mounted, loading config");
 			// Load existing config
 			loadCurrentConfig();
 
 			// Listen for config info
 			socket.on("weechat:config:info", (data: WeeChatRelayConfig) => {
-				console.log("[WeeChatRelay] Received config info", data);
 				currentConfig.value = data;
 				// Pre-fill form with current config (except password)
 				config.value.enabled = data.enabled;
@@ -376,7 +364,6 @@ export default defineComponent({
 
 			// Listen for save success
 			socket.on("weechat:config:success", (data: {message: string}) => {
-				console.log("[WeeChatRelay] Success", data);
 				status.value = {
 					type: "success",
 					message: data.message,
@@ -389,7 +376,6 @@ export default defineComponent({
 
 			// Listen for errors
 			socket.on("weechat:config:error", (data: {error: string}) => {
-				console.log("[WeeChatRelay] Error", data);
 				status.value = {
 					type: "error",
 					message: data.error,

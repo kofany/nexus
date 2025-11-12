@@ -90,11 +90,10 @@ describe("LDAP authentication plugin", function () {
 		});
 
 		it("should fail to authenticate with incorrect password", async function () {
+			let errorMessage = "";
 			const errorLogStub = sandbox
 				.stub(log, "error")
 				.callsFake(TestUtil.sanitizeLog((str) => (errorMessage += str)));
-
-			let errorMessage = "";
 			sandbox
 				.stub(Client.prototype, "bind")
 				.rejects(new Error("InsufficientAccessRightsError"));
@@ -110,11 +109,10 @@ describe("LDAP authentication plugin", function () {
 		});
 
 		it("should fail to authenticate with incorrect username", async function () {
+			let errorMessage = "";
 			const errorLogStub = sandbox
 				.stub(log, "error")
 				.callsFake(TestUtil.sanitizeLog((str) => (errorMessage += str)));
-
-			let errorMessage = "";
 			sandbox.stub(Client.prototype, "bind").rejects(new Error("NoSuchObjectError"));
 			sandbox.stub(Client.prototype, "unbind").resolves();
 

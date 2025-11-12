@@ -198,8 +198,7 @@
 </style>
 
 <script lang="ts">
-import {defineComponent, ref, computed, onMounted} from "vue";
-import {useStore} from "../../js/store";
+import {defineComponent, ref, onMounted} from "vue";
 import socket from "../../js/socket";
 import RevealPassword from "../RevealPassword.vue";
 
@@ -224,8 +223,6 @@ export default defineComponent({
 		RevealPassword,
 	},
 	setup() {
-		const store = useStore();
-
 		const config = ref<IrssiConnectionConfig>({
 			host: "127.0.0.1",
 			port: 9001,

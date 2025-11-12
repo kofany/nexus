@@ -8,25 +8,12 @@ import {ClientNetwork, ClientChan} from "../types";
 import {SharedNetwork, SharedNetworkChan} from "../../../shared/types/network";
 
 socket.on("init", async function (data) {
-	console.log("[INIT] Received init event");
-	console.log("[INIT] networks count:", data.networks.length);
-	console.log("[INIT] current store.state.networks count:", store.state.networks.length);
-	console.log("[INIT] data.token present:", !!data.token);
-	console.log(
-		"[INIT] Current localStorage - user:",
-		storage.get("user"),
-		"token before:",
-		storage.get("token") ? "present" : "MISSING"
-	);
-
 	// SAVE TOKEN TO LOCALSTORAGE (The Lounge auth, independent from irssi)
 	if (data.token) {
 		storage.set("token", data.token);
-		console.log("[INIT] Token saved to localStorage");
 	}
 
 	const mergedNetworks = mergeNetworkData(data.networks);
-	console.log("[INIT] After merge, networks count:", mergedNetworks.length);
 
 	store.commit("networks", mergedNetworks);
 	store.commit("isConnected", true);
@@ -82,7 +69,9 @@ socket.on("init", async function (data) {
 				// For example, it can be unset if you first open the page after server start
 				switchToChannel(store.state.networks[0].channels[0]);
 			} else {
-				await navigate("Connect").catch((err) => console.log(err));
+				await navigate("Connect").catch(() => {
+					// Ignore navigation errors
+				});
 			}
 		}
 	}
@@ -93,23 +82,12 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 	const collapsedNetworks = stored ? new Set(JSON.parse(stored)) : new Set();
 	const result: ReturnType<typeof mergeNetworkData> = [];
 
-	console.log("[MERGE] ===============================================");
-	console.log("[MERGE] mergeNetworkData called");
-	console.log("[MERGE] newNetworks.length:", newNetworks.length);
-	console.log("[MERGE] store.state.networks.length:", store.state.networks.length);
-
 	// SPECIAL CASE: If we're receiving networks after disconnect (store is empty),
 	// don't try to merge - just create fresh networks
 	const currentNetworks = store.state.networks;
 
 	if (currentNetworks.length === 0 && newNetworks.length > 0) {
-		console.log("[MERGE] ⚠️ Store is empty, creating FRESH networks (NO MERGE)");
-
 		for (const sharedNet of newNetworks) {
-			console.log(
-				`[MERGE] Creating fresh network: ${sharedNet.name} (uuid: ${sharedNet.uuid})`
-			);
-			console.log(`[MERGE]   - ${sharedNet.channels.length} channels created`);
 			const newNet: ClientNetwork = {
 				...sharedNet,
 				channels: sharedNet.channels.map(toClientChan),
@@ -119,11 +97,8 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 			result.push(newNet);
 		}
 
-		console.log(`[MERGE] ✅ Returning FRESH networks, count: ${result.length}`);
 		return result;
 	}
-
-	console.log("[MERGE] Using NORMAL merge logic");
 
 	// Normal merge logic (reconnect with existing networks)
 	for (const sharedNet of newNetworks) {
@@ -131,10 +106,6 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 
 		// If this network is new, set some default variables and initalize channel variables
 		if (!currentNetwork) {
-			console.log(
-				`[MERGE] Network ${sharedNet.name} (${sharedNet.uuid}) NOT FOUND in store - creating NEW`
-			);
-			console.log(`[MERGE]   - Created with ${sharedNet.channels.length} channels`);
 			const newNet: ClientNetwork = {
 				...sharedNet,
 				channels: sharedNet.channels.map(toClientChan),
@@ -144,10 +115,6 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 			result.push(newNet);
 			continue;
 		}
-
-		console.log(
-			`[MERGE] Network ${sharedNet.name} (${sharedNet.uuid}) FOUND in store - merging`
-		);
 
 		// Merge received network object into existing network object on the client
 		// so the object reference stays the same (e.g. for currentChannel state)
@@ -170,7 +137,6 @@ function mergeNetworkData(newNetworks: SharedNetwork[]): ClientNetwork[] {
 		result.push(currentNetwork);
 	}
 
-	console.log(`[MERGE] ✅ Returning merged networks, count: ${result.length}`);
 	return result;
 }
 
@@ -178,9 +144,6 @@ function mergeChannelData(
 	oldChannels: ClientChan[],
 	newChannels: SharedNetworkChan[]
 ): ClientChan[] {
-	console.log(
-		`[MERGE-CHAN] mergeChannelData: old=${oldChannels.length}, new=${newChannels.length}`
-	);
 	const result: ReturnType<typeof mergeChannelData> = [];
 
 	for (const newChannel of newChannels) {
@@ -188,18 +151,11 @@ function mergeChannelData(
 
 		if (!currentChannel) {
 			// This is a new channel that was joined while client was disconnected, initialize it
-			console.log(
-				`[MERGE-CHAN]   Channel ${newChannel.name} (id=${newChannel.id}) - NEW, creating`
-			);
 			const current = toClientChan(newChannel);
 			result.push(current);
 			emitNamesOrMarkUsersOudated(current); // TODO: this should not carry logic like that
 			continue;
 		}
-
-		console.log(
-			`[MERGE-CHAN]   Channel ${newChannel.name} (id=${newChannel.id}) - EXISTS, merging`
-		);
 
 		// Merge received channel object into existing currentChannel
 		// so the object references are exactly the same (e.g. in store.state.activeChannel)
@@ -231,7 +187,6 @@ function mergeChannelData(
 		result.push(currentChannel);
 	}
 
-	console.log(`[MERGE-CHAN] ✅ Result: ${result.length} channels`);
 	return result;
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const WebSocket = require("ws");
 
 console.log("Testing WebSocket TLS connection to irssi...");

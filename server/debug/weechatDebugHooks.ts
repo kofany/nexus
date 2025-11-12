@@ -419,5 +419,4 @@ export function printDebugOptionsGuide(): void {
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
     `;
-	console.log(guide);
 }

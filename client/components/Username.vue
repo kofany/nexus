@@ -33,7 +33,7 @@ export default defineComponent({
 		},
 		active: Boolean,
 		onHover: {
-			type: Function as PropType<(user: UserInMessage) => void>,
+			type: Function as PropType<() => void>,
 			required: false,
 		},
 		channel: {type: Object as PropType<ClientChan>, required: false},
