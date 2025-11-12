@@ -219,7 +219,14 @@ class Config {
         const configPath = this.getConfigPath();
 
         if (fs.existsSync(configPath)) {
-            const userConfig = require(configPath);
+            const loadedModule = require(configPath);
+
+            // Handle ESM modules with default export vs CommonJS modules
+            // ESM: import config from "./config.js" → {__esModule: true, default: {...}}
+            // CJS: module.exports = {...} → {...}
+            const userConfig = loadedModule.__esModule && loadedModule.default
+                ? loadedModule.default
+                : loadedModule;
 
             if (_.isEmpty(userConfig)) {
                 log.warn(
