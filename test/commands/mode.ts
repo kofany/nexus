@@ -1,7 +1,7 @@
 import {expect} from "chai";
-import Chan from "../../server/models/chan.js";
-import {ChanType} from "../../shared/types/chan.js";
-import ModeCommand from "../../server/plugins/inputs/mode.js";
+import Chan from "../../dist/server/models/chan.js";
+import {ChanType} from "../../dist/shared/types/chan.js";
+import ModeCommand from "../../dist/server/plugins/inputs/mode.js";
 
 describe("Commands", function () {
 	describe("/mode", function () {

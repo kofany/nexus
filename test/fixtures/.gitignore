@@ -11,3 +11,4 @@
 
 # Fixtures contain fake packages, stored in a fake node_modules folder
 !.thelounge/packages/node_modules/
+!.nexuslounge/packages/node_modules/

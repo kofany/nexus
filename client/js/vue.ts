@@ -28,7 +28,7 @@ VueApp.mount("#app");
 socket.open();
 
 store.watch(
-	(state) => state.sidebarOpen,
+	(state: typeof store.state): boolean => state.sidebarOpen,
 	(sidebarOpen) => {
 		if (window.innerWidth > constants.mobileViewportPixels) {
 			storage.set("nexuslounge.state.sidebar", sidebarOpen.toString());
@@ -38,7 +38,7 @@ store.watch(
 );
 
 store.watch(
-	(state) => state.userlistOpen,
+	(state: typeof store.state): boolean => state.userlistOpen,
 	(userlistOpen) => {
 		storage.set("nexuslounge.state.userlist", userlistOpen.toString());
 		eventbus.emit("resize");

@@ -122,7 +122,7 @@ router.beforeEach((to, from, next) => {
 	// unless they are trying to open SignIn (which can be triggered in auth.js)
 	if (!store.state.appLoaded && to.name !== "SignIn") {
 		store.watch(
-			(state) => state.appLoaded,
+			(state: typeof store.state): boolean => state.appLoaded,
 			() => next()
 		);
 

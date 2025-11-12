@@ -30,357 +30,357 @@ import {WeeChatMessage, WeeChatParser} from "./weechatProtocol.js";
 import {WeeChatRelayClient} from "./weechatRelayClient.js";
 
 export interface WeeChatRelayServerConfig {
-    // Port (single port per user)
-    port: number;
-    host?: string;
+	// Port (single port per user)
+	port: number;
+	host?: string;
 
-    // Protocol
-    protocol: "tcp" | "ws"; // TCP or WebSocket
-    wsPath?: string; // WebSocket path (default: /weechat)
+	// Protocol
+	protocol: "tcp" | "ws"; // TCP or WebSocket
+	wsPath?: string; // WebSocket path (default: /weechat)
 
-    // TLS/SSL
-    tls: boolean;
-    certPath?: string; // Path to certificate file
-    keyPath?: string; // Path to private key file
+	// TLS/SSL
+	tls: boolean;
+	certPath?: string; // Path to certificate file
+	keyPath?: string; // Path to private key file
 
-    // Authentication
-    password?: string;
-    passwordHashAlgo?: string[];
-    passwordHashIterations?: number;
+	// Authentication
+	password?: string;
+	passwordHashAlgo?: string[];
+	passwordHashIterations?: number;
 
-    // Compression
-    compression?: boolean;
+	// Compression
+	compression?: boolean;
 }
 
 /**
  * WeeChat Relay Bridge Server
  */
 export class WeeChatRelayServer extends EventEmitter {
-    private config: WeeChatRelayServerConfig;
-    private server: NetServer | tls.Server | https.Server | null = null;
-    private wsServer: WebSocketServer | null = null;
-    private clients: Map<string, WeeChatRelayClient> = new Map();
-    private clientIdCounter = 0;
+	private config: WeeChatRelayServerConfig;
+	private server: NetServer | tls.Server | https.Server | null = null;
+	private wsServer: WebSocketServer | null = null;
+	private clients: Map<string, WeeChatRelayClient> = new Map();
+	private clientIdCounter = 0;
 
-    constructor(config: WeeChatRelayServerConfig) {
-        super();
-        this.config = {
-            host: "0.0.0.0",
-            wsPath: "/weechat",
-            password: "",
-            passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
-            passwordHashIterations: 100000,
-            compression: true,
-            ...config,
-        };
+	constructor(config: WeeChatRelayServerConfig) {
+		super();
+		this.config = {
+			host: "0.0.0.0",
+			wsPath: "/weechat",
+			password: "",
+			passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
+			passwordHashIterations: 100000,
+			compression: true,
+			...config,
+		};
 
-        log.info(
-            `${colors.green("[WeeChat Relay]")} Creating WeeChatRelayServer: ` +
-                `protocol=${this.config.protocol}, port=${this.config.port}, tls=${this.config.tls}`
-        );
-    }
+		log.info(
+			`${colors.green("[WeeChat Relay]")} Creating WeeChatRelayServer: ` +
+				`protocol=${this.config.protocol}, port=${this.config.port}, tls=${this.config.tls}`
+		);
+	}
 
-    /**
-     * Start the server (TCP or WebSocket, with or without TLS)
-     */
-    async start(): Promise<void> {
-        if (this.config.protocol === "tcp") {
-            await this.startTcpServer();
-        } else if (this.config.protocol === "ws") {
-            await this.startWebSocketServer();
-        } else {
-            throw new Error(`Unknown protocol: ${this.config.protocol}`);
-        }
+	/**
+	 * Start the server (TCP or WebSocket, with or without TLS)
+	 */
+	async start(): Promise<void> {
+		if (this.config.protocol === "tcp") {
+			await this.startTcpServer();
+		} else if (this.config.protocol === "ws") {
+			await this.startWebSocketServer();
+		} else {
+			throw new Error(`Unknown protocol: ${this.config.protocol}`);
+		}
 
-        const tlsStr = this.config.tls ? "TLS" : "plain";
-        log.info(
-            `${colors.green(
-                "[WeeChat Relay]"
-            )} ✅ Started ${this.config.protocol.toUpperCase()} server (${tlsStr}) on ${
-                this.config.host
-            }:${this.config.port}`
-        );
-    }
+		const tlsStr = this.config.tls ? "TLS" : "plain";
+		log.info(
+			`${colors.green(
+				"[WeeChat Relay]"
+			)} ✅ Started ${this.config.protocol.toUpperCase()} server (${tlsStr}) on ${
+				this.config.host
+			}:${this.config.port}`
+		);
+	}
 
-    /**
-     * Start TCP server (with or without TLS)
-     */
-    private async startTcpServer(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.config.tls) {
-                // TLS TCP server
-                if (!this.config.certPath || !this.config.keyPath) {
-                    reject(new Error("TLS enabled but certPath/keyPath not provided"));
-                    return;
-                }
+	/**
+	 * Start TCP server (with or without TLS)
+	 */
+	private async startTcpServer(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (this.config.tls) {
+				// TLS TCP server
+				if (!this.config.certPath || !this.config.keyPath) {
+					reject(new Error("TLS enabled but certPath/keyPath not provided"));
+					return;
+				}
 
-                // certPath should already contain the full chain (server cert + CA cert)
-                // generated by sslCertGenerator.ts
-                const options: tls.TlsOptions = {
-                    key: fs.readFileSync(this.config.keyPath),
-                    cert: fs.readFileSync(this.config.certPath), // Full chain!
-                };
+				// certPath should already contain the full chain (server cert + CA cert)
+				// generated by sslCertGenerator.ts
+				const options: tls.TlsOptions = {
+					key: fs.readFileSync(this.config.keyPath),
+					cert: fs.readFileSync(this.config.certPath), // Full chain!
+				};
 
-                log.info(
-                    `${colors.cyan("[WeeChat Relay]")} Using certificate: ${this.config.certPath}`
-                );
+				log.info(
+					`${colors.cyan("[WeeChat Relay]")} Using certificate: ${this.config.certPath}`
+				);
 
-                this.server = tls.createServer(options, (socket: tls.TLSSocket) => {
-                    // Log TLS errors (handshake failures, etc.)
-                    socket.on("error", (err) => {
-                        log.error(
-                            `${colors.red("[WeeChat Relay]")} TLS socket error: ${err.message}`
-                        );
-                        log.error(`${colors.red("[WeeChat Relay]")} TLS error stack: ${err.stack}`);
-                    });
+				this.server = tls.createServer(options, (socket: tls.TLSSocket) => {
+					// Log TLS errors (handshake failures, etc.)
+					socket.on("error", (err) => {
+						log.error(
+							`${colors.red("[WeeChat Relay]")} TLS socket error: ${err.message}`
+						);
+						log.error(`${colors.red("[WeeChat Relay]")} TLS error stack: ${err.stack}`);
+					});
 
-                    socket.on("secureConnect", () => {
-                        log.info(`${colors.green("[WeeChat Relay]")} TLS handshake successful`);
-                    });
+					socket.on("secureConnect", () => {
+						log.info(`${colors.green("[WeeChat Relay]")} TLS handshake successful`);
+					});
 
-                    this.handleTcpConnection(socket);
-                });
+					this.handleTcpConnection(socket);
+				});
 
-                log.info(`${colors.cyan("[WeeChat Relay]")} Starting TLS TCP server...`);
-            } else {
-                // Plain TCP server
-                this.server = new NetServer();
-                this.server.on("connection", (socket: NetSocket) => {
-                    this.handleTcpConnection(socket);
-                });
+				log.info(`${colors.cyan("[WeeChat Relay]")} Starting TLS TCP server...`);
+			} else {
+				// Plain TCP server
+				this.server = new NetServer();
+				this.server.on("connection", (socket: NetSocket) => {
+					this.handleTcpConnection(socket);
+				});
 
-                log.info(`${colors.cyan("[WeeChat Relay]")} Starting plain TCP server...`);
-            }
+				log.info(`${colors.cyan("[WeeChat Relay]")} Starting plain TCP server...`);
+			}
 
-            this.server.on("error", (err) => {
-                log.error(`${colors.red("[WeeChat Relay]")} TCP server error: ${err}`);
-                reject(err);
-            });
+			this.server.on("error", (err) => {
+				log.error(`${colors.red("[WeeChat Relay]")} TCP server error: ${err}`);
+				reject(err);
+			});
 
-            this.server.listen(this.config.port, this.config.host, () => {
-                log.info(
-                    `${colors.green("[WeeChat Relay]")} TCP server listening on ${
-                        this.config.host
-                    }:${this.config.port}`
-                );
-                resolve();
-            });
-        });
-    }
+			this.server.listen(this.config.port, this.config.host, () => {
+				log.info(
+					`${colors.green("[WeeChat Relay]")} TCP server listening on ${
+						this.config.host
+					}:${this.config.port}`
+				);
+				resolve();
+			});
+		});
+	}
 
-    /**
-     * Start WebSocket server (with or without TLS)
-     */
-    private async startWebSocketServer(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.config.tls) {
-                // WSS (WebSocket Secure)
-                if (!this.config.certPath || !this.config.keyPath) {
-                    reject(new Error("TLS enabled but certPath/keyPath not provided"));
-                    return;
-                }
+	/**
+	 * Start WebSocket server (with or without TLS)
+	 */
+	private async startWebSocketServer(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (this.config.tls) {
+				// WSS (WebSocket Secure)
+				if (!this.config.certPath || !this.config.keyPath) {
+					reject(new Error("TLS enabled but certPath/keyPath not provided"));
+					return;
+				}
 
-                // certPath should already contain the full chain (server cert + CA cert)
-                const httpsServer = https.createServer({
-                    key: fs.readFileSync(this.config.keyPath),
-                    cert: fs.readFileSync(this.config.certPath), // Full chain!
-                });
+				// certPath should already contain the full chain (server cert + CA cert)
+				const httpsServer = https.createServer({
+					key: fs.readFileSync(this.config.keyPath),
+					cert: fs.readFileSync(this.config.certPath), // Full chain!
+				});
 
-                log.info(
-                    `${colors.cyan("[WeeChat Relay]")} Using certificate for WSS: ${
-                        this.config.certPath
-                    }`
-                );
+				log.info(
+					`${colors.cyan("[WeeChat Relay]")} Using certificate for WSS: ${
+						this.config.certPath
+					}`
+				);
 
-                this.wsServer = new WebSocketServer({
-                    server: httpsServer,
-                    path: this.config.wsPath,
-                });
+				this.wsServer = new WebSocketServer({
+					server: httpsServer,
+					path: this.config.wsPath,
+				});
 
-                httpsServer.listen(this.config.port, this.config.host, () => {
-                    log.info(
-                        `${colors.green("[WeeChat Relay]")} WSS server listening on ${
-                            this.config.host
-                        }:${this.config.port}${this.config.wsPath}`
-                    );
-                    resolve();
-                });
+				httpsServer.listen(this.config.port, this.config.host, () => {
+					log.info(
+						`${colors.green("[WeeChat Relay]")} WSS server listening on ${
+							this.config.host
+						}:${this.config.port}${this.config.wsPath}`
+					);
+					resolve();
+				});
 
-                httpsServer.on("error", (err) => {
-                    log.error(`${colors.red("[WeeChat Relay]")} HTTPS server error: ${err}`);
-                    reject(err);
-                });
+				httpsServer.on("error", (err) => {
+					log.error(`${colors.red("[WeeChat Relay]")} HTTPS server error: ${err}`);
+					reject(err);
+				});
 
-                this.server = httpsServer;
-                log.info(
-                    `${colors.cyan("[WeeChat Relay]")} Starting WSS (WebSocket Secure) server...`
-                );
-            } else {
-                // Plain WebSocket
-                this.wsServer = new WebSocketServer({
-                    host: this.config.host,
-                    port: this.config.port,
-                    path: this.config.wsPath,
-                });
+				this.server = httpsServer;
+				log.info(
+					`${colors.cyan("[WeeChat Relay]")} Starting WSS (WebSocket Secure) server...`
+				);
+			} else {
+				// Plain WebSocket
+				this.wsServer = new WebSocketServer({
+					host: this.config.host,
+					port: this.config.port,
+					path: this.config.wsPath,
+				});
 
-                this.wsServer.on("listening", () => {
-                    log.info(
-                        `${colors.green("[WeeChat Relay]")} WebSocket server listening on ${
-                            this.config.host
-                        }:${this.config.port}${this.config.wsPath}`
-                    );
-                    resolve();
-                });
+				this.wsServer.on("listening", () => {
+					log.info(
+						`${colors.green("[WeeChat Relay]")} WebSocket server listening on ${
+							this.config.host
+						}:${this.config.port}${this.config.wsPath}`
+					);
+					resolve();
+				});
 
-                log.info(`${colors.cyan("[WeeChat Relay]")} Starting plain WebSocket server...`);
-            }
+				log.info(`${colors.cyan("[WeeChat Relay]")} Starting plain WebSocket server...`);
+			}
 
-            this.wsServer.on("connection", (ws: WebSocket) => {
-                this.handleWebSocketConnection(ws);
-            });
+			this.wsServer.on("connection", (ws: WebSocket) => {
+				this.handleWebSocketConnection(ws);
+			});
 
-            this.wsServer.on("error", (err) => {
-                log.error(`${colors.red("[WeeChat Relay]")} WebSocket server error: ${err}`);
-                reject(err);
-            });
-        });
-    }
+			this.wsServer.on("error", (err) => {
+				log.error(`${colors.red("[WeeChat Relay]")} WebSocket server error: ${err}`);
+				reject(err);
+			});
+		});
+	}
 
-    /**
-     * Handle TCP connection
-     */
-    private handleTcpConnection(socket: NetSocket): void {
-        const clientId = `tcp-${this.clientIdCounter++}`;
-        const remoteAddr = `${socket.remoteAddress}:${socket.remotePort}`;
+	/**
+	 * Handle TCP connection
+	 */
+	private handleTcpConnection(socket: NetSocket): void {
+		const clientId = `tcp-${this.clientIdCounter++}`;
+		const remoteAddr = `${socket.remoteAddress}:${socket.remotePort}`;
 
-        // Log TLS info if this is a TLS socket
-        if ((socket as any).encrypted) {
-            const tlsSocket = socket as tls.TLSSocket;
-            log.info(
-                `${colors.green(
-                    "[WeeChat Relay]"
-                )} New TLS connection: ${clientId} from ${remoteAddr}`
-            );
-            log.info(
-                `${colors.cyan(
-                    "[WeeChat Relay]"
-                )} TLS version: ${tlsSocket.getProtocol()}, cipher: ${tlsSocket.getCipher()?.name}`
-            );
-        } else {
-            log.info(
-                `${colors.green(
-                    "[WeeChat Relay Bridge]"
-                )} New TCP connection: ${clientId} from ${remoteAddr}`
-            );
-        }
+		// Log TLS info if this is a TLS socket
+		if ((socket as any).encrypted) {
+			const tlsSocket = socket as tls.TLSSocket;
+			log.info(
+				`${colors.green(
+					"[WeeChat Relay]"
+				)} New TLS connection: ${clientId} from ${remoteAddr}`
+			);
+			log.info(
+				`${colors.cyan(
+					"[WeeChat Relay]"
+				)} TLS version: ${tlsSocket.getProtocol()}, cipher: ${tlsSocket.getCipher()?.name}`
+			);
+		} else {
+			log.info(
+				`${colors.green(
+					"[WeeChat Relay Bridge]"
+				)} New TCP connection: ${clientId} from ${remoteAddr}`
+			);
+		}
 
-        const client = new WeeChatRelayClient(clientId, socket, this.config);
-        this.clients.set(clientId, client);
+		const client = new WeeChatRelayClient(clientId, socket, this.config);
+		this.clients.set(clientId, client);
 
-        // Forward events
-        client.on("authenticated", (user) => {
-            this.emit("client:authenticated", clientId, user);
-        });
+		// Forward events
+		client.on("authenticated", (user) => {
+			this.emit("client:authenticated", clientId, user);
+		});
 
-        client.on("command", (command, args) => {
-            this.emit("client:command", clientId, command, args);
-        });
+		client.on("command", (command, args) => {
+			this.emit("client:command", clientId, command, args);
+		});
 
-        client.on("close", () => {
-            log.info(
-                `${colors.yellow("[WeeChat Relay Bridge]")} TCP connection closed: ${clientId}`
-            );
-            this.clients.delete(clientId);
-            this.emit("client:close", clientId);
-        });
+		client.on("close", () => {
+			log.info(
+				`${colors.yellow("[WeeChat Relay Bridge]")} TCP connection closed: ${clientId}`
+			);
+			this.clients.delete(clientId);
+			this.emit("client:close", clientId);
+		});
 
-        client.on("error", (err) => {
-            log.error(
-                `${colors.red("[WeeChat Relay Bridge]")} TCP client error: ${clientId} - ${err}`
-            );
-        });
-    }
+		client.on("error", (err) => {
+			log.error(
+				`${colors.red("[WeeChat Relay Bridge]")} TCP client error: ${clientId} - ${err}`
+			);
+		});
+	}
 
-    /**
-     * Handle WebSocket connection
-     */
-    private handleWebSocketConnection(ws: WebSocket): void {
-        const clientId = `ws-${this.clientIdCounter++}`;
+	/**
+	 * Handle WebSocket connection
+	 */
+	private handleWebSocketConnection(ws: WebSocket): void {
+		const clientId = `ws-${this.clientIdCounter++}`;
 
-        log.info(`${colors.green("[WeeChat Relay Bridge]")} New WebSocket connection: ${clientId}`);
+		log.info(`${colors.green("[WeeChat Relay Bridge]")} New WebSocket connection: ${clientId}`);
 
-        const client = new WeeChatRelayClient(clientId, ws, this.config);
-        this.clients.set(clientId, client);
+		const client = new WeeChatRelayClient(clientId, ws, this.config);
+		this.clients.set(clientId, client);
 
-        // Forward events
-        client.on("authenticated", (user) => {
-            this.emit("client:authenticated", clientId, user);
-        });
+		// Forward events
+		client.on("authenticated", (user) => {
+			this.emit("client:authenticated", clientId, user);
+		});
 
-        client.on("command", (command, args) => {
-            this.emit("client:command", clientId, command, args);
-        });
+		client.on("command", (command, args) => {
+			this.emit("client:command", clientId, command, args);
+		});
 
-        client.on("close", () => {
-            log.info(
-                `${colors.yellow(
-                    "[WeeChat Relay Bridge]"
-                )} WebSocket connection closed: ${clientId}`
-            );
-            this.clients.delete(clientId);
-            this.emit("client:close", clientId);
-        });
+		client.on("close", () => {
+			log.info(
+				`${colors.yellow(
+					"[WeeChat Relay Bridge]"
+				)} WebSocket connection closed: ${clientId}`
+			);
+			this.clients.delete(clientId);
+			this.emit("client:close", clientId);
+		});
 
-        client.on("error", (err) => {
-            log.error(
-                `${colors.red(
-                    "[WeeChat Relay Bridge]"
-                )} WebSocket client error: ${clientId} - ${err}`
-            );
-        });
-    }
+		client.on("error", (err) => {
+			log.error(
+				`${colors.red(
+					"[WeeChat Relay Bridge]"
+				)} WebSocket client error: ${clientId} - ${err}`
+			);
+		});
+	}
 
-    /**
-     * Get client by ID
-     */
-    getClient(clientId: string): WeeChatRelayClient | undefined {
-        return this.clients.get(clientId);
-    }
+	/**
+	 * Get client by ID
+	 */
+	getClient(clientId: string): WeeChatRelayClient | undefined {
+		return this.clients.get(clientId);
+	}
 
-    /**
-     * Get all clients
-     */
-    getClients(): WeeChatRelayClient[] {
-        return Array.from(this.clients.values());
-    }
+	/**
+	 * Get all clients
+	 */
+	getClients(): WeeChatRelayClient[] {
+		return Array.from(this.clients.values());
+	}
 
-    /**
-     * Stop the server
-     */
-    async stop(): Promise<void> {
-        // Close all clients
-        for (const client of this.clients.values()) {
-            client.close();
-        }
+	/**
+	 * Stop the server
+	 */
+	async stop(): Promise<void> {
+		// Close all clients
+		for (const client of this.clients.values()) {
+			client.close();
+		}
 
-        this.clients.clear();
+		this.clients.clear();
 
-        // Close main server (TCP/TLS or HTTPS for WSS)
-        if (this.server) {
-            await new Promise<void>((resolve) => {
-                this.server!.close(() => resolve());
-            });
-            this.server = null;
-        }
+		// Close main server (TCP/TLS or HTTPS for WSS)
+		if (this.server) {
+			await new Promise<void>((resolve) => {
+				this.server!.close(() => resolve());
+			});
+			this.server = null;
+		}
 
-        // Close WebSocket server
-        if (this.wsServer) {
-            await new Promise<void>((resolve) => {
-                this.wsServer!.close(() => resolve());
-            });
-            this.wsServer = null;
-        }
+		// Close WebSocket server
+		if (this.wsServer) {
+			await new Promise<void>((resolve) => {
+				this.wsServer!.close(() => resolve());
+			});
+			this.wsServer = null;
+		}
 
-        log.info(`${colors.yellow("[WeeChat Relay]")} Server stopped`);
-    }
+		log.info(`${colors.yellow("[WeeChat Relay]")} Server stopped`);
+	}
 }

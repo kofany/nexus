@@ -60,9 +60,8 @@ type ConfirmDialogData = {
 	button: string;
 };
 
-type ConfirmDialogCallback = {
-	(confirmed: boolean): void;
-};
+// eslint-disable-next-line no-unused-vars
+type ConfirmDialogCallback = (result: boolean) => void;
 
 export default defineComponent({
 	name: "ConfirmDialog",

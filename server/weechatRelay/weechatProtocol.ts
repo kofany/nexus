@@ -261,15 +261,14 @@ export class WeeChatMessage {
 
 			return result;
 		}
- 
-			// Build final message without compression
-			const result = Buffer.alloc(this.offset);
-			result.writeUInt32BE(this.offset, 0);
-			result.writeUInt8(COMPRESSION_OFF, 4);
-			this.buffer.copy(result, 5, 5, this.offset);
 
-			return result;
-		
+		// Build final message without compression
+		const result = Buffer.alloc(this.offset);
+		result.writeUInt32BE(this.offset, 0);
+		result.writeUInt8(COMPRESSION_OFF, 4);
+		this.buffer.copy(result, 5, 5, this.offset);
+
+		return result;
 	}
 }
 
@@ -347,9 +346,8 @@ export class WeeChatParser {
 		} else if (length === 0) {
 			return "";
 		}
- 
-			return this.readBytes(length).toString("utf8");
-		
+
+		return this.readBytes(length).toString("utf8");
 	}
 
 	/**
@@ -363,9 +361,8 @@ export class WeeChatParser {
 		} else if (length === 0) {
 			return Buffer.alloc(0);
 		}
- 
-			return this.readBytes(length);
-		
+
+		return this.readBytes(length);
 	}
 
 	/**

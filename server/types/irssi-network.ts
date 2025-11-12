@@ -117,14 +117,14 @@ export function camelToSnake(obj: any): any {
 	}
 
 	if (Array.isArray(obj)) {
-		return obj.map((item) => camelToSnake(item));
+		return obj.map((item): any => camelToSnake(item));
 	}
 
 	if (typeof obj === "object") {
 		const result: any = {};
 
 		for (const key in obj) {
-			if (obj.hasOwnProperty(key)) {
+			if (Object.hasOwn(obj, key)) {
 				const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase();
 				result[snakeKey] = camelToSnake(obj[key]);
 			}
@@ -145,15 +145,17 @@ export function snakeToCamel(obj: any): any {
 	}
 
 	if (Array.isArray(obj)) {
-		return obj.map((item) => snakeToCamel(item));
+		return obj.map((item): any => snakeToCamel(item));
 	}
 
 	if (typeof obj === "object") {
 		const result: any = {};
 
 		for (const key in obj) {
-			if (obj.hasOwnProperty(key)) {
-				const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+			if (Object.hasOwn(obj, key)) {
+				const camelKey = key.replace(/_([a-z])/g, (_: string, letter: string): string =>
+					letter.toUpperCase()
+				);
 				result[camelKey] = snakeToCamel(obj[key]);
 			}
 		}

@@ -1,18 +1,18 @@
 import fs from "fs";
 import path from "path";
 import {expect} from "chai";
-import util from "../util.js";
-import Msg from "../../server/models/msg.js";
-import {MessageType} from "../../shared/types/msg.js";
-import Config from "../../server/config.js";
+import util from "../util.ts";
+import Msg from "../../dist/server/models/msg.js";
+import {MessageType} from "../../dist/shared/types/msg.js";
+import Config from "../../dist/server/config.js";
 import MessageStorage, {
 	currentSchemaVersion,
 	migrations,
 	necessaryMigrations,
 	rollbacks,
-} from "../../server/plugins/messageStorage/sqlite.js";
+} from "../../dist/server/plugins/messageStorage/sqlite.js";
 import sqlite3 from "sqlite3";
-import {DeletionRequest} from "../../server/plugins/messageStorage/types";
+import type {DeletionRequest} from "../../server/plugins/messageStorage/types.js";
 
 const orig_schema = [
 	// Schema version #1

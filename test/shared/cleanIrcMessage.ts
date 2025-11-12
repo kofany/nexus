@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {cleanIrcMessage} from "../../shared/irc.js";
+import {cleanIrcMessage} from "../../dist/shared/irc.js";
 
 describe("cleanIrcMessage", function () {
 	it("should remove all formatting", function () {

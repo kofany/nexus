@@ -200,7 +200,7 @@ export class VariableMutationTracker<T> extends EventEmitter {
 		const tracker = this;
 
 		return new Proxy(target, {
-			get(obj, prop) {
+			get(obj: O, prop: string | symbol): any {
 				if (prop === property) {
 					return tracker.currentValue;
 				}

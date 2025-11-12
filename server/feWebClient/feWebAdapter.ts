@@ -108,7 +108,11 @@ export class FeWebAdapter {
 		this.socket.onMessage("server_status", (msg) => this.handleServerStatus(msg));
 
 		// 4. channel_join - User joined channel
-		this.socket.onMessage("channel_join", (msg) => this.handleChannelJoin(msg));
+		this.socket.onMessage("channel_join", (msg) => {
+			void this.handleChannelJoin(msg).catch((err) =>
+				log.error("[FeWebAdapter] channel_join error:", err)
+			);
+		});
 
 		// 5. channel_part - User left channel
 		this.socket.onMessage("channel_part", (msg) => this.handleChannelPart(msg));
@@ -147,10 +151,18 @@ export class FeWebAdapter {
 		this.socket.onMessage("channel_list", (msg) => this.handleChannelList(msg));
 
 		// 16. state_dump - Initial state dump
-		this.socket.onMessage("state_dump", (msg) => this.handleStateDump(msg));
+		this.socket.onMessage("state_dump", (msg) => {
+			void this.handleStateDump(msg).catch((err) =>
+				log.error("[FeWebAdapter] state_dump error:", err)
+			);
+		});
 
 		// 17. query_opened - Query window opened
-		this.socket.onMessage("query_opened", (msg) => this.handleQueryOpened(msg));
+		this.socket.onMessage("query_opened", (msg) => {
+			void this.handleQueryOpened(msg).catch((err) =>
+				log.error("[FeWebAdapter] query_opened error:", err)
+			);
+		});
 
 		// 18. query_closed - Query window closed (handled by IrssiClient directly via EventEmitter)
 		// Register empty handler to suppress warning
@@ -560,7 +572,7 @@ export class FeWebAdapter {
 				log.debug(`[FeWebAdapter] Removed user ${nick} from ${msg.channel}`);
 				break;
 
-			case "change":
+			case "change": {
 				// Nick change - rename user in ALL channels of this network
 				const newNick = msg.extra?.new_nick;
 
@@ -616,6 +628,7 @@ export class FeWebAdapter {
 
 				// Don't continue to the single-channel update at the end
 				return;
+			}
 
 			case "+o":
 			case "-o":
@@ -623,40 +636,7 @@ export class FeWebAdapter {
 			case "-v":
 			case "+h":
 			case "-h":
-				// Mode change
-				const targetUser = channel.users.get(nick.toLowerCase());
-
-				if (!targetUser) {
-					log.warn(`[FeWebAdapter] User ${nick} not found for mode change ${task}`);
-					return;
-				}
-
-				const isAdding = task[0] === "+";
-				const modeChar = task[1]; // o, v, h
-
-				// Convert mode character to symbol using PREFIX
-				const modeSymbol = network.serverOptions.PREFIX.modeToSymbol[modeChar];
-
-				if (!modeSymbol) {
-					log.warn(`[FeWebAdapter] Unknown mode character: ${modeChar}`);
-					return;
-				}
-
-				if (isAdding) {
-					// Add mode if not already present
-					if (!targetUser.modes.includes(modeSymbol)) {
-						targetUser.modes.unshift(modeSymbol); // Add to front (higher priority)
-					}
-				} else {
-					// Remove mode
-					targetUser.modes = targetUser.modes.filter((m) => m !== modeSymbol);
-				}
-
-				log.debug(
-					`[FeWebAdapter] Updated modes for ${nick} in ${
-						msg.channel
-					}: ${targetUser.modes.join("")}`
-				);
+				this.applyNicklistModeChange(channel, network, msg, task, nick);
 				break;
 
 			default:
@@ -670,6 +650,46 @@ export class FeWebAdapter {
 		// Emit update to frontend
 		const usersArray = Array.from(channel.users.values());
 		this.callbacks.onNicklistUpdate(network.uuid, channel.id, usersArray);
+	}
+
+	private applyNicklistModeChange(
+		channel: Chan,
+		network: NetworkData,
+		msg: FeWebMessage,
+		task: string,
+		nick: string
+	): void {
+		const targetUser = channel.users.get(nick.toLowerCase());
+
+		if (!targetUser) {
+			log.warn(`[FeWebAdapter] User ${nick} not found for mode change ${task}`);
+			return;
+		}
+
+		const isAdding = task[0] === "+";
+		const modeChar = task[1]; // o, v, h
+
+		// Convert mode character to symbol using PREFIX
+		const modeSymbol = network.serverOptions.PREFIX.modeToSymbol[modeChar];
+
+		if (!modeSymbol) {
+			log.warn(`[FeWebAdapter] Unknown mode character: ${modeChar}`);
+			return;
+		}
+
+		if (isAdding) {
+			// Add mode if not already present
+			if (!targetUser.modes.includes(modeSymbol)) {
+				targetUser.modes.unshift(modeSymbol); // Add to front (higher priority)
+			}
+		} else {
+			// Remove mode
+			targetUser.modes = targetUser.modes.filter((m) => m !== modeSymbol);
+		}
+
+		log.debug(
+			`[FeWebAdapter] Updated modes for ${nick} in ${msg.channel}: ${targetUser.modes.join("")}`
+		);
 	}
 
 	/**

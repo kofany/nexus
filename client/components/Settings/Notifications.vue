@@ -169,7 +169,6 @@ export default defineComponent({
 			const pop = new Audio();
 			pop.src = "audio/pop.wav";
 
-			 
 			pop.play();
 		};
 

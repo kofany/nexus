@@ -1,10 +1,10 @@
 import {expect} from "chai";
 
-import Chan from "../../server/models/chan.js";
-import Msg from "../../server/models/msg.js";
-import Network from "../../server/models/network.js";
-import Prefix from "../../server/models/prefix.js";
-import User from "../../server/models/user.js";
+import Chan from "../../dist/server/models/chan.js";
+import Msg from "../../dist/server/models/msg.js";
+import Network from "../../dist/server/models/network.js";
+import Prefix from "../../dist/server/models/prefix.js";
+import User from "../../dist/server/models/user.js";
 describe("Chan", function () {
 	const network = {
 		network: {
@@ -215,7 +215,8 @@ describe("Chan", function () {
 				"num_users",
 				"special",
 				"closed",
-				"data"
+				"data",
+				"users" // Added for irssi mode - includes user list
 			);
 		});
 

@@ -1,9 +1,9 @@
 import {expect} from "chai";
-import sinon from "ts-sinon";
+import sinon from "sinon";
 
-import log from "../../server/log.js";
-import Config from "../../server/config.js";
-import TestUtil from "../util.js";
+import log from "../../dist/server/log.js";
+import Config from "../../dist/server/config.js";
+import TestUtil from "../util.ts";
 
 describe("mergeConfig", function () {
 	it("should mutate object", function () {

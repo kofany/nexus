@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {findLinks, findLinksWithSchema} from "../../shared/linkify.js";
+import {findLinks, findLinksWithSchema} from "../../dist/shared/linkify.js";
 
 describe("findLinks", () => {
 	it("should find url", () => {
