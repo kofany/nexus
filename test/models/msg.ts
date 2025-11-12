@@ -1,8 +1,8 @@
 import {expect} from "chai";
 
-import Msg from "../../server/models/msg.js";
-import User from "../../server/models/user.js";
-import {LinkPreview} from "../../shared/types/msg.js";
+import Msg from "../../dist/server/models/msg.js";
+import User from "../../dist/server/models/user.js";
+import type {LinkPreview} from "../../dist/shared/types/msg.js";
 
 describe("Msg", function () {
 	["from", "target"].forEach((prop) => {

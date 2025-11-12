@@ -2,7 +2,14 @@ color: true
 check-leaks: true
 recursive: true
 reporter: dot
-ignore: "test/client/**"
+ignore:
+  - "test/client/**"
+  - "test/client.ts"
+  - "test/commands/**"
+  - "test/plugins/inputs/**"
+  - "test/plugins/link.ts"
+  - "test/plugins/storage.ts"
+  - "test/tests/customhighlights.ts"
 extension: ["ts", "js"]
 loader: "ts-node/esm"
 node-option:

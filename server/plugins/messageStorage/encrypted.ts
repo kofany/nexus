@@ -695,7 +695,7 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
             lastReadTime
         );
 
-        return row ? row.count : 0;
+        return row ? (row.count as number) : 0;
     }
 
     /**
@@ -715,7 +715,7 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
             channelName.toLowerCase()
         );
 
-        return row?.count || 0;
+        return (row?.count as number) || 0;
     }
 
     /**
@@ -847,7 +847,7 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
             channelName.toLowerCase()
         );
 
-        return row ? row.last_read_time : undefined;
+        return row ? (row.last_read_time as number) : undefined;
     }
 }
 

@@ -1,6 +1,5 @@
 import Config from "../config.js";
-import Busboy, {BusboyHeaders} from "@fastify/busboy";
-import type {Busboy as BusboyInstance} from "@fastify/busboy";
+import Busboy, {BusboyHeaders, type Busboy as BusboyInstance} from "@fastify/busboy";
 import {v4 as uuidv4} from "uuid";
 import path from "path";
 import fs from "fs";

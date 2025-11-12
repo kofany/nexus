@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
+ 
 import fs from "fs/promises";
 import path from "path";
 import filenamify from "filenamify";
@@ -19,12 +19,12 @@ class TextFileMessageStorage implements MessageStorage {
         this.isEnabled = false;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+     
     async enable() {
         this.isEnabled = true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+     
     async close() {
         this.isEnabled = false;
     }

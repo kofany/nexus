@@ -602,7 +602,7 @@ class SqliteMessageStorage implements SearchableMessageStorage {
             channelName.toLowerCase()
         );
 
-        return row ? row.count : 0;
+        return row ? (row.count as number) : 0;
     }
 
     canProvideMessages() {

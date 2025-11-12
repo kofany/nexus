@@ -3,10 +3,10 @@ import path from "path";
 import {fileURLToPath} from "url";
 import crypto from "crypto";
 import {expect} from "chai";
-import util from "../util.js";
-import Config from "../../server/config.js";
-import storage from "../../server/plugins/storage.js";
-import link from "../../server/plugins/irc-events/link.js";
+import util from "../util.ts";
+import Config from "../../dist/server/config.js";
+import storage from "../../dist/server/plugins/storage.js";
+import link from "../../dist/server/plugins/irc-events/link.js";
 import {Request, Response} from "express";
 
 const __filename = fileURLToPath(import.meta.url);

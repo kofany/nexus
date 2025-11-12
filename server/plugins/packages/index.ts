@@ -59,10 +59,10 @@ const packageApis = function (packageInfo: PackageInfo) {
         },
         Commands: {
             // SINGLE MODE: Command plugins not supported (no inputs system)
-            add: () => {
+            add() {
                 log.warn(`[${packageInfo.packageName}] Command registration not supported in irssi proxy mode`);
             },
-            runAsUser: (command: string, targetId: number, client: IrssiClient) => {
+            runAsUser(command: string, targetId: number, client: IrssiClient) {
                 // In irssi proxy mode, send command directly to irssi
                 log.warn(`[${packageInfo.packageName}] runAsUser not implemented for irssi proxy mode`);
             },

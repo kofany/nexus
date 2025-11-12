@@ -1,8 +1,8 @@
-import log from "../../../server/log.js";
+import log from "../../../dist/server/log.js";
 import {expect} from "chai";
-import TestUtil from "../../util.js";
+import TestUtil from "../../util.ts";
 import sinon from "ts-sinon";
-import packagePlugin from "../../../server/plugins/packages/index.js";
+import packagePlugin from "../../../dist/server/plugins/packages/index.js";
 
 let packages: typeof packagePlugin;
 

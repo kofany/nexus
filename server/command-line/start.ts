@@ -1,9 +1,8 @@
 import log from "../log.js";
 import colors from "chalk";
 import fs from "fs";
-import path from "path";
+import path, {dirname} from "path";
 import {fileURLToPath} from "url";
-import {dirname} from "path";
 import {Command} from "commander";
 import Config from "../config.js";
 import Utils from "./utils.js";

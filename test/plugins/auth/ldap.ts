@@ -1,10 +1,10 @@
-import log from "../../../server/log.js";
-import ldapAuth from "../../../server/plugins/auth/ldap.js";
-import Config from "../../../server/config.js";
+import log from "../../../dist/server/log.js";
+import ldapAuth from "../../../dist/server/plugins/auth/ldap.js";
+import Config from "../../../dist/server/config.js";
 import {Client} from "ldapts";
 import {expect} from "chai";
-import TestUtil from "../../util.js";
-import ClientManager from "../../../server/clientManager.js";
+import TestUtil from "../../util.ts";
+import ClientManager from "../../../dist/server/clientManager.js";
 import sinon from "ts-sinon";
 
 type SinonSandbox = sinon.SinonSandbox;

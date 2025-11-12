@@ -128,7 +128,9 @@ export default async function (
             if (fs.existsSync(publicPath)) {
                 return res.sendFile(publicPath);
             }
-        } catch {}
+        } catch {
+            // Ignore errors - will try clientPath next
+        }
 
         const clientPath = Utils.getFileFromRelativeToRoot("client", "themes", filename);
 
@@ -136,7 +138,9 @@ export default async function (
             if (fs.existsSync(clientPath)) {
                 return res.sendFile(clientPath);
             }
-        } catch {}
+        } catch {
+            // Ignore errors - will fall through to next()
+        }
 
         return next();
     });
@@ -269,7 +273,11 @@ export default async function (
 
             socket.on("error", (err) => log.error(`io socket error: ${err}`));
 
-            socket.on("auth:perform", performAuthentication);
+            const authHandler = (data: any) => {
+                void performAuthentication.call(socket, data).catch((err) => log.error("auth:perform error:", err));
+            };
+
+            socket.on("auth:perform", authHandler);
             socket.emit("auth:start", serverHash);
         });
 
@@ -320,7 +328,9 @@ export default async function (
 
             // Close all client and IRC connections
             if (manager) {
-                manager.clients.forEach((client) => client.quit());
+                manager.clients.forEach((client) => {
+                    void client.quit().catch((err) => log.error("Error during client quit:", err));
+                });
             }
 
             if (Config.values.prefetchStorage) {
@@ -529,7 +539,7 @@ function initializeIrssiClient(
     lastMessage: number,
     openChannel: number
 ) {
-    socket.off("auth:perform", performAuthentication);
+    socket.removeAllListeners("auth:perform"); // Remove all auth:perform listeners (wrapped version was registered)
     socket.emit("auth:success");
 
     void socket.join(client.id);

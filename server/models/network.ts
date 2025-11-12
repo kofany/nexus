@@ -4,6 +4,7 @@ import {v4 as uuidv4} from "uuid";
 // import IrcFramework, {Client as IRCClient} from "irc-framework";
 // Stubbed types for legacy code compatibility
 type IRCClient = any;
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace IrcFramework {
     export type MessageTags = any;
     export type Client = any;

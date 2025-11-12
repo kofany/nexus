@@ -30,7 +30,7 @@ program
             await Utils.executeYarnCommand("remove", packageName);
             log.info(`${colors.green(packageName)} has been successfully uninstalled.`);
         } catch (code_1) {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+             
             log.error(`Failed to uninstall ${colors.green(packageName)}. Exit code: ${code_1}`);
             process.exit(1);
         }

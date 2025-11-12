@@ -922,9 +922,9 @@ export class IrssiClient {
                         queryChannel.id = this.feWebAdapter.getNextChannelId();
 
                         // Add to network using sorted insertion
-                        const Network = (await import("./models/network.js")).default;
+                        const NetworkClass = (await import("./models/network.js")).default;
 
-                        if (network instanceof Network) {
+                        if (network instanceof NetworkClass) {
                             network.addChannel(queryChannel);
                         } else {
                             // For NetworkData, just push (sorting is handled in feWebAdapter)
@@ -2608,8 +2608,8 @@ export class IrssiClient {
      */
     async listIrssiNetworks(): Promise<IrssiNetwork[]> {
         log.info(`[IrssiClient] Listing networks for user ${this.name}`);
-        const networks = await this.sendIrssiListRequest("network_list");
-        return networks.map((net: any) => snakeToCamel(net));
+        const networks = await this.sendIrssiListRequest("network_list") as any[];
+        return networks.map((net: any) => snakeToCamel(net) as IrssiNetwork);
     }
 
     /**
@@ -2622,8 +2622,8 @@ export class IrssiClient {
             }`
         );
         const data = networkName ? {chatnet: networkName} : {};
-        const servers = await this.sendIrssiListRequest("server_list", data);
-        return servers.map((srv: any) => snakeToCamel(srv));
+        const servers = await this.sendIrssiListRequest("server_list", data) as any[];
+        return servers.map((srv: any) => snakeToCamel(srv) as IrssiServer);
     }
 
     /**
@@ -2797,8 +2797,8 @@ export class IrssiClient {
         let keyPath: string | undefined;
 
         if (this.config.weechatRelay.tls) {
-            const Config = (await import("./config.js")).default;
-            const certsDir = Config.getClientCertificatesPath();
+            const ConfigModule = (await import("./config.js")).default;
+            const certsDir = ConfigModule.getClientCertificatesPath();
 
             certPath = path.join(certsDir, `${this.name}-cert.pem`);
             keyPath = path.join(certsDir, `${this.name}-key.pem`);

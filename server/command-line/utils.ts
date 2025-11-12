@@ -4,9 +4,8 @@ import colors from "chalk";
 import fs from "fs";
 import Helper from "../helper.js";
 import Config from "../config.js";
-import path from "path";
+import path, {dirname} from "path";
 import {fileURLToPath} from "url";
-import {dirname} from "path";
 import {spawn} from "child_process";
 import {createRequire} from "module";
 
@@ -40,13 +39,15 @@ class Utils {
     }
 
     static getFileFromRelativeToRoot(...fileName: string[]) {
-        // e.g. /thelounge/server/command-line/utils.ts
-        if (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development") {
-            return path.resolve(path.join(__dirname, "..", "..", ...fileName));
+        // When running from compiled dist/ (e.g. /thelounge/dist/server/command-line/utils.ts)
+        // we need to go up 3 levels regardless of NODE_ENV
+        if (__dirname.includes("/dist/")) {
+            return path.resolve(path.join(__dirname, "..", "..", "..", ...fileName));
         }
 
-        // e.g. /thelounge/dist/server/command-line/utils.ts
-        return path.resolve(path.join(__dirname, "..", "..", "..", ...fileName));
+        // When running from source (e.g. /thelounge/server/command-line/utils.ts)
+        // we only need to go up 2 levels
+        return path.resolve(path.join(__dirname, "..", "..", ...fileName));
     }
 
     // Parses CLI options such as `-c public=true`, `-c debug.raw=true`, etc.

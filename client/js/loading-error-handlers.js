@@ -101,8 +101,8 @@
 
 			userSpecifiedCSSElement.innerHTML = userSettings.userStyles;
 		}
-	} catch (e) {
-		//
+	} catch {
+		// Ignore user style errors - non-critical
 	}
 
 	// Trigger early service worker registration

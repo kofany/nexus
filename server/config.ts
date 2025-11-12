@@ -1,7 +1,6 @@
 import {fileURLToPath} from "url";
-import {dirname} from "path";
 import {createRequire} from "module";
-import path from "path";
+import path, {dirname} from "path";
 import fs, {Stats} from "fs";
 import os from "os";
 import _ from "lodash";

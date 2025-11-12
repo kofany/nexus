@@ -935,11 +935,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		for (const m of messages) {
 			const lineIdInt = (() => {
-				const id: string | number = m.id || Date.now();
+				const msgId: string | number = m.id || Date.now();
 				const raw =
-					typeof id === "string"
-						? parseInt((id as string).split("-")[0], 10)
-						: Number(id);
+					typeof msgId === "string"
+						? parseInt((msgId as string).split("-")[0], 10)
+						: Number(msgId);
 				return Number.isFinite(raw)
 					? Math.abs(raw % 2147483647)
 					: Math.floor(Date.now() % 2147483647);

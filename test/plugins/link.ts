@@ -1,10 +1,10 @@
 import path from "path";
 import {fileURLToPath} from "url";
 import {expect} from "chai";
-import util from "../util.js";
-import Config from "../../server/config.js";
-import link from "../../server/plugins/irc-events/link.js";
-import {LinkPreview} from "../../shared/types/msg.js";
+import util from "../util.ts";
+import Config from "../../dist/server/config.js";
+import link from "../../dist/server/plugins/irc-events/link.js";
+import type {LinkPreview} from "../../dist/shared/types/msg.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
