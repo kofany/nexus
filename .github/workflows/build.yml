@@ -41,5 +41,14 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Debug paths (Windows diagnostic)
+        run: |
+          node -e "console.log('Platform:', process.platform)"
+          node -e "console.log('Path separator:', require('path').sep)"
+          node -e "const fs=require('fs'); console.log('public/ exists:', fs.existsSync('public'))"
+          node -e "const fs=require('fs'); if(fs.existsSync('public')) console.log('public/ contents (first 10):', fs.readdirSync('public').slice(0,10))"
+          node -e "const fs=require('fs'); console.log('public/nexuslounge.webmanifest exists:', fs.existsSync('public/nexuslounge.webmanifest'))"
+          node -e "console.log('dist/ exists:', require('fs').existsSync('dist'))"
+
       - name: Test
         run: yarn test

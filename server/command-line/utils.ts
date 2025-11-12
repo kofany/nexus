@@ -41,7 +41,8 @@ class Utils {
 	static getFileFromRelativeToRoot(...fileName: string[]) {
 		// When running from compiled dist/ (e.g. /thelounge/dist/server/command-line/utils.ts)
 		// we need to go up 3 levels regardless of NODE_ENV
-		if (__dirname.includes("/dist/")) {
+		// Check for both forward slash (Unix) and backslash (Windows)
+		if (__dirname.includes(`${path.sep}dist${path.sep}`)) {
 			return path.resolve(path.join(__dirname, "..", "..", "..", ...fileName));
 		}
 
