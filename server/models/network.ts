@@ -109,7 +109,6 @@ class Network {
 			saslAccount: "",
 			saslPassword: "",
 			channels: [],
-			irc: null,
 			serverOptions: {
 				CHANTYPES: ["#", "&"],
 				PREFIX: new Prefix([

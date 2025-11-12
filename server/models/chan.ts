@@ -4,8 +4,6 @@ import Config from "../config.js";
 import User from "./user.js";
 import Msg from "./msg.js";
 import storage from "../plugins/storage.js";
-// LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
-// import Client from "../client.js";
 import Network from "./network.js";
 import Prefix from "./prefix.js";
 import {MessageType, SharedMsg} from "../../shared/types/msg.js";

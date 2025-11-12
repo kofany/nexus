@@ -5,6 +5,7 @@ import SignIn from "../components/Windows/SignIn.vue";
 import Settings from "../components/Windows/Settings.vue";
 import Help from "../components/Windows/Help.vue";
 import Changelog from "../components/Windows/Changelog.vue";
+import NetworkManager from "../components/Windows/NetworkManager.vue";
 import SearchResults from "../components/Windows/SearchResults.vue";
 import RoutedChat from "../components/RoutedChat.vue";
 import {store} from "./store";
@@ -37,6 +38,11 @@ const router = createRouter({
 
 				next();
 			},
+		},
+		{
+			name: "NetworkManager",
+			path: "/network-manager",
+			component: NetworkManager,
 		},
 		{
 			path: "/settings",
