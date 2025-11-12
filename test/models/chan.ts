@@ -215,7 +215,8 @@ describe("Chan", function () {
 				"num_users",
 				"special",
 				"closed",
-				"data"
+				"data",
+				"users" // Added for irssi mode - includes user list
 			);
 		});
 

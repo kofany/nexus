@@ -1,7 +1,7 @@
 import log from "../../../dist/server/log.js";
 import {expect} from "chai";
 import TestUtil from "../../util.ts";
-import sinon from "ts-sinon";
+import sinon from "sinon";
 import packagePlugin from "../../../dist/server/plugins/packages/index.js";
 
 let packages: typeof packagePlugin;
@@ -14,7 +14,7 @@ describe("packages", function () {
 
         // ESM doesn't have require.cache, so we need to dynamically import with a cache buster
         const moduleUrl = new URL(
-            `../../../server/plugins/packages/index.js?update=${Date.now()}`,
+            `../../../dist/server/plugins/packages/index.js?update=${Date.now()}`,
             import.meta.url
         );
         const module = await import(moduleUrl.href);

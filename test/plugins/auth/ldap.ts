@@ -5,7 +5,7 @@ import {Client} from "ldapts";
 import {expect} from "chai";
 import TestUtil from "../../util.ts";
 import ClientManager from "../../../dist/server/clientManager.js";
-import sinon from "ts-sinon";
+import sinon from "sinon";
 
 type SinonSandbox = sinon.SinonSandbox;
 

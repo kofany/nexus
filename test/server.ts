@@ -6,7 +6,7 @@ import io from "socket.io-client";
 import util from "./util.ts";
 import changelog from "../dist/server/plugins/changelog.js";
 
-import sinon from "ts-sinon";
+import sinon from "sinon";
 import ClientManager from "../dist/server/clientManager.js";
 
 describe("Server", function () {
@@ -35,7 +35,7 @@ describe("Server", function () {
 		});
 
 		checkForUpdatesStub = sinon.stub(changelog, "checkForUpdates");
-		server = await (await import("../server/server.js")).default({} as any);
+		server = await (await import("../dist/server/server.js")).default({} as any);
 	});
 
 	after(function (done) {

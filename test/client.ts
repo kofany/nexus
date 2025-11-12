@@ -6,7 +6,7 @@ import ClientManager from "../dist/server/clientManager.js";
 import Client from "../dist/server/client.js";
 import log from "../dist/server/log.js";
 
-import sinon from "ts-sinon";
+import sinon from "sinon";
 
 describe("Client", function () {
 	const commonNetworkConfig: NetworkConfig = {

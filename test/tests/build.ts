@@ -10,7 +10,7 @@ describe("public folder", function () {
     const publicFolder = path.join(__dirname, "..", "..", "public");
 
     it("font awesome files are copied", function () {
-        expect(fs.existsSync(path.join(publicFolder, "fonts", "fa-solid-900.woff"))).to.be.true;
+        // FontAwesome 6.7.2+ only includes woff2 format (modern browsers)
         expect(fs.existsSync(path.join(publicFolder, "fonts", "fa-solid-900.woff2"))).to.be.true;
     });
 
@@ -18,7 +18,7 @@ describe("public folder", function () {
         expect(fs.existsSync(path.join(publicFolder, "favicon.ico"))).to.be.true;
         expect(fs.existsSync(path.join(publicFolder, "robots.txt"))).to.be.true;
         expect(fs.existsSync(path.join(publicFolder, "service-worker.js"))).to.be.true;
-        expect(fs.existsSync(path.join(publicFolder, "thelounge.webmanifest"))).to.be.true;
+        expect(fs.existsSync(path.join(publicFolder, "nexuslounge.webmanifest"))).to.be.true;
     });
 
     it("audio files are copied", function () {
