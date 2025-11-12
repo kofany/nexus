@@ -1,54 +1,14 @@
 import _ from "lodash";
 import {v4 as uuidv4} from "uuid";
-// LEGACY: irc-framework removed (SINGLE MODE uses IrssiClient only)
-// import IrcFramework, {Client as IRCClient} from "irc-framework";
-// Stubbed types for legacy code compatibility
-type IRCClient = any;
-// eslint-disable-next-line @typescript-eslint/no-namespace
-namespace IrcFramework {
-	export type MessageTags = any;
-	export type Client = any;
-}
-// Stubbed IrcFramework default export
-const IrcFramework = null as any;
 import Chan, {ChanConfig, Channel} from "./chan.js";
 import Msg from "./msg.js";
 import Prefix from "./prefix.js";
 import Helper, {Hostmask} from "../helper.js";
-import Config, {WebIRC} from "../config.js";
+import Config from "../config.js";
 import STSPolicies from "../plugins/sts.js";
-import ClientCertificate, {ClientCertificateType} from "../plugins/clientCertificate.js";
-// LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
-// Avoiding circular dependency - use any type for client parameters
 import {MessageType} from "../../shared/types/msg.js";
 import {ChanType} from "../../shared/types/chan.js";
 import {SharedNetwork} from "../../shared/types/network.js";
-
-type NetworkIrcOptions = {
-	host: string;
-	port: number;
-	password: string;
-	nick: string;
-	username: string;
-	gecos: string;
-	tls: boolean;
-	rejectUnauthorized: boolean;
-	webirc: WebIRC | null;
-	client_certificate: ClientCertificateType | null;
-	socks?: {
-		host: string;
-		port: number;
-		user: string;
-		pass: string;
-	};
-	sasl_mechanism?: string;
-	account?:
-		| {
-				account: string;
-				password: string;
-		  }
-		| Record<string, never>;
-};
 
 type NetworkStatus = {
 	connected: boolean;
@@ -60,14 +20,6 @@ export type IgnoreListItem = Hostmask & {
 };
 
 type IgnoreList = IgnoreListItem[];
-
-type NonNullableIRCWithOptions = NonNullable<IRCClient & {options: NetworkIrcOptions}>;
-
-export type NetworkWithIrcFramework = Network & {
-	irc: NonNullable<Network["irc"]> & {
-		options: NonNullableIRCWithOptions;
-	};
-};
 
 export type NetworkConfig = {
 	nick: string;
@@ -123,10 +75,6 @@ class Network {
 	proxyEnabled!: boolean;
 	highlightRegex?: RegExp;
 
-	irc?: IrcFramework.Client & {
-		options?: NetworkIrcOptions;
-	};
-
 	chanCache!: Chan[];
 	ignoreList!: IgnoreList;
 	keepNick!: string | null;
@@ -161,7 +109,6 @@ class Network {
 			saslAccount: "",
 			saslPassword: "",
 			channels: [],
-			irc: null,
 			serverOptions: {
 				CHANTYPES: ["#", "&"],
 				PREFIX: new Prefix([
@@ -287,107 +234,7 @@ class Network {
 		return true;
 	}
 
-	async createIrcFramework(this: NetworkWithIrcFramework, client: any) {
-		this.irc = new IrcFramework.Client({
-			version: false, // We handle it ourselves
-			outgoing_addr: Config.values.bind,
-			enable_chghost: true,
-			enable_echomessage: true,
-			enable_setname: true,
-			auto_reconnect: true,
-
-			// Exponential backoff maxes out at 300 seconds after 9 reconnects,
-			// it will keep trying for well over an hour (plus the timeouts)
-			auto_reconnect_max_retries: 30,
-
-			// TODO: this type should be set after setIrcFrameworkOptions
-		}) as NetworkWithIrcFramework["irc"];
-
-		await this.setIrcFrameworkOptions(client);
-
-		this.irc.requestCap([
-			"znc.in/self-message", // Legacy echo-message for ZNC
-			"znc.in/playback", // See http://wiki.znc.in/Playback
-		]);
-	}
-
-	async setIrcFrameworkOptions(this: NetworkWithIrcFramework, client: any) {
-		this.irc.options.host = this.host;
-		this.irc.options.port = this.port;
-		this.irc.options.password = this.password;
-		this.irc.options.nick = this.nick;
-		this.irc.options.username = Config.values.useHexIp
-			? Helper.ip2hex(client.config.browser!.ip!)
-			: this.username;
-		this.irc.options.gecos = this.realname;
-		this.irc.options.tls = this.tls;
-		this.irc.options.rejectUnauthorized = this.rejectUnauthorized;
-		this.irc.options.webirc = this.createWebIrc(client);
-		this.irc.options.client_certificate = null;
-
-		if (this.proxyEnabled) {
-			this.irc.options.socks = {
-				host: this.proxyHost,
-				port: this.proxyPort,
-				user: this.proxyUsername,
-				pass: this.proxyPassword,
-			};
-		} else {
-			delete this.irc.options.socks;
-		}
-
-		if (!this.sasl) {
-			delete this.irc.options.sasl_mechanism;
-			// irc-framework has a funny fallback where it uses nick + server pw
-			// in the sasl handshake, if account is undefined, so we need an empty
-			// object here to really turn it off
-			this.irc.options.account = {};
-		} else if (this.sasl === "external") {
-			this.irc.options.sasl_mechanism = "EXTERNAL";
-			this.irc.options.account = {};
-			this.irc.options.client_certificate = await ClientCertificate.get(this.uuid);
-		} else if (this.sasl === "plain") {
-			delete this.irc.options.sasl_mechanism;
-			this.irc.options.account = {
-				account: this.saslAccount,
-				password: this.saslPassword,
-			};
-		}
-	}
-
-	createWebIrc(client: any) {
-		if (
-			!Config.values.webirc ||
-			!Object.prototype.hasOwnProperty.call(Config.values.webirc, this.host)
-		) {
-			return null;
-		}
-
-		const webircObject = {
-			password: Config.values.webirc[this.host],
-			username: "nexuslounge",
-			address: client.config.browser?.ip,
-			hostname: client.config.browser?.hostname,
-			options: {},
-		};
-
-		// https://ircv3.net/specs/extensions/webirc#options
-		if (client.config.browser?.isSecure) {
-			webircObject.options = {
-				secure: true,
-			};
-		}
-
-		if (typeof Config.values.webirc[this.host] === "function") {
-			webircObject.password = null;
-
-			return Config.values.webirc[this.host](webircObject, this) as typeof webircObject;
-		}
-
-		return webircObject;
-	}
-
-	async edit(this: NetworkWithIrcFramework, client: any, args: any) {
+	async edit(client: any, args: any) {
 		const oldNetworkName = this.name;
 		const oldNick = this.nick;
 		const oldRealname = this.realname;
@@ -434,41 +281,7 @@ class Network {
 			return;
 		}
 
-		if (this.irc) {
-			if (this.nick !== oldNick) {
-				if (this.irc.connected) {
-					// Send new nick straight away
-					this.irc.changeNick(this.nick);
-				} else {
-					this.irc.user.nick = this.nick;
-
-					// Update UI nick straight away if IRC is not connected
-					client.emit("nick", {
-						network: this.uuid,
-						nick: this.nick,
-					});
-				}
-			}
-
-			if (
-				this.irc.connected &&
-				this.realname !== oldRealname &&
-				this.irc.network.cap.isEnabled("setname")
-			) {
-				this.irc.raw("SETNAME", this.realname);
-			}
-
-			await this.setIrcFrameworkOptions(client);
-
-			if (this.irc.options?.username) {
-				this.irc.user.username = this.irc.options.username;
-			}
-
-			if (this.irc.options?.gecos) {
-				this.irc.user.gecos = this.irc.options.gecos;
-			}
-		}
-
+		// Network editing in proxy mode is handled by irssi backend
 		client.save();
 	}
 
@@ -493,10 +306,6 @@ class Network {
 		if (this.keepNick === nick) {
 			this.keepNick = null;
 		}
-
-		if (this.irc?.options) {
-			this.irc.options.nick = nick;
-		}
 	}
 
 	getFilteredClone(lastActiveChannel?: number, lastMessage?: number): SharedNetwork {
@@ -513,24 +322,8 @@ class Network {
 	}
 
 	getNetworkStatus() {
-		const status = {
-			connected: false,
-			secure: false,
-		};
-
-		if (this.irc && this.irc.connection && this.irc.connection.transport) {
-			const transport = this.irc.connection.transport;
-
-			if (transport.socket) {
-				const isLocalhost = transport.socket.remoteAddress === "127.0.0.1";
-				const isAuthorized = transport.socket.encrypted && transport.socket.authorized;
-
-				status.connected = transport.isConnected();
-				status.secure = isAuthorized || isLocalhost;
-			}
-		}
-
-		return status;
+		// In proxy mode, network status is managed by irssi backend
+		return this.status;
 	}
 
 	addChannel(newChan: Chan) {
@@ -577,14 +370,9 @@ class Network {
 	}
 
 	quit(quitMessage?: string) {
-		if (!this.irc) {
-			return;
-		}
-
+		// In proxy mode, quit is handled by irssi backend
 		// https://ircv3.net/specs/extensions/sts#rescheduling-expiry-on-disconnect
 		STSPolicies.refreshExpiration(this.host);
-
-		this.irc.quit(quitMessage || this.leaveMessage || Config.values.leaveMessage);
 	}
 
 	exportForEdit() {

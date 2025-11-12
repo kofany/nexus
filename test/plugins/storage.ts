@@ -6,7 +6,6 @@ import {expect} from "chai";
 import util from "../util.ts";
 import Config from "../../dist/server/config.js";
 import storage from "../../dist/server/plugins/storage.js";
-import link from "../../dist/server/plugins/irc-events/link.js";
 import {Request, Response} from "express";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,66 +72,6 @@ describe("Image storage", function () {
 
 	afterEach(function () {
 		Config.values.prefetchStorage = false;
-	});
-
-	it("should store the thumbnail", function (done) {
-		const thumb_url = this._makeUrl("thumb");
-		const message = this.irc.createMessage({
-			text: thumb_url,
-		});
-
-		link(this.irc, this.network.channels[0], message, message.text);
-
-		const real_test_img_url = this._makeUrl("real-test-image.png");
-		this.app.get("/thumb", function (req, res) {
-			res.send(
-				`<title>Google</title><meta property='og:image' content='${real_test_img_url}'>`
-			);
-		});
-
-		this.irc.once("msg:preview", function (data) {
-			expect(data.preview.head).to.equal("Google");
-			expect(data.preview.link).to.equal(thumb_url);
-			expect(data.preview.thumb).to.equal(correctImageURL);
-			done();
-		});
-	});
-
-	it("should store the image", function (done) {
-		const real_test_img_url = this._makeUrl("real-test-image.png");
-		const message = this.irc.createMessage({
-			text: real_test_img_url,
-		});
-
-		link(this.irc, this.network.channels[0], message, message.text);
-
-		this.irc.once("msg:preview", function (data) {
-			expect(data.preview.type).to.equal("image");
-			expect(data.preview.link).to.equal(real_test_img_url);
-			expect(data.preview.thumb).to.equal(correctImageURL);
-			done();
-		});
-	});
-
-	it("should lookup correct extension type", function (done) {
-		const msg_url = this._makeUrl("svg-preview");
-		const message = this.irc.createMessage({
-			text: msg_url,
-		});
-
-		const logo_url = this._makeUrl("logo.svg");
-		this.app.get("/svg-preview", function (req: Request, res: Response) {
-			res.send(`<title>test title</title><meta property='og:image' content='${logo_url}'>`);
-		});
-
-		link(this.irc, this.network.channels[0], message, message.text);
-
-		this.irc.once("msg:preview", function (data) {
-			expect(data.preview.type).to.equal("link");
-			expect(data.preview.link).to.equal(msg_url);
-			expect(data.preview.thumb).to.equal(correctSvgURL);
-			done();
-		});
 	});
 
 	it("should clear storage folder", function () {
