@@ -15,7 +15,7 @@ try {
 		`=== WeeChat Relay Debug Log Started at ${new Date().toISOString()} ===\n`
 	);
 } catch (err) {
-	console.error(`Failed to initialize WeeChat debug log: ${err}`);
+	// Ignore file write errors
 }
 
 /**

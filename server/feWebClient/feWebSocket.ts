@@ -243,6 +243,13 @@ export class FeWebSocket extends EventEmitter {
 				return;
 			}
 
+			// Timeout if no auth_ok received
+			const authTimeout = setTimeout(() => {
+				if (!this.isAuthenticated) {
+					reject(new Error("Authentication timeout - no auth_ok received from server"));
+				}
+			}, 10000); // 10 seconds
+
 			// Register auth handler BEFORE opening connection (use .once() to ensure it runs only once)
 			this.once("auth_ok", (msg: FeWebMessage) => {
 				log.debug("[FeWebSocket] authHandler called (ONCE), msg.type:", msg.type);
@@ -262,13 +269,6 @@ export class FeWebSocket extends EventEmitter {
 				resolve();
 				log.debug("[FeWebSocket] resolve() called");
 			});
-
-			// Timeout if no auth_ok received
-			const authTimeout = setTimeout(() => {
-				if (!this.isAuthenticated) {
-					reject(new Error("Authentication timeout - no auth_ok received from server"));
-				}
-			}, 10000); // 10 seconds
 
 			// Connection opened
 			this.ws.on("open", () => {
