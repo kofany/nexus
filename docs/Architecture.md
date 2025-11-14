@@ -17,7 +17,7 @@ This document provides a comprehensive overview of NexusIRC's architecture, desi
 
 ## System Overview
 
-NexusIRC is built on a multi-layered architecture designed for scalability, security, and protocol flexibility.
+NexusIRC is built as a **web frontend for irssi/erssi**. It does NOT connect directly to IRC networks - all IRC connectivity is handled exclusively by irssi/erssi via the FE-Web protocol.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -58,11 +58,11 @@ NexusIRC is built on a multi-layered architecture designed for scalability, secu
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │              Protocol Adapters                           │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │   │
-│  │  │    irssi     │  │   WeeChat    │  │  Direct IRC  │  │   │
-│  │  │  FE-Web      │  │    Relay     │  │   Client     │  │   │
-│  │  │  Protocol    │  │   Protocol   │  │              │  │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘  │   │
+│  │  ┌──────────────┐  ┌──────────────┐                     │   │
+│  │  │    irssi     │  │   WeeChat    │                     │   │
+│  │  │  FE-Web      │  │    Relay     │                     │   │
+│  │  │  (REQUIRED)  │  │  (Optional)  │                     │   │
+│  │  └──────────────┘  └──────────────┘                     │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -73,18 +73,24 @@ NexusIRC is built on a multi-layered architecture designed for scalability, secu
 │  │  └──────────────┘  └──────────────┘  └──────────────┘  │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────────┘
-                             │
-         ┌───────────────────┴───────────────────┐
-         │                                       │
-┌────────▼─────────┐                   ┌─────────▼──────────┐
-│  irssi Instance  │                   │   IRC Networks     │
-│  (fe-web module) │                   │  (Direct Connect)  │
-│                  │                   │                    │
-│  • AES-256-GCM   │                   │  • Multiple nets   │
-│  • WebSocket     │                   │  • Persistent      │
-│  • IRC proxy     │                   │  • Connection pool │
-└──────────────────┘                   └────────────────────┘
+                             │ FE-Web Protocol (WebSocket)
+                             │ AES-256-GCM Encrypted
+┌────────────────────────────▼────────────────────────────────────┐
+│                  irssi/erssi Instance                            │
+│  • Handles ALL IRC connectivity (REQUIRED)                      │
+│  • Manages networks, channels, users                            │
+│  • Executes IRC commands                                        │
+│  • fe-web module provides WebSocket interface                   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ Native IRC Protocol
+                             ▼
+                   ┌────────────────────┐
+                   │   IRC Networks     │
+                   │  (Libera, OFTC...) │
+                   └────────────────────┘
 ```
+
+**Critical:** NexusIRC has NO built-in IRC client. All IRC functionality comes from irssi/erssi.
 
 ---
 
@@ -232,16 +238,6 @@ Located in `server/weechatRelay/`, implements WeeChat relay protocol.
 - Compression support (zlib, zstd)
 - Multiple client connections
 - Protocol versioning
-
-### Direct IRC Client
-
-Traditional IRC client implementation for direct network connections.
-
-**Features:**
-- RFC 2812 compliant
-- IRCv3 capability negotiation
-- SASL authentication
-- Client certificate support
 
 ---
 

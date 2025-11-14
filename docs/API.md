@@ -266,37 +266,13 @@ Search messages.
 
 #### `network:new`
 
-Add a new IRC network.
-
-**Payload:**
-```javascript
-{
-    name: "Libera",
-    host: "irc.libera.chat",
-    port: 6697,
-    tls: true,
-    nick: "myusername",
-    username: "myusername",
-    realname: "My Real Name",
-    password: "",
-    join: "#nexusirc"
-}
-```
+> **Legacy Event:** Network creation is managed by irssi/erssi. NexusIRC does not support creating IRC networks via Socket.IO.
 
 ---
 
 #### `network:edit`
 
-Edit an existing network.
-
-**Payload:**
-```javascript
-{
-    uuid: "network-uuid",
-    name: "Libera",
-    // ... other network properties
-}
-```
+> **Legacy Event:** Network editing is handled within irssi/erssi. This event is not used in the current architecture.
 
 ---
 

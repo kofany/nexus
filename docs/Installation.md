@@ -28,6 +28,10 @@ This guide provides detailed installation instructions for NexusIRC on various p
   - Enable it: `corepack enable`
   - This will manage the correct Yarn version automatically
 
+- **irssi or erssi** with FE-Web module
+  - NexusIRC requires a running irssi/erssi instance
+  - See [irssi Integration Guide](Irssi-Integration.md) for setup
+
 ### Optional
 
 - **SQLite3** - For persistent message storage (recommended)
@@ -35,6 +39,10 @@ This guide provides detailed installation instructions for NexusIRC on various p
   - **Linux**: `build-essential`, `python3`
   - **macOS**: Xcode Command Line Tools
   - **Windows**: Visual Studio Build Tools
+
+### Important Note
+
+**NexusIRC does NOT connect directly to IRC networks.** All IRC connectivity is handled by irssi/erssi. You must have a working irssi/erssi instance with the FE-Web module before NexusIRC can be used.
 
 ---
 

@@ -23,6 +23,10 @@ NexusIRC uses a JavaScript configuration file located at:
 
 The configuration file is created automatically on first run with default values. You can edit it with any text editor.
 
+### Important: IRC Network Configuration
+
+**NexusIRC does NOT configure IRC networks.** All IRC networks, channels, and settings are managed in your irssi/erssi instance. NexusIRC only configures the connection to irssi/erssi via the FE-Web protocol.
+
 ### Example Configuration
 
 ```javascript
@@ -93,11 +97,7 @@ port: 19000
 **Type:** `string` or `undefined`  
 **Default:** `undefined`
 
-Local IP address to bind for outgoing IRC connections. Leave undefined to let the OS choose.
-
-```javascript
-bind: undefined
-```
+> **Note:** This setting is not applicable in NexusIRC as it does not make direct IRC connections. All IRC connectivity is handled by irssi/erssi.
 
 ### `reverseProxy`
 
@@ -255,17 +255,7 @@ ldap: {
 
 ### `webirc`
 
-**Type:** `object` or `null`  
-**Default:** `null`
-
-WebIRC gateway configuration for revealing user IPs to IRC servers:
-
-```javascript
-webirc: {
-    "irc.libera.chat": "password123",
-    "irc.oftc.net": "password456"
-}
-```
+> **Legacy Option:** WebIRC integration applied to the legacy direct IRC client and is not used in the current irssi-only architecture.
 
 ---
 
@@ -380,25 +370,7 @@ debug: {
 
 ### `defaults`
 
-**Type:** `object`
-
-Default values for new IRC connections:
-
-```javascript
-defaults: {
-    name: "My Network",
-    host: "irc.libera.chat",
-    port: 6697,
-    password: "",
-    tls: true,
-    rejectUnauthorized: true,
-    nick: "user",
-    username: "user",
-    realname: "NexusIRC User",
-    leaveMessage: "NexusIRC - https://github.com/outragelabs/nexusirc",
-    join: "#nexusirc"
-}
-```
+> **Note:** IRC network configuration is managed by irssi/erssi, not NexusIRC. This setting is not applicable in the current architecture.
 
 ---
 
@@ -542,11 +514,11 @@ export default {
     prefetch: true,
     disableMediaPreview: true,
     maxHistory: 1000,
-    defaults: {
-        name: "Libera",
-        host: "irc.libera.chat",
-        port: 6697,
-        tls: true
+    irssi: {
+        enable: true,
+        host: "127.0.0.1",
+        port: 9001,
+        ssl: true
     }
 }
 ```
@@ -568,6 +540,12 @@ export default {
             rootPassword: process.env.LDAP_PASSWORD,
             filter: "(&(objectClass=person)(memberOf=cn=irc,ou=groups,dc=company,dc=com))"
         }
+    },
+    irssi: {
+        enable: true,
+        host: "127.0.0.1",
+        port: 9001,
+        ssl: true
     },
     messageStorage: ["sqlite"],
     storagePolicy: {
