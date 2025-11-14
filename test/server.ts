@@ -58,7 +58,7 @@ describe("Server", function () {
 		});
 
 		it("should serve static content correctly", async () => {
-			const response = await got(webURL + "nexuslounge.webmanifest");
+			const response = await got(webURL + "nexusirc.webmanifest");
 			const body = JSON.parse(response.body);
 
 			expect(response.statusCode).to.equal(200);
