@@ -53,7 +53,7 @@ describe("Server", function () {
 		it("should run a web server on " + webURL, async () => {
 			const response = await got(webURL);
 			expect(response.statusCode).to.equal(200);
-			expect(response.body).to.include("<title>Nexus Lounge</title>");
+			expect(response.body).to.include("<title>NexusIRC</title>");
 			expect(response.body).to.include("js/bundle.js");
 		});
 
@@ -62,13 +62,13 @@ describe("Server", function () {
 			const body = JSON.parse(response.body);
 
 			expect(response.statusCode).to.equal(200);
-			expect(body.name).to.equal("Nexus Lounge");
+			expect(body.name).to.equal("NexusIRC");
 			expect(response.headers["content-type"]).to.include("application/manifest+json");
 		});
 	});
 
-	// WebSocket tests removed - legacy from The Lounge
-	// Nexus Lounge is private-only proxy mode, these tests tested:
+	// WebSocket tests removed - legacy from NexusIRC
+	// NexusIRC is private-only proxy mode, these tests tested:
 	// 1. Public mode authentication (removed in 8ac5febd)
 	// 2. Direct IRC network creation (not available in proxy mode)
 	// 3. Client-side network management (managed by irssi backend)

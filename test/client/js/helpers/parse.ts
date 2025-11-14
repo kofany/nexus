@@ -54,10 +54,10 @@ describe("IRC formatted message parser", () => {
 	it("should find urls", () => {
 		const testCases = [
 			{
-				input: "irc://irc.example.com/thelounge",
+				input: "irc://irc.example.com/nexusirc",
 				expected:
-					'<a href="irc://irc.example.com/thelounge" dir="auto" target="_blank" rel="noopener">' +
-					"irc://irc.example.com/thelounge" +
+					'<a href="irc://irc.example.com/nexusirc" dir="auto" target="_blank" rel="noopener">' +
+					"irc://irc.example.com/nexusirc" +
 					"</a>",
 			},
 			{
@@ -68,11 +68,11 @@ describe("IRC formatted message parser", () => {
 					"</a>",
 			},
 			{
-				input: "look at https://thelounge.chat/ for more information",
+				input: "look at https://nexusirc.chat/ for more information",
 				expected:
 					"look at " +
-					'<a href="https://thelounge.chat/" dir="auto" target="_blank" rel="noopener">' +
-					"https://thelounge.chat/" +
+					'<a href="https://nexusirc.chat/" dir="auto" target="_blank" rel="noopener">' +
+					"https://nexusirc.chat/" +
 					"</a>" +
 					" for more information",
 			},
@@ -275,8 +275,8 @@ describe("IRC formatted message parser", () => {
 		},
 		{
 			name: "hex foreground and background colors",
-			input: "\x04415364,ff9e18The Lounge",
-			expected: '<span style="color:#415364;background-color:#FF9E18;">The Lounge</span>',
+			input: "\x04415364,ff9e18NexusIRC",
+			expected: '<span style="color:#415364;background-color:#FF9E18;">NexusIRC</span>',
 		},
 		{
 			name: "italic",
@@ -395,22 +395,22 @@ describe("IRC formatted message parser", () => {
 	it("should go bonkers like mirc", () => {
 		const testCases = [
 			{
-				input: "\x02irc\x0f://\x1dirc.example.com\x0f/\x034,8thelounge",
+				input: "\x02irc\x0f://\x1dirc.example.com\x0f/\x034,8nexusirc",
 				expected:
-					'<a href="irc://irc.example.com/thelounge" dir="auto" target="_blank" rel="noopener">' +
+					'<a href="irc://irc.example.com/nexusirc" dir="auto" target="_blank" rel="noopener">' +
 					'<span class="irc-bold">irc</span>' +
 					"://" +
 					'<span class="irc-italic">irc.example.com</span>' +
 					"/" +
-					'<span class="irc-fg4 irc-bg8">thelounge</span>' +
+					'<span class="irc-fg4 irc-bg8">nexusirc</span>' +
 					"</a>",
 			},
 			{
-				input: "\x02#\x038,9thelounge",
+				input: "\x02#\x038,9nexusirc",
 				expected:
 					'<span dir="auto" role="button" tabindex="0" class="inline-channel">' +
 					'<span class="irc-bold">#</span>' +
-					'<span class="irc-bold irc-fg8 irc-bg9">thelounge</span>' +
+					'<span class="irc-bold irc-fg8 irc-bg9">nexusirc</span>' +
 					"</span>",
 			},
 		];
@@ -477,17 +477,17 @@ describe("IRC formatted message parser", () => {
 		},
 		{
 			name: "wrapped in URLs",
-			input: "https://i.❤️.thelounge.chat",
+			input: "https://i.❤️.nexusirc.chat",
 			// FIXME: Emoji in text should be `<span class="emoji">❤️</span>`. See https://github.com/thelounge/thelounge/issues/1784
 			expected:
-				'<a href="https://i.❤️.thelounge.chat" dir="auto" target="_blank" rel="noopener">https://i.❤️.thelounge.chat</a>',
+				'<a href="https://i.❤️.nexusirc.chat" dir="auto" target="_blank" rel="noopener">https://i.❤️.nexusirc.chat</a>',
 		},
 		{
 			name: "wrapped in channels",
-			input: "#i❤️thelounge",
+			input: "#i❤️nexusirc",
 			// FIXME: Emoji in text should be `<span class="emoji">❤️</span>`. See https://github.com/thelounge/thelounge/issues/1784
 			expected:
-				'<span dir="auto" role="button" tabindex="0" class="inline-channel">#i❤️thelounge</span>',
+				'<span dir="auto" role="button" tabindex="0" class="inline-channel">#i❤️nexusirc</span>',
 		},
 	].forEach(({name, input, expected}) => {
 		it(`should find emoji: ${name}`, () => {

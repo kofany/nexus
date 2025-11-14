@@ -78,7 +78,7 @@
 	--primary-font-size: 14px;
 	--monospace-font-size: 13px;
 
-	/* The Lounge specific mappings */
+	/* NexusIRC specific mappings */
 	--body-color: var(--primary-font);
 	--body-color-muted: var(--secondary-font);
 	--body-bg-color: var(--primary-bg);

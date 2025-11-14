@@ -13,7 +13,7 @@ import {IrssiUserConfig, IrssiConnectionConfig} from "./irssiClient.js";
 /**
  * Encrypt irssi password using IP+PORT as salt (for autoconnect)
  *
- * Uses AES-256-GCM with PBKDF2(IP+PORT, "thelounge-irssi-autoconnect")
+ * Uses AES-256-GCM with PBKDF2(IP+PORT, "nexusirc-irssi-autoconnect")
  * This allows autoconnect without user password!
  *
  * @param irssiPassword - Plain irssi WebSocket password
@@ -28,7 +28,7 @@ export async function encryptIrssiPassword(
 ): Promise<string> {
 	// Use IP+PORT as salt for key derivation
 	const salt = `${host}:${port}`;
-	const key = crypto.pbkdf2Sync(salt, "thelounge-irssi-autoconnect", 10000, 32, "sha256");
+	const key = crypto.pbkdf2Sync(salt, "nexusirc-irssi-autoconnect", 10000, 32, "sha256");
 
 	// Generate random IV (12 bytes for GCM)
 	const iv = crypto.randomBytes(12);
@@ -46,7 +46,7 @@ export async function encryptIrssiPassword(
 /**
  * Decrypt irssi password using IP+PORT as salt (for autoconnect)
  *
- * Uses AES-256-GCM with PBKDF2(IP+PORT, "thelounge-irssi-autoconnect")
+ * Uses AES-256-GCM with PBKDF2(IP+PORT, "nexusirc-irssi-autoconnect")
  * This allows autoconnect without user password!
  *
  * @param encryptedPassword - Base64-encoded encrypted password
@@ -61,7 +61,7 @@ export async function decryptIrssiPassword(
 ): Promise<string> {
 	// Use IP+PORT as salt for key derivation (same as encryption)
 	const salt = `${host}:${port}`;
-	const key = crypto.pbkdf2Sync(salt, "thelounge-irssi-autoconnect", 10000, 32, "sha256");
+	const key = crypto.pbkdf2Sync(salt, "nexusirc-irssi-autoconnect", 10000, 32, "sha256");
 
 	const encryptedBuffer = Buffer.from(encryptedPassword, "base64");
 
@@ -202,7 +202,7 @@ export function validateIrssiConnectionConfig(config: IrssiConnectionConfig): tr
  *
  * This is the same key derivation used in IrssiClient.login()
  *
- * @param userPassword - User's The Lounge password
+ * @param userPassword - User's NexusIRC password
  * @param irssiPassword - Plain irssi WebSocket password (salt)
  * @returns Encryption key (32 bytes)
  */

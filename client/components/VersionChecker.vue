@@ -2,7 +2,7 @@
 	<div id="version-checker" :class="[store.state.versionStatus]">
 		<p v-if="store.state.versionStatus === 'loading'">Checking for updates…</p>
 		<p v-if="store.state.versionStatus === 'new-version'">
-			Nexus Lounge <b>{{ store.state.versionData?.latest.version }}</b>
+			NexusIRC <b>{{ store.state.versionData?.latest.version }}</b>
 			<template v-if="store.state.versionData?.latest.prerelease"> (pre-release) </template>
 			is now available.
 			<br />
@@ -12,11 +12,11 @@
 			</a>
 		</p>
 		<p v-if="store.state.versionStatus === 'new-packages'">
-			Nexus Lounge is up to date, but there are out of date packages Run
+			NexusIRC is up to date, but there are out of date packages Run
 			<code>nexuslounge upgrade</code> on the server to upgrade packages.
 		</p>
 		<template v-if="store.state.versionStatus === 'up-to-date'">
-			<p>Nexus Lounge is up to date!</p>
+			<p>NexusIRC is up to date!</p>
 
 			<button
 				v-if="store.state.versionDataExpired"

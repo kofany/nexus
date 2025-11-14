@@ -26,7 +26,7 @@ describe("Utils", function () {
 			expect(stdout[stdout.length - 1]).to.equal("\n");
 		});
 
-		it("should contain information about NEXUSLOUNGE_HOME env var", function () {
+		it("should contain information about NEXUSIRC_HOME env var", function () {
 			// Mock `log.raw` to extract its effect into a concatenated string
 			let stdout = "";
 
@@ -38,7 +38,7 @@ describe("Utils", function () {
 
 			logRawStub.restore();
 
-			expect(stdout).to.include("NEXUSLOUNGE_HOME");
+			expect(stdout).to.include("NEXUSIRC_HOME");
 		});
 	});
 

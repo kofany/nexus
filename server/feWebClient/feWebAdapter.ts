@@ -1,7 +1,7 @@
 /**
  * fe-web Event Adapter (Server-side)
  *
- * Maps fe-web JSON messages to The Lounge event format.
+ * Maps fe-web JSON messages to NexusIRC event format.
  * Implements 100% of CLIENT-SPEC.md message types.
  *
  * This is a server-side port of client/js/feWebAdapter.ts
@@ -222,7 +222,7 @@ export class FeWebAdapter {
 		const messageType =
 			msg.level === MSGLEVEL_ACTIONS ? MessageType.ACTION : MessageType.MESSAGE;
 
-		// Convert to The Lounge message format
+		// Convert to NexusIRC message format
 		const loungeMsg = new Msg({
 			type: messageType,
 			time: msg.timestamp ? new Date(msg.timestamp * 1000) : new Date(),
@@ -1012,7 +1012,7 @@ export class FeWebAdapter {
 			// Note: irssi fe-web doesn't send CHANTYPES/PREFIX/NETWORK in state_dump
 			// We use defaults + server tag as NETWORK name
 
-			// Create lobby channel (required by The Lounge frontend)
+			// Create lobby channel (required by NexusIRC frontend)
 			// Frontend expects network.channels[0] to be lobby, channels[1+] to be real channels
 			const lobbyChannel = new Chan({
 				name: serverTag,

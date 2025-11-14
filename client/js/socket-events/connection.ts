@@ -33,7 +33,7 @@ function handleDisconnect(data) {
 	if (!socket.io.reconnection()) {
 		store.commit(
 			"currentUserVisibleError",
-			`Disconnected from the server (${message}), Nexus Lounge does not reconnect in public mode.`
+			`Disconnected from the server (${message}), NexusIRC does not reconnect in public mode.`
 		);
 		updateLoadingMessage();
 		return;

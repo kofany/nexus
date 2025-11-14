@@ -1,5 +1,5 @@
 /*
-This (very The Lounge-custom) script is a helper to generate changelog entries.
+This (very NexusIRC-custom) script is a helper to generate changelog entries.
 
 Note that it is not meant to produce fully-automated changelogs like other tools
 do, but merely prepare a changelog entry without risks of mistyping a URL or
@@ -254,7 +254,7 @@ function stableVersion(prereleaseVersion) {
 	return prereleaseVersion.substr(0, prereleaseVersion.indexOf("-"));
 }
 
-// Generates a compare-view URL between 2 versions of The Lounge
+// Generates a compare-view URL between 2 versions of NexusIRC
 function fullChangelogUrl(v1, v2) {
 	return `https://github.com/thelounge/thelounge/compare/v${v1}...v${v2}`;
 }

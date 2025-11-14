@@ -96,7 +96,7 @@ async function generate(): Promise<ClientCertificateType> {
 	// Create certificate
 	const cert = await x509.X509CertificateGenerator.createSelfSigned(
 		{
-			name: "CN=The Lounge IRC Client",
+			name: "CN=NexusIRC Client",
 			keys,
 			notBefore: (() => {
 				const date = new Date();

@@ -5,18 +5,18 @@
 				<img
 					:src="`img/logo-${isPublic() ? 'horizontal-' : ''}transparent-bg.svg`"
 					class="logo"
-					alt="Nexus Lounge"
+					alt="NexusIRC"
 					role="presentation"
 				/>
 				<img
 					:src="`img/logo-${isPublic() ? 'horizontal-' : ''}transparent-bg-inverted.svg`"
 					class="logo-inverted"
-					alt="Nexus Lounge"
+					alt="NexusIRC"
 					role="presentation"
 				/>
 				<span
 					v-if="isDevelopment"
-					title="Nexus Lounge has been built in development mode"
+					title="NexusIRC has been built in development mode"
 					:style="{
 						backgroundColor: '#ff9e18',
 						color: '#000',

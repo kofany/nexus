@@ -18,7 +18,7 @@ describe("public folder", function () {
 		expect(fs.existsSync(path.join(publicFolder, "favicon.ico"))).to.be.true;
 		expect(fs.existsSync(path.join(publicFolder, "robots.txt"))).to.be.true;
 		expect(fs.existsSync(path.join(publicFolder, "service-worker.js"))).to.be.true;
-		expect(fs.existsSync(path.join(publicFolder, "nexuslounge.webmanifest"))).to.be.true;
+		expect(fs.existsSync(path.join(publicFolder, "nexusirc.webmanifest"))).to.be.true;
 	});
 
 	it("audio files are copied", function () {

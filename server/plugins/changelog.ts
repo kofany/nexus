@@ -121,7 +121,7 @@ function checkForUpdates(manager: ClientManager) {
 			}
 
 			log.info(
-				`Nexus Lounge ${colors.green(
+				`NexusIRC ${colors.green(
 					versionData.latest.version
 				)} is available. Read more on GitHub: ${versionData.latest.url}`
 			);

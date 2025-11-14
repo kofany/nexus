@@ -1,6 +1,6 @@
 {
-  "name": "nexuslounge",
-  "description": "Nexus Lounge - A heavily modified fork of The Lounge with erssi/irssi fe-web protocol support and weechat relay for incoming clients",
+  "name": "nexusirc",
+  "description": "NexusIRC - A heavily modified fork of The Lounge with erssi/irssi fe-web protocol support and weechat relay for incoming clients",
   "version": "4.4.3",
   "type": "module",
   "preferGlobal": true,
@@ -33,7 +33,7 @@
   },
   "keywords": [
     "lounge",
-    "nexuslounge",
+    "nexusirc",
     "browser",
     "web",
     "chat",
@@ -48,7 +48,7 @@
     "node": ">=22.0.0"
   },
   "files": [
-    "./.nexuslounge_home",
+    "./.nexusirc_home",
     "./index.mjs",
     "./yarn.lock",
     "./client/index.html.tpl",

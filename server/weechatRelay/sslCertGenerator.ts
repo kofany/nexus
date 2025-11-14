@@ -112,8 +112,8 @@ distinguished_name = dn
 x509_extensions = v3_ca
 
 [dn]
-CN = Nexus Lounge CA - ${username}
-O = Nexus Lounge
+CN = NexusIRC CA - ${username}
+O = NexusIRC
 OU = Certificate Authority
 
 [v3_ca]
@@ -142,7 +142,7 @@ req_extensions = v3_req
 
 [dn]
 CN = nexuslounge-${username}.local
-O = Nexus Lounge
+O = NexusIRC
 OU = WeeChat Relay
 
 [v3_req]

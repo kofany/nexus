@@ -28,7 +28,7 @@ class User {
 	}
 
 	setModes(modes: string[], prefix: Prefix) {
-		// irc-framework sets character mode, but The Lounge works with symbols
+		// irc-framework sets character mode, but NexusIRC works with symbols
 		this.modes = modes.map((mode) => prefix.modeToSymbol[mode]);
 	}
 

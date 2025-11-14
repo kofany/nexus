@@ -19,7 +19,7 @@ class Utils {
 		[
 			"",
 			"Environment variable:",
-			`  NEXUSLOUNGE_HOME          Path for all configuration files and folders. Defaults to ${colors.green(
+			`  NEXUSIRC_HOME          Path for all configuration files and folders. Defaults to ${colors.green(
 				Helper.expandHome(Utils.defaultHome())
 			)}`,
 			"",
@@ -31,7 +31,7 @@ class Utils {
 			return home;
 		}
 
-		const distConfig = Utils.getFileFromRelativeToRoot(".nexuslounge_home");
+		const distConfig = Utils.getFileFromRelativeToRoot(".nexusirc_home");
 
 		home = fs.readFileSync(distConfig, "utf-8").trim();
 
@@ -39,14 +39,14 @@ class Utils {
 	}
 
 	static getFileFromRelativeToRoot(...fileName: string[]) {
-		// When running from compiled dist/ (e.g. /thelounge/dist/server/command-line/utils.ts)
+		// When running from compiled dist/ (e.g. /nexusirc/dist/server/command-line/utils.ts)
 		// we need to go up 3 levels regardless of NODE_ENV
 		// Check for both forward slash (Unix) and backslash (Windows)
 		if (__dirname.includes(`${path.sep}dist${path.sep}`)) {
 			return path.resolve(path.join(__dirname, "..", "..", "..", ...fileName));
 		}
 
-		// When running from source (e.g. /thelounge/server/command-line/utils.ts)
+		// When running from source (e.g. /nexusirc/server/command-line/utils.ts)
 		// we only need to go up 2 levels
 		return path.resolve(path.join(__dirname, "..", "..", ...fileName));
 	}
@@ -130,7 +130,7 @@ class Utils {
 			// We only ever operate in production mode
 			NODE_ENV: "production",
 
-			// If Nexus Lounge runs from a user that does not have a home directory,
+			// If NexusIRC runs from a user that does not have a home directory,
 			// yarn may fail when it tries to read certain folders,
 			// we give it an existing folder so the reads do not throw a permission error.
 			// Yarn uses os.homedir() to figure out the path, which internally reads

@@ -22,8 +22,8 @@ function escapeRegExpCharSet(raw: string): string {
 // end index and channel name.
 function findChannels(text: string, channelPrefixes: string[], userModes: string[]) {
 	// `userModePattern` is necessary to ignore user modes in /whois responses.
-	// For example, a voiced user in #thelounge will have a /whois response of:
-	// > foo is on the following channels: +#thelounge
+	// For example, a voiced user in #nexusirc will have a /whois response of:
+	// > foo is on the following channels: +#nexusirc
 	// We need to explicitly ignore user modes to parse such channels correctly.
 	const userModePattern = userModes.map(escapeRegExpCharSet).join("");
 	const channelPrefixPattern = channelPrefixes.map(escapeRegExpCharSet).join("");

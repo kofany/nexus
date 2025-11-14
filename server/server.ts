@@ -102,7 +102,7 @@ export default async function (
 		dev: false,
 	}
 ) {
-	log.info(`Nexus Lounge ${colors.green(Helper.getVersion())} \
+	log.info(`NexusIRC ${colors.green(Helper.getVersion())} \
 (Node.js ${colors.green(process.versions.node)} on ${colors.green(process.platform)} ${
 		process.arch
 	})`);

@@ -47,7 +47,7 @@ class ClientManager {
 		if (users.length === 0) {
 			log.info(
 				`There are currently no users. Create one with ${colors.bold(
-					"thelounge add <name>"
+					"nexusirc add <name>"
 				)}.`
 			);
 
@@ -243,17 +243,17 @@ class ClientManager {
 				);
 				log.warn(
 					"The file owner has been changed to the expected user. " +
-						"To prevent any issues, please run thelounge commands " +
+						"To prevent any issues, please run nexusirc commands " +
 						"as the correct user that owns the config folder."
 				);
 				log.warn(
-					"See https://thelounge.chat/docs/usage#using-the-correct-system-user for more information."
+					"See https://nexusirc.chat/docs/usage#using-the-correct-system-user for more information."
 				);
 				fs.chownSync(userPath, userFolderStat.uid, userFolderStat.gid);
 			}
 		} catch (e: any) {
 			// We're simply verifying file owner as a safe guard for users
-			// that run `thelounge add` as root, so we don't care if it fails
+			// that run `nexusirc add` as root, so we don't care if it fails
 		}
 
 		return true;

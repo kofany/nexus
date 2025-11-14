@@ -134,17 +134,17 @@ function loadPackage(packageName: string) {
 
 		packageInfo = JSON.parse(fs.readFileSync(path.join(packagePath, "package.json"), "utf-8"));
 
-		if (!packageInfo.nexuslounge) {
+		if (!packageInfo.nexusirc) {
 			throw "'nexuslounge' is not present in package.json";
 		}
 
 		if (
-			packageInfo.nexuslounge.supports &&
-			!semver.satisfies(Helper.getVersionNumber(), packageInfo.nexuslounge.supports, {
+			packageInfo.nexusirc.supports &&
+			!semver.satisfies(Helper.getVersionNumber(), packageInfo.nexusirc.supports, {
 				includePrerelease: true, // our pre-releases should respect the semver guarantees
 			})
 		) {
-			throw `v${packageInfo.version} does not support this version of Nexus Lounge. Supports: ${packageInfo.nexuslounge.supports}`;
+			throw `v${packageInfo.version} does not support this version of NexusIRC. Supports: ${packageInfo.nexusirc.supports}`;
 		}
 
 		packageFile = require(packagePath);
@@ -160,7 +160,7 @@ function loadPackage(packageName: string) {
 
 	const version = packageInfo.version;
 	packageInfo = {
-		...packageInfo.nexuslounge,
+		...packageInfo.nexusirc,
 		packageName: packageName,
 		version,
 	};
@@ -187,7 +187,7 @@ function loadPackage(packageName: string) {
 
 		log.info(
 			"There are packages using the experimental plugin API. " +
-				"Be aware that this API is not yet stable and may change in future Nexus Lounge releases."
+				"Be aware that this API is not yet stable and may change in future NexusIRC releases."
 		);
 	}
 }

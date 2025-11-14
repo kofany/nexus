@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "nexusirc-package-foo": "*"
+  }
+}

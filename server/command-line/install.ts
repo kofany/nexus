@@ -72,22 +72,22 @@ program
 				const humanVersion = isLocalFile ? packageName : `${json.name} v${json.version}`;
 
 				if (!("nexuslounge" in json)) {
-					log.error(`${colors.red(humanVersion)} does not have Nexus Lounge metadata.`);
+					log.error(`${colors.red(humanVersion)} does not have NexusIRC metadata.`);
 
 					process.exit(1);
 				}
 
 				if (
-					json.nexuslounge.supports &&
-					!semver.satisfies(Helper.getVersionNumber(), json.nexuslounge.supports, {
+					json.nexusirc.supports &&
+					!semver.satisfies(Helper.getVersionNumber(), json.nexusirc.supports, {
 						includePrerelease: true,
 					})
 				) {
 					log.error(
 						`${colors.red(
 							humanVersion
-						)} does not support Nexus Lounge v${Helper.getVersionNumber()}. Supported version(s): ${
-							json.nexuslounge.supports
+						)} does not support NexusIRC v${Helper.getVersionNumber()}. Supported version(s): ${
+							json.nexusirc.supports
 						}`
 					);
 

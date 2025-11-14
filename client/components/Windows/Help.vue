@@ -7,7 +7,7 @@
 			<h1 class="title">Help</h1>
 
 			<h2 class="help-version-title">
-				<span>About Nexus Lounge</span>
+				<span>About NexusIRC</span>
 				<small>
 					v{{ store.state.serverConfiguration?.version }} (<router-link
 						id="view-changelog"
@@ -22,7 +22,7 @@
 
 				<template v-if="store.state.serverConfiguration?.gitCommit">
 					<p>
-						Nexus Lounge is running from source (<a
+						NexusIRC is running from source (<a
 							:href="`https://github.com/erssi-org/nexuslounge/tree/${store.state.serverConfiguration?.gitCommit}`"
 							target="_blank"
 							rel="noopener"
@@ -640,7 +640,7 @@
 				</div>
 				<div class="description">
 					<p>
-						Send an action message to the current channel. Nexus Lounge will display it
+						Send an action message to the current channel. NexusIRC will display it
 						inline, as if the message was posted in the third person.
 					</p>
 				</div>

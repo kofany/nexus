@@ -27,7 +27,7 @@ program
 // Parse options from `argv` returning `argv` void of these options.
 const argvWithoutOptions = program.parseOptions(process.argv);
 
-Config.setHome(process.env.NEXUSLOUNGE_HOME || process.env.THELOUNGE_HOME || Utils.defaultHome());
+Config.setHome(process.env.NEXUSIRC_HOME || process.env.THELOUNGE_HOME || Utils.defaultHome());
 
 // Check config file owner and warn if we're running under a different user
 try {
@@ -79,7 +79,7 @@ function createPackagesFolder() {
 				{
 					private: true,
 					description:
-						"Packages for Nexus Lounge. Use `nexuslounge install <package>` command to add a package.",
+						"Packages for NexusIRC. Use `nexuslounge install <package>` command to add a package.",
 					dependencies: {},
 				},
 				null,
@@ -98,7 +98,7 @@ function verifyFileOwner() {
 
 	if (uid === 0) {
 		log.warn(
-			`You are currently running Nexus Lounge as root. ${colors.bold.red(
+			`You are currently running NexusIRC as root. ${colors.bold.red(
 				"We highly discourage running as root!"
 			)}`
 		);
@@ -108,7 +108,7 @@ function verifyFileOwner() {
 
 	if (configStat && configStat.uid !== uid) {
 		log.warn(
-			"Config file owner does not match the user you are currently running Nexus Lounge as."
+			"Config file owner does not match the user you are currently running NexusIRC as."
 		);
 		log.warn(
 			"To prevent any issues, please run nexuslounge commands " +

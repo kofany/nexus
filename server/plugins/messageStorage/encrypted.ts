@@ -246,7 +246,7 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 		const version = await this.current_version();
 
 		if (version > currentSchemaVersion) {
-			throw `sqlite messages schema version is higher than expected (${version} > ${currentSchemaVersion}). Is Nexus Lounge out of date?`;
+			throw `sqlite messages schema version is higher than expected (${version} > ${currentSchemaVersion}). Is NexusIRC out of date?`;
 		} else if (version === currentSchemaVersion) {
 			return; // nothing to do
 		}

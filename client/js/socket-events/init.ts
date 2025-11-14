@@ -8,7 +8,7 @@ import {ClientNetwork, ClientChan} from "../types";
 import {SharedNetwork, SharedNetworkChan} from "../../../shared/types/network";
 
 socket.on("init", async function (data) {
-	// SAVE TOKEN TO LOCALSTORAGE (The Lounge auth, independent from irssi)
+	// SAVE TOKEN TO LOCALSTORAGE (NexusIRC auth, independent from irssi)
 	if (data.token) {
 		storage.set("token", data.token);
 	}

@@ -1,5 +1,5 @@
 // @ts-nocheck
-// Nexus Lounge - https://github.com/erssi-org/nexuslounge
+// NexusIRC - https://github.com/erssi-org/nexuslounge
 /* global clients */
 "use strict";
 

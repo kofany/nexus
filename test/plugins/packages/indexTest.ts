@@ -33,19 +33,19 @@ describe("packages", function () {
 		it("should return the list of registered stylesheets for loaded packages", function () {
 			packages.loadPackages();
 
-			expect(packages.getStylesheets()).to.deep.equal(["thelounge-package-foo/style.css"]);
+			expect(packages.getStylesheets()).to.deep.equal(["nexusirc-package-foo/style.css"]);
 		});
 	});
 
 	describe(".getPackage", function () {
 		it("should contain no reference to packages before loading them", function () {
-			expect(packages.getPackage("thelounge-package-foo")).to.be.undefined;
+			expect(packages.getPackage("nexusirc-package-foo")).to.be.undefined;
 		});
 
 		it("should return details of a registered package after it was loaded", function () {
 			packages.loadPackages();
 
-			expect(packages.getPackage("thelounge-package-foo")).to.have.key("onServerStart");
+			expect(packages.getPackage("nexusirc-package-foo")).to.have.key("onServerStart");
 		});
 	});
 
@@ -60,7 +60,7 @@ describe("packages", function () {
 			packages.loadPackages();
 
 			expect(stdout).to.deep.equal(
-				"Package thelounge-package-foo vdummy loaded\nThere are packages using the experimental plugin API. Be aware that this API is not yet stable and may change in future Nexus Lounge releases.\n"
+				"Package nexusirc-package-foo vdummy loaded\nThere are packages using the experimental plugin API. Be aware that this API is not yet stable and may change in future Nexus Lounge releases.\n"
 			);
 		});
 	});

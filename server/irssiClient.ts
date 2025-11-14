@@ -132,7 +132,7 @@ export class IrssiClient {
 	feWebAdapter: FeWebAdapter | null = null;
 	encryptionKey: Buffer | null = null;
 	irssiPassword: string | null = null; // Decrypted irssi password (in memory)
-	userPassword: string | null = null; // User's The Lounge password (in memory, for encryption)
+	userPassword: string | null = null; // User's NexusIRC password (in memory, for encryption)
 
 	// Networks from irssi (managed by FeWebAdapter)
 	networks: NetworkData[] = [];
@@ -283,11 +283,11 @@ export class IrssiClient {
 
 		// Step 4: Connect to irssi fe-web (ASYNCHRONOUSLY - don't block login!)
 		// Don't await - let it connect in background
-		// If it fails, user can still use The Lounge UI and fix config in Settings
+		// If it fails, user can still use NexusIRC UI and fix config in Settings
 		// WeeChat Relay will be started automatically after erssi sync (in handleInit)
 		this.connectToIrssi().catch((error) => {
 			log.error(`Failed to connect to irssi for user ${colors.bold(this.name)}: ${error}`);
-			// Don't throw - user is already logged in to The Lounge
+			// Don't throw - user is already logged in to NexusIRC
 		});
 
 		log.info(`User ${colors.bold(this.name)} logged in successfully`);
@@ -725,7 +725,7 @@ export class IrssiClient {
 
 	/**
 	 * Command Translation Layer
-	 * Translates Vue/The Lounge specific commands to irssi-compatible commands
+	 * Translates Vue/NexusIRC specific commands to irssi-compatible commands
 	 * Returns:
 	 * - null: no translation needed, use original command
 	 * - string: translated command to send to irssi
@@ -1610,7 +1610,7 @@ export class IrssiClient {
 	}
 
 	/**
-	 * Set The Lounge password (login password, NOT irssi password!)
+	 * Set NexusIRC password (login password, NOT irssi password!)
 	 */
 	setPassword(hash: string, callback: (success: boolean) => void): void {
 		const oldHash = this.config.password;
