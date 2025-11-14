@@ -8,7 +8,7 @@ import {Command} from "commander";
 import {FullMetadata} from "package-json";
 
 type CustomMetadata = FullMetadata & {
-	nexuslounge: {
+	nexusirc: {
 		supports: string;
 	};
 };
@@ -71,7 +71,7 @@ program
 			.then((json: CustomMetadata) => {
 				const humanVersion = isLocalFile ? packageName : `${json.name} v${json.version}`;
 
-				if (!("nexuslounge" in json)) {
+				if (!("nexusirc" in json)) {
 					log.error(`${colors.red(humanVersion)} does not have NexusIRC metadata.`);
 
 					process.exit(1);

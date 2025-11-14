@@ -8661,9 +8661,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nexuslounge@workspace:.":
+"nexusirc@workspace:.":
   version: 0.0.0-use.local
-  resolution: "nexuslounge@workspace:."
+  resolution: "nexusirc@workspace:."
   dependencies:
     "@babel/core": "npm:7.26.0"
     "@babel/plugin-transform-runtime": "npm:7.25.9"
@@ -8778,7 +8778,7 @@ __metadata:
     sqlite3:
       optional: true
   bin:
-    nexuslounge: index.mjs
+    nexusirc: index.mjs
   languageName: unknown
   linkType: soft
 

@@ -789,17 +789,23 @@ function initializeIrssiClient(
 				client.config.irssiConnection.port
 			);
 
-			// Derive message storage encryption key
-			const crypto = await import("crypto");
-			client.encryptionKey = crypto.pbkdf2Sync(
-				client.userPassword!,
-				client.irssiPassword,
-				10000,
-				32,
-				"sha256"
-			);
+			// Derive message storage encryption key (only if userPassword is available)
+			if (client.userPassword) {
+				const crypto = await import("crypto");
+				client.encryptionKey = crypto.pbkdf2Sync(
+					client.userPassword,
+					client.irssiPassword,
+					10000,
+					32,
+					"sha256"
+				);
 
-			log.info(`Encryption keys re-derived for user ${client.name}`);
+				log.info(`Encryption keys re-derived for user ${client.name}`);
+			} else {
+				log.warn(
+					`Cannot re-derive encryption key for user ${client.name}: userPassword not available (session-based login)`
+				);
+			}
 
 			// Reconnect to irssi with new settings
 			if (client.irssiConnection) {

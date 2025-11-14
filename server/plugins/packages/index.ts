@@ -21,7 +21,7 @@ const packageMap = new Map<string, Package>();
 
 export type PackageInfo = {
 	packageName: string;
-	nexuslounge?: {supports: string};
+	nexusirc?: {supports: string};
 	version: string;
 	type?: string;
 	files?: string[];
@@ -135,7 +135,7 @@ function loadPackage(packageName: string) {
 		packageInfo = JSON.parse(fs.readFileSync(path.join(packagePath, "package.json"), "utf-8"));
 
 		if (!packageInfo.nexusirc) {
-			throw "'nexuslounge' is not present in package.json";
+			throw "'nexusirc' is not present in package.json";
 		}
 
 		if (
