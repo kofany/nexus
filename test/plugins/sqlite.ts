@@ -11,7 +11,7 @@ import MessageStorage, {
 	necessaryMigrations,
 	rollbacks,
 } from "../../dist/server/plugins/messageStorage/sqlite.js";
-import sqlite3 from "sqlite3";
+import Database from "better-sqlite3";
 import type {DeletionRequest} from "../../server/plugins/messageStorage/types.js";
 
 const orig_schema = [
@@ -50,25 +50,19 @@ const v1_dummy_messages = [
 ];
 
 describe("SQLite migrations", function () {
-	let db: sqlite3.Database;
+	let db: Database.Database;
 
 	function serialize_run(stmt: string, ...params: any[]): Promise<void> {
-		return new Promise((resolve, reject) => {
-			db.serialize(() => {
-				db.run(stmt, params, (err) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve();
-				});
-			});
-		});
+		try {
+			db.prepare(stmt).run(...params);
+			return Promise.resolve();
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	before(async function () {
-		db = new sqlite3.Database(":memory:");
+		db = new Database(":memory:");
 
 		for (const stmt of orig_schema) {
 			await serialize_run(stmt);
@@ -86,8 +80,8 @@ describe("SQLite migrations", function () {
 		}
 	});
 
-	after(function (done) {
-		db.close(done);
+	after(function () {
+		db.close();
 	});
 
 	it("has a down migration for every migration", function () {
@@ -243,33 +237,21 @@ describe("SQLite Message Storage", function () {
 	let store: MessageStorage;
 
 	function db_get_one(stmt: string, ...params: any[]): Promise<any> {
-		return new Promise((resolve, reject) => {
-			store.database.serialize(() => {
-				store.database.get(stmt, params, (err, row) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(row);
-				});
-			});
-		});
+		try {
+			const row = store.database.prepare(stmt).get(...params);
+			return Promise.resolve(row);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	function db_get_mult(stmt: string, ...params: any[]): Promise<any[]> {
-		return new Promise((resolve, reject) => {
-			store.database.serialize(() => {
-				store.database.all(stmt, params, (err, rows) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(rows);
-				});
-			});
-		});
+		try {
+			const rows = store.database.prepare(stmt).all(...params);
+			return Promise.resolve(rows);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	before(function (done) {

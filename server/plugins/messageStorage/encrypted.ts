@@ -9,7 +9,7 @@
  * - Each message is encrypted as: [IV 12B][Ciphertext][Auth Tag 16B]
  */
 
-import type {Database} from "sqlite3";
+import Database from "better-sqlite3";
 import log from "../../log.js";
 import path from "path";
 import fs from "fs/promises";
@@ -22,9 +22,6 @@ import Network from "../../models/network.js";
 import {SearchQuery, SearchResponse} from "../../../shared/types/storage.js";
 import {MessageType} from "../../../shared/types/msg.js";
 import crypto from "crypto";
-import {createRequire} from "module";
-
-const require = createRequire(import.meta.url);
 
 // LRU Cache for decrypted messages (performance optimization)
 class LRUCache<K, V> {
@@ -66,16 +63,6 @@ class LRUCache<K, V> {
 	}
 }
 
-let sqlite3: any;
-
-try {
-	sqlite3 = require("sqlite3");
-} catch (e: any) {
-	log.error(
-		"Unable to load sqlite3 module. See https://github.com/mapbox/node-sqlite3/wiki/Binaries"
-	);
-}
-
 export const currentSchemaVersion = 1760689200000; // 2025-10-17 (added unread_markers table)
 
 // Schema for encrypted message storage
@@ -106,13 +93,28 @@ class Deferred {
 	}
 }
 
+type BatchedMessage = {
+	network: string;
+	channel: string;
+	time: number;
+	type: string;
+	encrypted_data: Buffer;
+};
+
 export class EncryptedMessageStorage implements SearchableMessageStorage {
 	isEnabled: boolean;
-	database!: Database;
+	database!: Database.Database;
 	initDone: Deferred;
 	userName: string;
 	private encryptionKey: Buffer;
 	private cache: LRUCache<string, Message[]>;
+
+	// Message batching for improved write performance
+	private batchQueue: BatchedMessage[] = [];
+	private batchSize = 50; // Flush after 50 messages
+	private batchTimeout = 1000; // Flush after 1 second
+	private batchTimer: NodeJS.Timeout | null = null;
+	private insertStmt: Database.Statement | null = null;
 
 	constructor(userName: string, encryptionKey: Buffer) {
 		this.userName = userName;
@@ -169,11 +171,15 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 	}
 
 	async _enable(connection_string: string) {
-		this.database = new sqlite3.Database(connection_string);
-
 		try {
+			this.database = new Database(connection_string);
 			await this.run_pragmas();
 			await this.run_migrations();
+
+			// Prepare insert statement for batching
+			this.insertStmt = this.database.prepare(
+				"INSERT INTO messages(network, channel, time, type, encrypted_data) VALUES(?, ?, ?, ?, ?)"
+			);
 		} catch (e) {
 			this.isEnabled = false;
 			throw Helper.catch_to_error("Migration failed", e);
@@ -283,70 +289,109 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 			return;
 		}
 
+		// Flush any pending batched messages
+		await this.flushBatch();
+
+		// Clear batch timer
+		if (this.batchTimer) {
+			clearTimeout(this.batchTimer);
+			this.batchTimer = null;
+		}
+
 		this.isEnabled = false;
 
-		return new Promise<void>((resolve, reject) => {
-			this.database.close((err) => {
-				if (err) {
-					reject(`Failed to close sqlite database: ${err.message}`);
-					return;
-				}
+		try {
+			this.database.close();
+		} catch (err: any) {
+			throw new Error(`Failed to close sqlite database: ${err.message}`);
+		}
+	}
 
-				resolve();
+	/**
+	 * Flush batched messages to database using a transaction
+	 */
+	private async flushBatch(): Promise<void> {
+		if (this.batchQueue.length === 0) {
+			return;
+		}
+
+		if (!this.insertStmt) {
+			log.error("Cannot flush batch: insert statement not prepared");
+			return;
+		}
+
+		const messages = this.batchQueue.splice(0); // Take all messages and clear queue
+
+		try {
+			// Use transaction for batch insert (much faster than individual inserts)
+			const transaction = this.database.transaction((msgs: BatchedMessage[]) => {
+				for (const msg of msgs) {
+					this.insertStmt!.run(
+						msg.network,
+						msg.channel,
+						msg.time,
+						msg.type,
+						msg.encrypted_data
+					);
+				}
 			});
-		});
+
+			transaction(messages);
+		} catch (err) {
+			log.error(`Failed to flush message batch: ${err}`);
+			// Re-add messages to queue on failure
+			this.batchQueue.unshift(...messages);
+			throw err;
+		}
+	}
+
+	/**
+	 * Schedule a batch flush
+	 */
+	private scheduleBatchFlush(): void {
+		if (this.batchTimer) {
+			return; // Timer already scheduled
+		}
+
+		this.batchTimer = setTimeout(() => {
+			this.batchTimer = null;
+			this.flushBatch().catch((err) => log.error(`Batch flush error: ${err}`));
+		}, this.batchTimeout);
 	}
 
 	/**
 	 * Helper methods for database operations
 	 */
 	serialize_run(stmt: string, ...params: any[]): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.database.serialize(() => {
-				this.database.run(stmt, params, (err: Error | null) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve();
-				});
-			});
-		});
+		try {
+			this.database.prepare(stmt).run(...params);
+			return Promise.resolve();
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	serialize_get(stmt: string, ...params: any[]): Promise<any> {
-		return new Promise((resolve, reject) => {
-			this.database.serialize(() => {
-				this.database.get(stmt, params, (err: Error | null, row: any) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(row);
-				});
-			});
-		});
+		try {
+			const row = this.database.prepare(stmt).get(...params);
+			return Promise.resolve(row);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	serialize_fetchall(stmt: string, ...params: any[]): Promise<any[]> {
-		return new Promise((resolve, reject) => {
-			this.database.serialize(() => {
-				this.database.all(stmt, params, (err: Error | null, rows: any[]) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(rows);
-				});
-			});
-		});
+		try {
+			const rows = this.database.prepare(stmt).all(...params);
+			return Promise.resolve(rows);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	/**
 	 * Index a message (store encrypted)
+	 * Uses batching to improve write performance - messages are queued and written in transactions
 	 */
 	async index(network: Network, channel: Channel, msg: Message) {
 		await this.initDone.promise;
@@ -371,18 +416,26 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 		const plaintext = JSON.stringify(clonedMsg);
 		const encrypted = this.encrypt(plaintext);
 
-		await this.serialize_run(
-			"INSERT INTO messages(network, channel, time, type, encrypted_data) VALUES(?, ?, ?, ?, ?)",
-			network.uuid,
-			channel.name.toLowerCase(),
-			msg.time.getTime(),
-			msg.type || MessageType.MESSAGE,
-			encrypted
-		);
+		// Add to batch queue instead of immediate insert
+		this.batchQueue.push({
+			network: network.uuid,
+			channel: channel.name.toLowerCase(),
+			time: msg.time.getTime(),
+			type: msg.type || MessageType.MESSAGE,
+			encrypted_data: encrypted,
+		});
 
 		// Invalidate cache for this channel
 		const cacheKey = `${network.uuid}:${channel.name.toLowerCase()}`;
 		this.cache.set(cacheKey, []); // Clear cache entry
+
+		// Flush batch if it reaches the size limit
+		if (this.batchQueue.length >= this.batchSize) {
+			await this.flushBatch();
+		} else {
+			// Schedule flush after timeout
+			this.scheduleBatchFlush();
+		}
 	}
 
 	/**
@@ -434,6 +487,9 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 			});
 		}
 
+		// Flush any pending batched writes before reading
+		await this.flushBatch();
+
 		// If unlimited history is specified, load 100k messages
 		const limit = Config.values.maxHistory < 0 ? 100000 : Config.values.maxHistory;
 
@@ -484,6 +540,9 @@ export class EncryptedMessageStorage implements SearchableMessageStorage {
 				"search called but encrypted storage provider not enabled. This is a programming error"
 			);
 		}
+
+		// Flush any pending batched writes before searching
+		await this.flushBatch();
 
 		// For encrypted storage, we need to decrypt all messages to search
 		// This is a performance limitation of encryption

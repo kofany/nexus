@@ -1,4 +1,4 @@
-import type {Database} from "sqlite3";
+import Database from "better-sqlite3";
 
 import log from "../../log.js";
 import path from "path";
@@ -10,22 +10,6 @@ import Helper from "../../helper.js";
 import type {SearchableMessageStorage, DeletionRequest} from "./types.js";
 import Network from "../../models/network.js";
 import {SearchQuery, SearchResponse} from "../../../shared/types/storage.js";
-import {createRequire} from "module";
-
-const require = createRequire(import.meta.url);
-
-// TODO; type
-let sqlite3: any;
-
-try {
-	sqlite3 = require("sqlite3");
-} catch (e: any) {
-	Config.values.messageStorage = Config.values.messageStorage.filter((item) => item !== "sqlite");
-
-	log.error(
-		"Unable to load sqlite3 module. See https://github.com/mapbox/node-sqlite3/wiki/Binaries"
-	);
-}
 
 type Migration = {version: number; stmts: string[]};
 type Rollback = {version: number; rollback_forbidden?: boolean; stmts: string[]};
@@ -117,11 +101,26 @@ class Deferred {
 	}
 }
 
+type BatchedMessage = {
+	network: string;
+	channel: string;
+	time: number;
+	type: string;
+	msg: string;
+};
+
 class SqliteMessageStorage implements SearchableMessageStorage {
 	isEnabled: boolean;
-	database!: Database;
+	database!: Database.Database;
 	initDone: Deferred;
 	userName: string;
+
+	// Message batching for improved write performance
+	private batchQueue: BatchedMessage[] = [];
+	private batchSize = 50; // Flush after 50 messages
+	private batchTimeout = 1000; // Flush after 1 second
+	private batchTimer: NodeJS.Timeout | null = null;
+	private insertStmt: Database.Statement | null = null;
 
 	constructor(userName: string) {
 		this.userName = userName;
@@ -130,11 +129,15 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 	}
 
 	async _enable(connection_string: string) {
-		this.database = new sqlite3.Database(connection_string);
-
 		try {
+			this.database = new Database(connection_string);
 			await this.run_pragmas(); // must be done outside of a transaction
 			await this.run_migrations();
+
+			// Prepare insert statement for batching
+			this.insertStmt = this.database.prepare(
+				"INSERT INTO messages(network, channel, time, type, msg) VALUES(?, ?, ?, ?, ?)"
+			);
 		} catch (e) {
 			this.isEnabled = false;
 			throw Helper.catch_to_error("Migration failed", e);
@@ -257,18 +260,68 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 			return;
 		}
 
+		// Flush any pending batched messages
+		await this.flushBatch();
+
+		// Clear batch timer
+		if (this.batchTimer) {
+			clearTimeout(this.batchTimer);
+			this.batchTimer = null;
+		}
+
 		this.isEnabled = false;
 
-		return new Promise<void>((resolve, reject) => {
-			this.database.close((err) => {
-				if (err) {
-					reject(`Failed to close sqlite database: ${err.message}`);
-					return;
-				}
+		try {
+			this.database.close();
+		} catch (err: any) {
+			throw new Error(`Failed to close sqlite database: ${err.message}`);
+		}
+	}
 
-				resolve();
+	/**
+	 * Flush batched messages to database using a transaction
+	 */
+	private async flushBatch(): Promise<void> {
+		if (this.batchQueue.length === 0) {
+			return;
+		}
+
+		if (!this.insertStmt) {
+			log.error("Cannot flush batch: insert statement not prepared");
+			return;
+		}
+
+		const messages = this.batchQueue.splice(0); // Take all messages and clear queue
+
+		try {
+			// Use transaction for batch insert (much faster than individual inserts)
+			const transaction = this.database.transaction((msgs: BatchedMessage[]) => {
+				for (const msg of msgs) {
+					this.insertStmt!.run(msg.network, msg.channel, msg.time, msg.type, msg.msg);
+				}
 			});
-		});
+
+			transaction(messages);
+		} catch (err) {
+			log.error(`Failed to flush message batch: ${err}`);
+			// Re-add messages to queue on failure
+			this.batchQueue.unshift(...messages);
+			throw err;
+		}
+	}
+
+	/**
+	 * Schedule a batch flush
+	 */
+	private scheduleBatchFlush(): void {
+		if (this.batchTimer) {
+			return; // Timer already scheduled
+		}
+
+		this.batchTimer = setTimeout(() => {
+			this.batchTimer = null;
+			this.flushBatch().catch((err) => log.error(`Batch flush error: ${err}`));
+		}, this.batchTimeout);
 	}
 
 	async fetch_rollbacks(since_version: number) {
@@ -401,15 +454,22 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 			return newMsg;
 		}, {});
 
-		await this.serialize_run(
-			"INSERT INTO messages(network, channel, time, type, msg) VALUES(?, ?, ?, ?, ?)",
+		// Add to batch queue instead of immediate insert
+		this.batchQueue.push({
+			network: network.uuid,
+			channel: channel.name.toLowerCase(),
+			time: msg.time.getTime(),
+			type: msg.type,
+			msg: JSON.stringify(clonedMsg),
+		});
 
-			network.uuid,
-			channel.name.toLowerCase(),
-			msg.time.getTime(),
-			msg.type,
-			JSON.stringify(clonedMsg)
-		);
+		// Flush batch if it reaches the size limit
+		if (this.batchQueue.length >= this.batchSize) {
+			await this.flushBatch();
+		} else {
+			// Schedule flush after timeout
+			this.scheduleBatchFlush();
+		}
 	}
 
 	async deleteChannel(network: Network, channel: Channel) {
@@ -436,6 +496,9 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 		if (!this.isEnabled || Config.values.maxHistory === 0) {
 			return [];
 		}
+
+		// Flush any pending batched writes before reading
+		await this.flushBatch();
 
 		// If unlimited history is specified, load 100k messages
 		const limit = Config.values.maxHistory < 0 ? 100000 : Config.values.maxHistory;
@@ -469,11 +532,14 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 			);
 		}
 
+		// Flush any pending batched writes before searching
+		await this.flushBatch();
+
 		// Using the '@' character to escape '%' and '_' in patterns.
 		const escapedSearchTerm = query.searchTerm.replace(/([%_@])/g, "@$1");
 
 		let select =
-			'SELECT msg, type, time, network, channel FROM messages WHERE type = "message" AND json_extract(msg, "$.text") LIKE ? ESCAPE \'@\'';
+			"SELECT msg, type, time, network, channel FROM messages WHERE type = 'message' AND json_extract(msg, '$.text') LIKE ? ESCAPE '@'";
 		const params: any[] = [`%${escapedSearchTerm}%`];
 
 		if (query.networkUuid) {
@@ -501,6 +567,10 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 
 	async deleteMessages(req: DeletionRequest): Promise<number> {
 		await this.initDone.promise;
+
+		// Flush any pending batched writes before deleting
+		await this.flushBatch();
+
 		let sql = "delete from messages where id in (select id from messages where\n";
 
 		// We roughly get a timestamp from N days before.
@@ -539,6 +609,9 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 		if (!this.isEnabled) {
 			return [];
 		}
+
+		// Flush any pending batched writes before reading
+		await this.flushBatch();
 
 		const rows = await this.serialize_fetchall(
 			"SELECT msg, type, time FROM messages WHERE network = ? AND channel = ? ORDER BY time DESC LIMIT ?",
@@ -610,48 +683,30 @@ class SqliteMessageStorage implements SearchableMessageStorage {
 	}
 
 	private serialize_run(stmt: string, ...params: any[]): Promise<number> {
-		return new Promise((resolve, reject) => {
-			this.database.serialize(() => {
-				this.database.run(stmt, params, function (err) {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(this.changes); // number of affected rows, `this` is re-bound by sqlite3
-				});
-			});
-		});
+		try {
+			const result = this.database.prepare(stmt).run(...params);
+			return Promise.resolve(result.changes);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	private serialize_fetchall(stmt: string, ...params: any[]): Promise<any[]> {
-		return new Promise((resolve, reject) => {
-			this.database.serialize(() => {
-				this.database.all(stmt, params, (err, rows) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(rows);
-				});
-			});
-		});
+		try {
+			const rows = this.database.prepare(stmt).all(...params);
+			return Promise.resolve(rows);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
 	private serialize_get(stmt: string, ...params: any[]): Promise<any> {
-		return new Promise((resolve, reject) => {
-			this.database.serialize(() => {
-				this.database.get(stmt, params, (err, row) => {
-					if (err) {
-						reject(err);
-						return;
-					}
-
-					resolve(row);
-				});
-			});
-		});
+		try {
+			const row = this.database.prepare(stmt).get(...params);
+			return Promise.resolve(row);
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 }
 

@@ -4,7 +4,7 @@ import path from "path";
 import os from "os";
 import fs from "fs";
 import net from "net";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import crypto from "crypto";
 import {execSync} from "child_process";
 
