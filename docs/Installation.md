@@ -188,6 +188,7 @@ npm install --global nexusirc
 ### Configuration Directory
 
 NexusIRC stores its configuration in:
+
 - **Linux/macOS**: `~/.nexusirc`
 - **Windows**: `%APPDATA%\.nexusirc`
 
@@ -200,6 +201,7 @@ export NEXUSIRC_HOME=/path/to/config
 ### First Run
 
 On first run, NexusIRC will:
+
 1. Create the configuration directory
 2. Generate a default `config.js` file
 3. Create necessary subdirectories (`users/`, `logs/`, etc.)

@@ -101,20 +101,22 @@ NexusIRC is built as a **web frontend for irssi/erssi**. It does NOT connect dir
 **Responsibility:** Manages all user instances and their lifecycle.
 
 **Key Features:**
+
 - User authentication and session management
 - Client instantiation and cleanup
 - Multi-session support (same user, multiple browsers)
 - User configuration loading and saving
 
 **Code Structure:**
+
 ```typescript
 class ClientManager {
-    clients: Map<string, Client>
-    
-    loginUser(username: string, password: string): Client
-    logoutUser(username: string): void
-    attachBrowserSession(username: string, socket: Socket): void
-    detachBrowserSession(username: string, socketId: string): void
+  clients: Map<string, Client>;
+
+  loginUser(username: string, password: string): Client;
+  logoutUser(username: string): void;
+  attachBrowserSession(username: string, socket: Socket): void;
+  detachBrowserSession(username: string, socketId: string): void;
 }
 ```
 
@@ -123,6 +125,7 @@ class ClientManager {
 **Responsibility:** Manages IRC connections, either directly or through protocol adapters.
 
 **Key Features:**
+
 - Network connection management
 - Channel state tracking
 - Message routing
@@ -130,16 +133,17 @@ class ClientManager {
 - Event emission to connected browsers
 
 **Architecture:**
+
 ```typescript
 class IrssiClient {
-    networks: Map<string, Network>
-    messageStorage: MessageStorage
-    attachedBrowsers: Map<string, Socket>
-    
-    connect(network: NetworkConfig): Promise<void>
-    disconnect(networkId: string): void
-    sendMessage(target: string, text: string): void
-    handleIncomingMessage(message: Message): void
+  networks: Map<string, Network>;
+  messageStorage: MessageStorage;
+  attachedBrowsers: Map<string, Socket>;
+
+  connect(network: NetworkConfig): Promise<void>;
+  disconnect(networkId: string): void;
+  sendMessage(target: string, text: string): void;
+  handleIncomingMessage(message: Message): void;
 }
 ```
 
@@ -148,6 +152,7 @@ class IrssiClient {
 **Responsibility:** Represents a single IRC network connection.
 
 **Key Features:**
+
 - IRC protocol implementation
 - Connection state machine
 - Channel management
@@ -159,6 +164,7 @@ class IrssiClient {
 **Responsibility:** Represents a channel or private message conversation.
 
 **Key Features:**
+
 - Message history
 - User list
 - Topic management
@@ -176,17 +182,20 @@ Located in `server/feWebClient/`, this implements the irssi FE-Web protocol spec
 **Components:**
 
 #### 1. FeWebSocket (`feWebSocket.ts`)
+
 - WebSocket client for irssi fe-web module
 - Binary frame handling
 - Auto-reconnection with exponential backoff
 - Event-based message routing
 
 #### 2. FeWebEncryption (`feWebEncryption.ts`)
+
 - AES-256-GCM encryption/decryption
 - PBKDF2 key derivation
 - Dual-layer security (TLS + AES)
 
 **Message Flow:**
+
 ```
 Browser → NexusIRC: User command
     ↓
@@ -234,6 +243,7 @@ storageKey = PBKDF2(
 Located in `server/weechatRelay/`, implements WeeChat relay protocol.
 
 **Features:**
+
 - Binary protocol support
 - Compression support (zlib, zstd)
 - Multiple client connections
@@ -250,6 +260,7 @@ NexusIRC supports pluggable storage backends:
 #### 1. SQLite Storage (`server/plugins/messageStorage/sqlite.ts`)
 
 **Schema:**
+
 ```sql
 CREATE TABLE messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -260,11 +271,12 @@ CREATE TABLE messages (
     encrypted_data BLOB NOT NULL
 );
 
-CREATE INDEX idx_messages_user_channel 
+CREATE INDEX idx_messages_user_channel
     ON messages(user, network, channel, time);
 ```
 
 **Features:**
+
 - Full-text search
 - Message cleanup policy
 - Encrypted message storage
@@ -272,6 +284,7 @@ CREATE INDEX idx_messages_user_channel
 - Automatic migrations
 
 **Encryption Format:**
+
 ```
 Message on disk:
 [IV 12 bytes][Ciphertext (variable)][Auth Tag 16 bytes]
@@ -289,12 +302,14 @@ Decrypted JSON:
 #### 2. Text Storage (`server/plugins/messageStorage/text.ts`)
 
 **Features:**
+
 - Plain text log files
 - One file per channel
 - Simple grep-based search
 - No dependencies
 
 **File Structure:**
+
 ```
 ~/.nexusirc/logs/
     username/
@@ -309,25 +324,25 @@ Stored as JSON files in `~/.nexusirc/users/`:
 
 ```json
 {
-    "password": "$2a$11$...",  // bcrypt hash
-    "log": true,
-    "awayMessage": "Away",
-    "networks": [
-        {
-            "uuid": "unique-id",
-            "name": "Libera",
-            "host": "irc.libera.chat",
-            "port": 6697,
-            "tls": true,
-            "nick": "username",
-            "channels": ["#nexusirc"]
-        }
-    ],
-    "irssiConnection": {
-        "host": "127.0.0.1",
-        "port": 9001,
-        "passwordEncrypted": "..."
+  "password": "$2a$11$...", // bcrypt hash
+  "log": true,
+  "awayMessage": "Away",
+  "networks": [
+    {
+      "uuid": "unique-id",
+      "name": "Libera",
+      "host": "irc.libera.chat",
+      "port": 6697,
+      "tls": true,
+      "nick": "username",
+      "channels": ["#nexusirc"]
     }
+  ],
+  "irssiConnection": {
+    "host": "127.0.0.1",
+    "port": 9001,
+    "passwordEncrypted": "..."
+  }
 }
 ```
 
@@ -339,50 +354,50 @@ Stored as JSON files in `~/.nexusirc/users/`:
 
 #### Client → Server
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `auth:perform` | `{username, password}` | Authenticate user |
-| `input` | `{target, text}` | Send message/command |
-| `more` | `{target, lastId}` | Request message history |
-| `network:new` | `{...networkConfig}` | Add new network |
-| `network:edit` | `{uuid, ...config}` | Edit network config |
-| `open` | `{target}` | Open channel/query |
-| `sort` | `{type, order, target}` | Sort channels |
-| `names` | `{target}` | Request user list |
-| `changelog` | `{}` | Request changelog |
-| `search` | `{query, offset}` | Search messages |
+| Event          | Payload                 | Description             |
+| -------------- | ----------------------- | ----------------------- |
+| `auth:perform` | `{username, password}`  | Authenticate user       |
+| `input`        | `{target, text}`        | Send message/command    |
+| `more`         | `{target, lastId}`      | Request message history |
+| `network:new`  | `{...networkConfig}`    | Add new network         |
+| `network:edit` | `{uuid, ...config}`     | Edit network config     |
+| `open`         | `{target}`              | Open channel/query      |
+| `sort`         | `{type, order, target}` | Sort channels           |
+| `names`        | `{target}`              | Request user list       |
+| `changelog`    | `{}`                    | Request changelog       |
+| `search`       | `{query, offset}`       | Search messages         |
 
 #### Server → Client
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `auth:success` | `{...user}` | Authentication successful |
-| `auth:failed` | `{}` | Authentication failed |
-| `init` | `{networks, active}` | Initial state |
-| `msg` | `{chan, msg}` | New message |
-| `more` | `{chan, messages}` | Message history |
-| `network` | `{network}` | Network added/updated |
-| `network:status` | `{network, connected}` | Connection status |
-| `nick` | `{network, nick}` | Nick changed |
-| `join` | `{chan}` | Channel joined |
-| `part` | `{chan}` | Channel parted |
-| `quit` | `{network, user}` | User quit |
-| `names` | `{chan, users}` | User list |
-| `topic` | `{chan, topic}` | Topic changed |
-| `users` | `{chan, users}` | User list update |
-| `configuration` | `{...config}` | Server configuration |
+| Event            | Payload                | Description               |
+| ---------------- | ---------------------- | ------------------------- |
+| `auth:success`   | `{...user}`            | Authentication successful |
+| `auth:failed`    | `{}`                   | Authentication failed     |
+| `init`           | `{networks, active}`   | Initial state             |
+| `msg`            | `{chan, msg}`          | New message               |
+| `more`           | `{chan, messages}`     | Message history           |
+| `network`        | `{network}`            | Network added/updated     |
+| `network:status` | `{network, connected}` | Connection status         |
+| `nick`           | `{network, nick}`      | Nick changed              |
+| `join`           | `{chan}`               | Channel joined            |
+| `part`           | `{chan}`               | Channel parted            |
+| `quit`           | `{network, user}`      | User quit                 |
+| `names`          | `{chan, users}`        | User list                 |
+| `topic`          | `{chan, topic}`        | Topic changed             |
+| `users`          | `{chan, users}`        | User list update          |
+| `configuration`  | `{...config}`          | Server configuration      |
 
 ### REST API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Serve web application |
-| `GET` | `/storage/:file` | Serve uploaded files |
-| `POST` | `/upload` | Upload file |
-| `GET` | `/packages` | List installed packages |
-| `GET` | `/packages/search/:query` | Search packages |
-| `POST` | `/packages/install` | Install package |
-| `DELETE` | `/packages/:name` | Uninstall package |
+| Method   | Endpoint                  | Description             |
+| -------- | ------------------------- | ----------------------- |
+| `GET`    | `/`                       | Serve web application   |
+| `GET`    | `/storage/:file`          | Serve uploaded files    |
+| `POST`   | `/upload`                 | Upload file             |
+| `GET`    | `/packages`               | List installed packages |
+| `GET`    | `/packages/search/:query` | Search packages         |
+| `POST`   | `/packages/install`       | Install package         |
+| `DELETE` | `/packages/:name`         | Uninstall package       |
 
 ---
 
@@ -407,6 +422,7 @@ Stored as JSON files in `~/.nexusirc/users/`:
 ### Encryption Keys
 
 **Password Storage:**
+
 ```javascript
 // User password (hashed with bcrypt)
 bcrypt.hash(password, 11) → stored in users/username.json
@@ -417,6 +433,7 @@ encrypted = AES-256-GCM(irssiPassword, tempKey)
 ```
 
 **Runtime Keys:**
+
 ```javascript
 // WebSocket encryption (managed by FeWebSocket)
 webSocketKey = PBKDF2(irssiPassword, "irssi-fe-web-v1", ...)
@@ -428,6 +445,7 @@ storageKey = PBKDF2(userPassword, irssiPassword, ...)
 ### Security Considerations
 
 **Strengths:**
+
 - ✅ Passwords hashed with bcrypt
 - ✅ Messages encrypted at rest (AES-256-GCM)
 - ✅ TLS support for network connections
@@ -435,11 +453,13 @@ storageKey = PBKDF2(userPassword, irssiPassword, ...)
 - ✅ Each user has isolated encryption key
 
 **Limitations:**
+
 - ⚠️ Encryption keys stored in RAM during runtime
 - ⚠️ Admin with root access can dump memory
 - ⚠️ Requires trust in server administrator
 
 **Mitigations:**
+
 - Run in isolated environment (Docker, VM)
 - Use encrypted swap (Linux: dm-crypt)
 - Regular server restarts to clear memory
@@ -454,7 +474,7 @@ storageKey = PBKDF2(userPassword, irssiPassword, ...)
 
 ```
 1. User types message in browser, presses Enter
-2. Browser emits Socket.IO event: 
+2. Browser emits Socket.IO event:
    input {target: channelId, text: "/msg #channel Hello"}
 
 3. Server receives event, finds user's Client instance
@@ -526,29 +546,31 @@ storageKey = PBKDF2(userPassword, irssiPassword, ...)
 Located in `server/plugins/`, supports custom functionality:
 
 **Available Plugin Types:**
+
 - Authentication providers (`plugins/auth/`)
 - Message storage backends (`plugins/messageStorage/`)
 - Input handlers
 - Theme packages
 
 **Example Plugin Structure:**
+
 ```javascript
 export default {
-    name: "custom-plugin",
-    version: "1.0.0",
-    
-    onServerStart(context) {
-        // Initialize plugin
-    },
-    
-    onClientConnect(client) {
-        // Handle new client
-    },
-    
-    onMessage(client, message) {
-        // Process message
-    }
-}
+  name: "custom-plugin",
+  version: "1.0.0",
+
+  onServerStart(context) {
+    // Initialize plugin
+  },
+
+  onClientConnect(client) {
+    // Handle new client
+  },
+
+  onMessage(client, message) {
+    // Process message
+  },
+};
 ```
 
 ### Custom Themes
@@ -569,14 +591,14 @@ Add custom IRC commands:
 ```javascript
 // server/plugins/custom-commands.ts
 export default {
-    name: "customCommands",
-    
-    commands: {
-        "hello": function(client, target, params) {
-            client.sendMessage(target, `Hello ${params}!`);
-        }
-    }
-}
+  name: "customCommands",
+
+  commands: {
+    hello: function (client, target, params) {
+      client.sendMessage(target, `Hello ${params}!`);
+    },
+  },
+};
 ```
 
 ---

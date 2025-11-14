@@ -32,6 +32,7 @@ NexusIRC is a heavily customized fork of [The Lounge](https://github.com/theloun
 ## ✨ Features
 
 ### Core Functionality
+
 - **irssi FE-Web Protocol Client**: Connects to irssi/erssi instances via encrypted WebSocket
 - **Multi-User Support**: Each user connects to their own irssi instance
 - **Multi-Session Sync**: Use multiple browsers/devices with synchronized state
@@ -41,17 +42,20 @@ NexusIRC is a heavily customized fork of [The Lounge](https://github.com/theloun
 - **Push Notifications**: Desktop and mobile notifications for mentions and messages
 
 ### Protocol Bridges
+
 - **irssi FE-Web Protocol**: Full integration with irssi's web frontend protocol (mandatory)
 - **WeeChat Relay**: Built-in relay server for WeeChat protocol clients
 - **Dual-Layer Security**: TLS + AES-256-GCM encryption for irssi communication
 
 ### User Experience
+
 - **Persistent Connections**: irssi stays connected even when browser is closed
 - **Link Previews**: Automatic preview generation for URLs, images, and videos
 - **LDAP Authentication**: Enterprise-ready authentication support
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 
 ### Developer-Friendly
+
 - **TypeScript**: Fully typed codebase for better maintainability
 - **Vue 3**: Modern reactive frontend framework
 - **Plugin System**: Extensible architecture for custom functionality
@@ -123,14 +127,14 @@ On first run, a default configuration file will be created. Edit `~/.nexusirc/co
 
 ```javascript
 export default {
-    irssi: {
-        enable: true,
-        host: "127.0.0.1",
-        port: 9001,
-        ssl: true
-    },
-    messageStorage: ["sqlite"]
-}
+  irssi: {
+    enable: true,
+    host: "127.0.0.1",
+    port: 9001,
+    ssl: true,
+  },
+  messageStorage: ["sqlite"],
+};
 ```
 
 **Next Steps:** See the [irssi Integration Guide](docs/Irssi-Integration.md) for detailed setup instructions.

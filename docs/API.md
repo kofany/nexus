@@ -42,11 +42,13 @@ Serves the main web application.
 Retrieve uploaded files.
 
 **Parameters:**
+
 - `file` (string): Filename to retrieve
 
 **Response:** File binary data
 
 **Example:**
+
 ```
 GET /storage/image-abc123.png
 ```
@@ -58,19 +60,22 @@ GET /storage/image-abc123.png
 Upload a file to the server.
 
 **Headers:**
+
 - `Content-Type: multipart/form-data`
 
 **Body:** File data
 
 **Response:**
+
 ```json
 {
-    "url": "https://example.com/storage/file-abc123.ext",
-    "name": "file.ext"
+  "url": "https://example.com/storage/file-abc123.ext",
+  "name": "file.ext"
 }
 ```
 
 **Example:**
+
 ```bash
 curl -X POST http://localhost:19000/upload \
   -F "file=@image.png" \
@@ -84,15 +89,16 @@ curl -X POST http://localhost:19000/upload \
 List installed packages (themes and plugins).
 
 **Response:**
+
 ```json
 {
-    "packages": [
-        {
-            "name": "nexusirc-theme-solarized",
-            "version": "1.0.0",
-            "type": "theme"
-        }
-    ]
+  "packages": [
+    {
+      "name": "nexusirc-theme-solarized",
+      "version": "1.0.0",
+      "type": "theme"
+    }
+  ]
 }
 ```
 
@@ -103,18 +109,20 @@ List installed packages (themes and plugins).
 Search for available packages on npm.
 
 **Parameters:**
+
 - `query` (string): Search query
 
 **Response:**
+
 ```json
 {
-    "results": [
-        {
-            "name": "nexusirc-theme-custom",
-            "version": "1.2.3",
-            "description": "Custom theme for NexusIRC"
-        }
-    ]
+  "results": [
+    {
+      "name": "nexusirc-theme-custom",
+      "version": "1.2.3",
+      "description": "Custom theme for NexusIRC"
+    }
+  ]
 }
 ```
 
@@ -125,17 +133,19 @@ Search for available packages on npm.
 Install a package.
 
 **Body:**
+
 ```json
 {
-    "package": "nexusirc-theme-solarized"
+  "package": "nexusirc-theme-solarized"
 }
 ```
 
 **Response:**
+
 ```json
 {
-    "success": true,
-    "message": "Package installed successfully"
+  "success": true,
+  "message": "Package installed successfully"
 }
 ```
 
@@ -146,13 +156,15 @@ Install a package.
 Uninstall a package.
 
 **Parameters:**
+
 - `name` (string): Package name
 
 **Response:**
+
 ```json
 {
-    "success": true,
-    "message": "Package uninstalled successfully"
+  "success": true,
+  "message": "Package uninstalled successfully"
 }
 ```
 
@@ -167,6 +179,7 @@ Uninstall a package.
 Authenticate a user.
 
 **Payload:**
+
 ```javascript
 {
     username: "alice",
@@ -175,6 +188,7 @@ Authenticate a user.
 ```
 
 **Response Events:**
+
 - `auth:success` - Authentication successful
 - `auth:failed` - Authentication failed
 
@@ -185,6 +199,7 @@ Authenticate a user.
 Send a message or command.
 
 **Payload:**
+
 ```javascript
 {
     target: 42,  // Channel ID
@@ -199,6 +214,7 @@ Send a message or command.
 Request message history.
 
 **Payload:**
+
 ```javascript
 {
     target: 42,     // Channel ID
@@ -215,9 +231,10 @@ Request message history.
 Open a channel or query.
 
 **Payload:**
+
 ```javascript
 {
-    target: 42  // Channel ID
+  target: 42; // Channel ID
 }
 ```
 
@@ -228,9 +245,10 @@ Open a channel or query.
 Request user list for a channel.
 
 **Payload:**
+
 ```javascript
 {
-    target: 42  // Channel ID
+  target: 42; // Channel ID
 }
 ```
 
@@ -251,6 +269,7 @@ Request the changelog.
 Search messages.
 
 **Payload:**
+
 ```javascript
 {
     networkUuid: "network-uuid",
@@ -281,6 +300,7 @@ Search messages.
 Sort channels or networks.
 
 **Payload:**
+
 ```javascript
 {
     type: "channels",
@@ -298,6 +318,7 @@ Sort channels or networks.
 Sent when authentication succeeds.
 
 **Payload:**
+
 ```javascript
 {
     success: true,
@@ -316,9 +337,10 @@ Sent when authentication succeeds.
 Sent when authentication fails.
 
 **Payload:**
+
 ```javascript
 {
-    success: false
+  success: false;
 }
 ```
 
@@ -329,6 +351,7 @@ Sent when authentication fails.
 Sends initial state after authentication.
 
 **Payload:**
+
 ```javascript
 {
     active: -1,
@@ -365,6 +388,7 @@ Sends initial state after authentication.
 New message received.
 
 **Payload:**
+
 ```javascript
 {
     chan: 42,  // Channel ID
@@ -391,6 +415,7 @@ New message received.
 Message history response.
 
 **Payload:**
+
 ```javascript
 {
     chan: 42,
@@ -408,6 +433,7 @@ Message history response.
 Network added or updated.
 
 **Payload:**
+
 ```javascript
 {
     network: {
@@ -425,6 +451,7 @@ Network added or updated.
 Network connection status changed.
 
 **Payload:**
+
 ```javascript
 {
     network: "network-uuid",
@@ -440,6 +467,7 @@ Network connection status changed.
 Channel joined.
 
 **Payload:**
+
 ```javascript
 {
     network: "network-uuid",
@@ -458,9 +486,10 @@ Channel joined.
 Channel parted.
 
 **Payload:**
+
 ```javascript
 {
-    chan: 42
+  chan: 42;
 }
 ```
 
@@ -471,6 +500,7 @@ Channel parted.
 Nick changed.
 
 **Payload:**
+
 ```javascript
 {
     network: "network-uuid",
@@ -485,6 +515,7 @@ Nick changed.
 User quit.
 
 **Payload:**
+
 ```javascript
 {
     network: "network-uuid",
@@ -502,6 +533,7 @@ User quit.
 User list update.
 
 **Payload:**
+
 ```javascript
 {
     chan: 42,
@@ -525,6 +557,7 @@ User list update.
 Full user list for a channel.
 
 **Payload:**
+
 ```javascript
 {
     chan: 42,
@@ -541,6 +574,7 @@ Full user list for a channel.
 Topic changed.
 
 **Payload:**
+
 ```javascript
 {
     chan: 42,
@@ -555,9 +589,10 @@ Topic changed.
 Server changelog.
 
 **Payload:**
+
 ```javascript
 {
-    changelog: "# Changelog\n\n## v4.4.3\n..."
+  changelog: "# Changelog\n\n## v4.4.3\n...";
 }
 ```
 
@@ -568,6 +603,7 @@ Server changelog.
 Search results.
 
 **Payload:**
+
 ```javascript
 {
     networkUuid: "network-uuid",
@@ -602,12 +638,12 @@ nexusirc-plugin-example/
 
 ```json
 {
-    "name": "nexusirc-plugin-example",
-    "version": "1.0.0",
-    "nexusirc": {
-        "supports": ">=4.4.0"
-    },
-    "main": "index.js"
+  "name": "nexusirc-plugin-example",
+  "version": "1.0.0",
+  "nexusirc": {
+    "supports": ">=4.4.0"
+  },
+  "main": "index.js"
 }
 ```
 
@@ -616,21 +652,21 @@ nexusirc-plugin-example/
 ```javascript
 // index.js
 export default {
-    onServerStart(api) {
-        // Called when NexusIRC starts
-        
-        // Access configuration
-        const config = api.Config.getConfig();
-        
-        // Add stylesheet
-        api.Stylesheets.addFile("style.css");
-        
-        // Add public file
-        api.PublicFiles.add("script.js");
-        
-        // Logging
-        api.Logger.info("Plugin loaded");
-    }
+  onServerStart(api) {
+    // Called when NexusIRC starts
+
+    // Access configuration
+    const config = api.Config.getConfig();
+
+    // Add stylesheet
+    api.Stylesheets.addFile("style.css");
+
+    // Add public file
+    api.PublicFiles.add("script.js");
+
+    // Logging
+    api.Logger.info("Plugin loaded");
+  },
 };
 ```
 
@@ -639,29 +675,29 @@ export default {
 #### Config
 
 ```javascript
-api.Config.getConfig()  // Get server configuration
-api.Config.getPersistentStorageDir()  // Get plugin storage directory
+api.Config.getConfig(); // Get server configuration
+api.Config.getPersistentStorageDir(); // Get plugin storage directory
 ```
 
 #### Stylesheets
 
 ```javascript
-api.Stylesheets.addFile("style.css")  // Add CSS file
+api.Stylesheets.addFile("style.css"); // Add CSS file
 ```
 
 #### PublicFiles
 
 ```javascript
-api.PublicFiles.add("script.js")  // Add public JavaScript file
+api.PublicFiles.add("script.js"); // Add public JavaScript file
 ```
 
 #### Logger
 
 ```javascript
-api.Logger.error("Error message")
-api.Logger.warn("Warning message")
-api.Logger.info("Info message")
-api.Logger.debug("Debug message")
+api.Logger.error("Error message");
+api.Logger.warn("Warning message");
+api.Logger.info("Info message");
+api.Logger.debug("Debug message");
 ```
 
 ---
@@ -672,22 +708,22 @@ api.Logger.debug("Debug message")
 
 ```typescript
 interface Network {
-    uuid: string;
-    name: string;
-    host: string;
-    port: number;
-    tls: boolean;
-    rejectUnauthorized: boolean;
-    nick: string;
-    username: string;
-    realname: string;
-    password: string;
-    join: string;
-    channels: Channel[];
-    status: {
-        connected: boolean;
-        secure: boolean;
-    };
+  uuid: string;
+  name: string;
+  host: string;
+  port: number;
+  tls: boolean;
+  rejectUnauthorized: boolean;
+  nick: string;
+  username: string;
+  realname: string;
+  password: string;
+  join: string;
+  channels: Channel[];
+  status: {
+    connected: boolean;
+    secure: boolean;
+  };
 }
 ```
 
@@ -695,14 +731,14 @@ interface Network {
 
 ```typescript
 interface Channel {
-    id: number;
-    name: string;
-    type: "channel" | "query" | "lobby" | "special";
-    topic: string;
-    unread: number;
-    highlight: number;
-    messages: Message[];
-    users: User[];
+  id: number;
+  name: string;
+  type: "channel" | "query" | "lobby" | "special";
+  topic: string;
+  unread: number;
+  highlight: number;
+  messages: Message[];
+  users: User[];
 }
 ```
 
@@ -710,17 +746,29 @@ interface Channel {
 
 ```typescript
 interface Message {
-    id: number;
-    type: "message" | "action" | "notice" | "join" | "part" | "quit" | "nick" | "topic" | "mode" | "ctcp" | "away" | "back";
-    time: string;  // ISO 8601
-    from: {
-        nick: string;
-        mode: string;
-    };
-    text: string;
-    self: boolean;
-    highlight: boolean;
-    hostmask?: string;
+  id: number;
+  type:
+    | "message"
+    | "action"
+    | "notice"
+    | "join"
+    | "part"
+    | "quit"
+    | "nick"
+    | "topic"
+    | "mode"
+    | "ctcp"
+    | "away"
+    | "back";
+  time: string; // ISO 8601
+  from: {
+    nick: string;
+    mode: string;
+  };
+  text: string;
+  self: boolean;
+  highlight: boolean;
+  hostmask?: string;
 }
 ```
 
@@ -728,10 +776,10 @@ interface Message {
 
 ```typescript
 interface User {
-    nick: string;
-    mode: string;  // "@", "+", "", etc.
-    away: boolean;
-    hostmask?: string;
+  nick: string;
+  mode: string; // "@", "+", "", etc.
+  away: boolean;
+  hostmask?: string;
 }
 ```
 

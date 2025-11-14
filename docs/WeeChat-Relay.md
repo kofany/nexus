@@ -49,16 +49,16 @@ Edit `~/.nexusirc/config.js`:
 
 ```javascript
 export default {
-    // ... other settings ...
-    weechat: {
-        enable: true,
-        host: "0.0.0.0",      // Listen on all interfaces
-        port: 9000,           // WeeChat relay default port
-        ssl: false,           // TLS encryption
-        password: "relay-password",  // Required for authentication
-        bindAddress: undefined,      // Optional bind address
-    }
-}
+  // ... other settings ...
+  weechat: {
+    enable: true,
+    host: "0.0.0.0", // Listen on all interfaces
+    port: 9000, // WeeChat relay default port
+    ssl: false, // TLS encryption
+    password: "relay-password", // Required for authentication
+    bindAddress: undefined, // Optional bind address
+  },
+};
 ```
 
 ### SSL/TLS Configuration (Recommended)
@@ -99,6 +99,7 @@ tail -f ~/.nexusirc/logs/server.log
 ```
 
 Expected output:
+
 ```
 [INFO] WeeChat relay server listening on 0.0.0.0:9000
 ```
@@ -177,19 +178,19 @@ The WeeChat relay protocol is a binary protocol for communication between WeeCha
 
 NexusIRC implements the following WeeChat relay commands:
 
-| Command | Description |
-|---------|-------------|
-| `init` | Initialize connection, exchange capabilities |
-| `hdata` | Request hierarchical data (buffers, lines, etc.) |
-| `info` | Get server information |
-| `infolist` | Get information list |
-| `nicklist` | Get/update nicklist for a buffer |
-| `input` | Send input to a buffer |
-| `sync` | Synchronize data |
-| `desync` | Desynchronize data |
-| `test` | Test connection |
-| `ping` | Ping server |
-| `quit` | Disconnect |
+| Command    | Description                                      |
+| ---------- | ------------------------------------------------ |
+| `init`     | Initialize connection, exchange capabilities     |
+| `hdata`    | Request hierarchical data (buffers, lines, etc.) |
+| `info`     | Get server information                           |
+| `infolist` | Get information list                             |
+| `nicklist` | Get/update nicklist for a buffer                 |
+| `input`    | Send input to a buffer                           |
+| `sync`     | Synchronize data                                 |
+| `desync`   | Desynchronize data                               |
+| `test`     | Test connection                                  |
+| `ping`     | Ping server                                      |
+| `quit`     | Disconnect                                       |
 
 ### Data Types
 
@@ -216,23 +217,23 @@ Run multiple relay servers (e.g., one for internal, one for external):
 
 ```javascript
 weechat: [
-    {
-        enable: true,
-        host: "127.0.0.1",
-        port: 9000,
-        ssl: false,
-        password: "internal-password"
-    },
-    {
-        enable: true,
-        host: "0.0.0.0",
-        port: 9001,
-        ssl: true,
-        sslCert: "/path/to/cert.pem",
-        sslKey: "/path/to/key.pem",
-        password: "external-password"
-    }
-]
+  {
+    enable: true,
+    host: "127.0.0.1",
+    port: 9000,
+    ssl: false,
+    password: "internal-password",
+  },
+  {
+    enable: true,
+    host: "0.0.0.0",
+    port: 9001,
+    ssl: true,
+    sslCert: "/path/to/cert.pem",
+    sslKey: "/path/to/key.pem",
+    password: "external-password",
+  },
+];
 ```
 
 ### Reverse Proxy
@@ -243,10 +244,10 @@ Use nginx to proxy WeeChat relay:
 server {
     listen 443 ssl;
     server_name irc.example.com;
-    
+
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
-    
+
     location /weechat {
         proxy_pass http://localhost:9000;
         proxy_http_version 1.1;
@@ -265,12 +266,12 @@ server {
 
 ### Connection Issues
 
-| Symptom | Cause | Solution |
-|---------|-------|----------|
-| `Connection refused` | Relay not running | Check config, restart NexusIRC |
-| `Invalid password` | Wrong relay password | Verify password in config |
-| `Timeout` | Firewall blocking port | Open port 9000 in firewall |
-| `SSL handshake failed` | Invalid certificate | Use valid cert or disable SSL verification |
+| Symptom                | Cause                  | Solution                                   |
+| ---------------------- | ---------------------- | ------------------------------------------ |
+| `Connection refused`   | Relay not running      | Check config, restart NexusIRC             |
+| `Invalid password`     | Wrong relay password   | Verify password in config                  |
+| `Timeout`              | Firewall blocking port | Open port 9000 in firewall                 |
+| `SSL handshake failed` | Invalid certificate    | Use valid cert or disable SSL verification |
 
 ### Debugging
 
@@ -308,11 +309,9 @@ nexusirc relay clients
 - **`Port already in use`**: Another service is using port 9000
   - Change port in configuration
   - Or stop conflicting service
-  
 - **`Certificate verify failed`**: Client doesn't trust certificate
   - Use valid certificate from CA
   - Or disable certificate verification in client
-  
 - **`Unsupported compression type`**: Client requested unsupported compression
   - Update NexusIRC or disable compression in client
 

@@ -159,7 +159,6 @@ Configuration is stored in each user's `user.json` file:
 ## Usage with Lith
 
 1. **Configure in nexuslounge UI:**
-
    - Login to nexuslounge web interface
    - Go to Settings → WeeChat Relay
    - Enable: Yes
@@ -168,7 +167,6 @@ Configuration is stored in each user's `user.json` file:
    - Save
 
 2. **Configure Lith:**
-
    - Host: Your nexuslounge server address
    - Port: The port you configured (e.g., 9001)
    - Use WebSocket: Yes

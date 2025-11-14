@@ -115,6 +115,7 @@ sudo make install
 ```
 
 **Expected Output:**
+
 - `fe-web` module installed in irssi module directory (usually `/usr/lib/irssi/modules/`)
 
 ### 2. Configure irssi
@@ -159,6 +160,7 @@ Restart irssi to apply changes.
 ```
 
 Expected output:
+
 ```
 Fe-Web module is running on 127.0.0.1:9001 (SSL enabled)
 ```
@@ -171,24 +173,24 @@ Fe-Web module is running on 127.0.0.1:9001 (SSL enabled)
 
 ```javascript
 export default {
-    // ... other settings ...
-    irssi: {
-        enable: true,
-        host: "127.0.0.1",
-        port: 9001,
-        ssl: true,
-        rejectUnauthorized: false, // Set to true with valid certificates
-        reconnect: {
-            retries: 5,
-            interval: 5000
-        }
+  // ... other settings ...
+  irssi: {
+    enable: true,
+    host: "127.0.0.1",
+    port: 9001,
+    ssl: true,
+    rejectUnauthorized: false, // Set to true with valid certificates
+    reconnect: {
+      retries: 5,
+      interval: 5000,
     },
-    messageStorage: ["sqlite"],
-    storagePolicy: {
-        enabled: true,
-        maxAge: 30
-    }
-}
+  },
+  messageStorage: ["sqlite"],
+  storagePolicy: {
+    enabled: true,
+    maxAge: 30,
+  },
+};
 ```
 
 ### 2. User Configuration
@@ -211,14 +213,14 @@ Add the irssi connection details:
 
 ```json
 {
-    "name": "alice",
-    "password": "$2a$11$...",  // bcrypt hash
-    "log": true,
-    "irssiConnection": {
-        "host": "127.0.0.1",
-        "port": 9001,
-        "passwordEncrypted": "..."  // Set via CLI
-    }
+  "name": "alice",
+  "password": "$2a$11$...", // bcrypt hash
+  "log": true,
+  "irssiConnection": {
+    "host": "127.0.0.1",
+    "port": 9001,
+    "passwordEncrypted": "..." // Set via CLI
+  }
 }
 ```
 
@@ -229,12 +231,14 @@ nexusirc irssi set-password alice
 ```
 
 You'll be prompted for:
+
 - irssi host (default 127.0.0.1)
 - irssi port (default 9001)
 - SSL usage
 - irssi password
 
 NexusIRC will:
+
 1. Encrypt the irssi password using AES-256-GCM
 2. Store it in `users/alice.json`
 3. Derive encryption keys on login
@@ -334,13 +338,13 @@ tail -f ~/.nexusirc/logs/server.log
 
 ### Connection Issues
 
-| Symptom | Cause | Solution |
-|---------|-------|----------|
-| `Connection refused` | irssi fe-web not running | Check irssi output, ensure module is loaded |
-| `Handshake failed` | TLS certificate issue | Set `rejectUnauthorized: false` temporarily or use valid certs |
-| `Invalid password` | Wrong irssi password | Update using `nexusirc irssi set-password` |
-| `Timeout` | Network/connectivity issues | Check firewall, network routing |
-| `Encrypted message invalid` | Mismatched encryption key | Reset irssi password and reconfigure |
+| Symptom                     | Cause                       | Solution                                                       |
+| --------------------------- | --------------------------- | -------------------------------------------------------------- |
+| `Connection refused`        | irssi fe-web not running    | Check irssi output, ensure module is loaded                    |
+| `Handshake failed`          | TLS certificate issue       | Set `rejectUnauthorized: false` temporarily or use valid certs |
+| `Invalid password`          | Wrong irssi password        | Update using `nexusirc irssi set-password`                     |
+| `Timeout`                   | Network/connectivity issues | Check firewall, network routing                                |
+| `Encrypted message invalid` | Mismatched encryption key   | Reset irssi password and reconfigure                           |
 
 ### Debugging
 

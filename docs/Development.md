@@ -50,6 +50,7 @@ yarn githooks-install
 #### VS Code Configuration
 
 Recommended extensions (`.vscode/extensions.json`):
+
 - `dbaeumer.vscode-eslint` - ESLint
 - `esbenp.prettier-vscode` - Prettier
 - `Vue.volar` - Vue language support
@@ -58,6 +59,7 @@ Recommended extensions (`.vscode/extensions.json`):
 #### Environment Variables
 
 Create a `.env` file (not committed):
+
 ```bash
 NODE_ENV=development
 DEBUG=nexusirc:*
@@ -76,6 +78,7 @@ yarn dev
 ```
 
 This starts:
+
 - Express server on port 19000
 - WebSocket server
 - Webpack dev middleware with HMR
@@ -165,15 +168,15 @@ nexusirc/
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `server/server.ts` | Main server setup, Express, Socket.IO |
-| `server/clientManager.ts` | User/client lifecycle management |
-| `server/irssiClient.ts` | IRC connection handling |
-| `client/js/main.ts` | Frontend entry point |
-| `client/js/socket.ts` | Socket.IO client setup |
-| `webpack.config.ts` | Build configuration |
-| `tsconfig.json` | TypeScript configuration |
+| File                      | Purpose                               |
+| ------------------------- | ------------------------------------- |
+| `server/server.ts`        | Main server setup, Express, Socket.IO |
+| `server/clientManager.ts` | User/client lifecycle management      |
+| `server/irssiClient.ts`   | IRC connection handling               |
+| `client/js/main.ts`       | Frontend entry point                  |
+| `client/js/socket.ts`     | Socket.IO client setup                |
+| `webpack.config.ts`       | Build configuration                   |
+| `tsconfig.json`           | TypeScript configuration              |
 
 ---
 
@@ -187,22 +190,23 @@ nexusirc/
 - Use strict mode
 
 **Example:**
+
 ```typescript
 // Good
 interface NetworkConfig {
-    name: string;
-    host: string;
-    port: number;
-    tls: boolean;
+  name: string;
+  host: string;
+  port: number;
+  tls: boolean;
 }
 
 function connectNetwork(config: NetworkConfig): Promise<void> {
-    // ...
+  // ...
 }
 
 // Bad
 function connectNetwork(config: any): any {
-    // ...
+  // ...
 }
 ```
 
@@ -213,21 +217,22 @@ function connectNetwork(config: any): any {
 - Use `<script setup lang="ts">`
 
 **Example:**
+
 ```vue
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import {ref, computed} from "vue";
 
 interface Props {
-    message: string;
-    highlight?: boolean;
+  message: string;
+  highlight?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    highlight: false,
+  highlight: false,
 });
 
 const emit = defineEmits<{
-    (e: "click", id: number): void;
+  (e: "click", id: number): void;
 }>();
 </script>
 ```
@@ -248,6 +253,7 @@ yarn lint:eslint server/server.ts
 ```
 
 **Key Rules:**
+
 - Indentation: Tabs
 - Semicolons: Required
 - Quotes: Double quotes
@@ -267,6 +273,7 @@ footer (optional)
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -276,6 +283,7 @@ footer (optional)
 - `chore`: Build, dependencies, etc.
 
 **Examples:**
+
 ```
 feat(client): add message search functionality
 
@@ -320,35 +328,36 @@ yarn coverage
 We use Mocha + Chai for testing:
 
 **Example Test:**
+
 ```typescript
 // test/server/models/msg.test.ts
-import { expect } from "chai";
+import {expect} from "chai";
 import Msg from "../../../server/models/msg";
 
-describe("Msg", function() {
-    describe("#constructor", function() {
-        it("should create a message with text", function() {
-            const msg = new Msg({
-                text: "Hello world",
-                from: { nick: "test" }
-            });
-            
-            expect(msg.text).to.equal("Hello world");
-            expect(msg.from.nick).to.equal("test");
-        });
+describe("Msg", function () {
+  describe("#constructor", function () {
+    it("should create a message with text", function () {
+      const msg = new Msg({
+        text: "Hello world",
+        from: {nick: "test"},
+      });
+
+      expect(msg.text).to.equal("Hello world");
+      expect(msg.from.nick).to.equal("test");
     });
-    
-    describe("#isHighlight", function() {
-        it("should detect nick mentions", function() {
-            const msg = new Msg({
-                text: "test: hello",
-                from: { nick: "alice" }
-            });
-            
-            expect(msg.isHighlight("test")).to.be.true;
-            expect(msg.isHighlight("bob")).to.be.false;
-        });
+  });
+
+  describe("#isHighlight", function () {
+    it("should detect nick mentions", function () {
+      const msg = new Msg({
+        text: "test: hello",
+        from: {nick: "alice"},
+      });
+
+      expect(msg.isHighlight("test")).to.be.true;
+      expect(msg.isHighlight("bob")).to.be.false;
     });
+  });
 });
 ```
 
@@ -383,27 +392,23 @@ yarn test:mocha test/client/**/*.test.ts
 #### VS Code Launch Configuration
 
 Create `.vscode/launch.json`:
+
 ```json
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Debug Server",
-            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
-            "args": [
-                "--project", "server/tsconfig.json",
-                "server/index.ts",
-                "start",
-                "--dev"
-            ],
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "console": "integratedTerminal"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Server",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
+      "args": ["--project", "server/tsconfig.json", "server/index.ts", "start", "--dev"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal"
+    }
+  ]
 }
 ```
 
@@ -447,6 +452,7 @@ nexusirc.socket.emit("input", {...})  // Send test events
 ### Common Issues
 
 **Port Already in Use:**
+
 ```bash
 # Find process using port
 lsof -i :19000
@@ -456,6 +462,7 @@ kill -9 <PID>
 ```
 
 **Build Failures:**
+
 ```bash
 # Clear caches
 rm -rf node_modules dist public/js public/css
@@ -464,6 +471,7 @@ yarn build
 ```
 
 **TypeScript Errors:**
+
 ```bash
 # Check types without building
 yarn tsc --noEmit
@@ -543,6 +551,7 @@ NODE_ENV=production yarn start
 ### Code Review Process
 
 All PRs require:
+
 - ✅ Passing CI checks
 - ✅ At least one approving review
 - ✅ No merge conflicts
@@ -551,6 +560,7 @@ All PRs require:
 ### Documentation
 
 When adding features, update:
+
 - Inline code comments (for complex logic)
 - JSDoc/TSDoc (for public APIs)
 - README.md (if user-facing)
@@ -606,27 +616,25 @@ yarn generate:config:doc
 
 ```typescript
 // Import types
-import type { Socket } from "socket.io";
-import type { NetworkConfig } from "./models/network";
+import type {Socket} from "socket.io";
+import type {NetworkConfig} from "./models/network";
 
 // Define interfaces
 interface UserConfig {
-    name: string;
-    password: string;
+  name: string;
+  password: string;
 }
 
 // Use enums
 enum MessageType {
-    Message = "message",
-    Action = "action",
-    Notice = "notice"
+  Message = "message",
+  Action = "action",
+  Notice = "notice",
 }
 
 // Type guards
 function isNetworkConfig(obj: unknown): obj is NetworkConfig {
-    return typeof obj === "object" && 
-           obj !== null && 
-           "host" in obj;
+  return typeof obj === "object" && obj !== null && "host" in obj;
 }
 ```
 
@@ -634,7 +642,7 @@ function isNetworkConfig(obj: unknown): obj is NetworkConfig {
 
 ```vue
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import {ref, computed, watch, onMounted} from "vue";
 
 // Reactive state
 const count = ref(0);
@@ -644,12 +652,12 @@ const doubled = computed(() => count.value * 2);
 
 // Watch changes
 watch(count, (newVal, oldVal) => {
-    console.log(`Count changed from ${oldVal} to ${newVal}`);
+  console.log(`Count changed from ${oldVal} to ${newVal}`);
 });
 
 // Lifecycle hooks
 onMounted(() => {
-    console.log("Component mounted");
+  console.log("Component mounted");
 });
 </script>
 ```

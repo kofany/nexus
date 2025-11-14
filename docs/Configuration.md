@@ -18,6 +18,7 @@ This guide covers all configuration options available in NexusIRC.
 ## Configuration File
 
 NexusIRC uses a JavaScript configuration file located at:
+
 - **Linux/macOS**: `~/.nexusirc/config.js`
 - **Windows**: `%APPDATA%\.nexusirc\config.js`
 
@@ -31,14 +32,14 @@ The configuration file is created automatically on first run with default values
 
 ```javascript
 export default {
-    public: false,
-    host: "0.0.0.0",
-    port: 19000,
-    theme: "hunter",
-    prefetch: true,
-    messageStorage: ["sqlite"],
-    // ... more options
-}
+  public: false,
+  host: "0.0.0.0",
+  port: 19000,
+  theme: "hunter",
+  prefetch: true,
+  messageStorage: ["sqlite"],
+  // ... more options
+};
 ```
 
 After modifying the configuration, restart NexusIRC for changes to take effect:
@@ -62,7 +63,7 @@ Determines the server mode:
 - **`true` (Public Mode)**: No authentication required. IRC connections are lost when users leave.
 
 ```javascript
-public: false
+public: false;
 ```
 
 ### `host`
@@ -78,7 +79,7 @@ The IP address or hostname for the web server to listen on:
 - `"unix:/path/to/socket.sock"` - UNIX domain socket
 
 ```javascript
-host: "127.0.0.1"  // Localhost only
+host: "127.0.0.1"; // Localhost only
 ```
 
 ### `port`
@@ -89,7 +90,7 @@ host: "127.0.0.1"  // Localhost only
 The TCP port number for the web server:
 
 ```javascript
-port: 19000
+port: 19000;
 ```
 
 ### `bind`
@@ -107,7 +108,7 @@ port: 19000
 Enable when running behind a reverse proxy (nginx, Apache, etc.). When enabled, NexusIRC honors the `X-Forwarded-For` header.
 
 ```javascript
-reverseProxy: true
+reverseProxy: true;
 ```
 
 ### `maxHistory`
@@ -118,7 +119,7 @@ reverseProxy: true
 Maximum number of messages to keep in memory per channel/query. Set to `-1` for unlimited.
 
 ```javascript
-maxHistory: 10000
+maxHistory: 10000;
 ```
 
 ---
@@ -131,12 +132,13 @@ maxHistory: 10000
 **Default:** `"hunter"`
 
 Default theme for new users. Available themes:
+
 - `hunter` (default dark theme)
 - `morning` (light theme)
 - `solarized` (requires nexusirc-theme-solarized package)
 
 ```javascript
-theme: "hunter"
+theme: "hunter";
 ```
 
 ### `prefetch`
@@ -147,7 +149,7 @@ theme: "hunter"
 Enable automatic URL preview generation (thumbnails and descriptions).
 
 ```javascript
-prefetch: true
+prefetch: true;
 ```
 
 ### `disableMediaPreview`
@@ -158,7 +160,7 @@ prefetch: true
 Disable previews for third-party media (images, video, audio) to prevent external requests.
 
 ```javascript
-disableMediaPreview: false
+disableMediaPreview: false;
 ```
 
 ### `prefetchStorage`
@@ -169,7 +171,7 @@ disableMediaPreview: false
 Store and proxy prefetched images locally instead of hotlinking. Useful for HTTPS sites.
 
 ```javascript
-prefetchStorage: true
+prefetchStorage: true;
 ```
 
 ### `prefetchMaxImageSize`
@@ -180,7 +182,7 @@ prefetchStorage: true
 Maximum image size in kilobytes for preview generation.
 
 ```javascript
-prefetchMaxImageSize: 2048
+prefetchMaxImageSize: 2048;
 ```
 
 ### `prefetchTimeout`
@@ -191,7 +193,7 @@ prefetchMaxImageSize: 2048
 Timeout in milliseconds for fetching link previews.
 
 ```javascript
-prefetchTimeout: 5000
+prefetchTimeout: 5000;
 ```
 
 ### `fileUpload`
@@ -269,10 +271,11 @@ ldap: {
 Message storage backends to use (in order of preference):
 
 ```javascript
-messageStorage: ["sqlite", "text"]
+messageStorage: ["sqlite", "text"];
 ```
 
 Options:
+
 - `"sqlite"` - SQLite database (recommended, supports search)
 - `"text"` - Plain text files (fallback)
 
@@ -351,7 +354,7 @@ identd: {
 Path to oidentd configuration file:
 
 ```javascript
-oidentd: "/home/user/.oidentd.conf"
+oidentd: "/home/user/.oidentd.conf";
 ```
 
 ### `debug`
@@ -394,6 +397,7 @@ export NODE_ENV=production
 ```
 
 Options:
+
 - `production` - Optimized for production
 - `development` - Development mode with extra debugging
 
@@ -419,6 +423,7 @@ nexusirc start [options]
 ```
 
 Options:
+
 - `--config <path>` - Use a custom config file
 - `--dev` - Start in development mode
 
@@ -490,86 +495,86 @@ nexusirc storage stats
 
 ```javascript
 export default {
-    public: false,
-    host: "127.0.0.1",
-    port: 19000,
-    messageStorage: ["sqlite"],
-    prefetch: true,
-    prefetchStorage: true,
-    fileUpload: {
-        enable: true,
-        maxFileSize: 5120
-    }
-}
+  public: false,
+  host: "127.0.0.1",
+  port: 19000,
+  messageStorage: ["sqlite"],
+  prefetch: true,
+  prefetchStorage: true,
+  fileUpload: {
+    enable: true,
+    maxFileSize: 5120,
+  },
+};
 ```
 
 ### Public Server with Reverse Proxy
 
 ```javascript
 export default {
-    public: true,
+  public: true,
+  host: "127.0.0.1",
+  port: 19000,
+  reverseProxy: true,
+  prefetch: true,
+  disableMediaPreview: true,
+  maxHistory: 1000,
+  irssi: {
+    enable: true,
     host: "127.0.0.1",
-    port: 19000,
-    reverseProxy: true,
-    prefetch: true,
-    disableMediaPreview: true,
-    maxHistory: 1000,
-    irssi: {
-        enable: true,
-        host: "127.0.0.1",
-        port: 9001,
-        ssl: true
-    }
-}
+    port: 9001,
+    ssl: true,
+  },
+};
 ```
 
 ### Enterprise with LDAP
 
 ```javascript
 export default {
-    public: false,
-    host: "0.0.0.0",
-    port: 19000,
-    reverseProxy: true,
-    ldap: {
-        enable: true,
-        url: "ldaps://ldap.company.com",
-        baseDN: "ou=users,dc=company,dc=com",
-        searchDN: {
-            rootDN: "cn=admin,dc=company,dc=com",
-            rootPassword: process.env.LDAP_PASSWORD,
-            filter: "(&(objectClass=person)(memberOf=cn=irc,ou=groups,dc=company,dc=com))"
-        }
+  public: false,
+  host: "0.0.0.0",
+  port: 19000,
+  reverseProxy: true,
+  ldap: {
+    enable: true,
+    url: "ldaps://ldap.company.com",
+    baseDN: "ou=users,dc=company,dc=com",
+    searchDN: {
+      rootDN: "cn=admin,dc=company,dc=com",
+      rootPassword: process.env.LDAP_PASSWORD,
+      filter: "(&(objectClass=person)(memberOf=cn=irc,ou=groups,dc=company,dc=com))",
     },
-    irssi: {
-        enable: true,
-        host: "127.0.0.1",
-        port: 9001,
-        ssl: true
-    },
-    messageStorage: ["sqlite"],
-    storagePolicy: {
-        enabled: true,
-        maxAge: 365
-    }
-}
+  },
+  irssi: {
+    enable: true,
+    host: "127.0.0.1",
+    port: 9001,
+    ssl: true,
+  },
+  messageStorage: ["sqlite"],
+  storagePolicy: {
+    enabled: true,
+    maxAge: 365,
+  },
+};
 ```
 
 ### irssi Integration
 
 ```javascript
 export default {
-    public: false,
+  public: false,
+  host: "127.0.0.1",
+  port: 19000,
+  irssi: {
+    enable: true,
     host: "127.0.0.1",
-    port: 19000,
-    irssi: {
-        enable: true,
-        host: "127.0.0.1",
-        port: 9001,
-        ssl: true
-    },
-    messageStorage: ["sqlite"]
-}
+    port: 9001,
+    ssl: true,
+  },
+  messageStorage: ["sqlite"],
+};
 ```
 
 ---
