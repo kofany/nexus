@@ -36,138 +36,198 @@ const FE_WEB_SALT = "irssi-fe-web-v1";
  *
  * Message Format:
  * [IV (12 bytes)] [Ciphertext (variable)] [Auth Tag (16 bytes)]
+ *
+ * Performance: Static cache for derived keys (shared across instances)
+ * - Eliminates repeated PBKDF2 derivations (10,000 iterations each)
  */
 export class FeWebEncryption {
-	private password: string;
-	private key: Buffer | null = null;
-	private enabled: boolean;
+    private password: string;
+    private key: Buffer | null = null;
+    private enabled: boolean;
 
-	/**
-	 * @param password - WebSocket password (used for key derivation with FIXED salt)
-	 * @param enabled - Enable/disable encryption (default: true)
-	 */
-	constructor(password: string, enabled: boolean = true) {
-		this.password = password;
-		this.enabled = enabled;
-	}
+    // Static cache for derived keys (shared across instances)
+    private static keyCache = new Map<string, Buffer>();
+    private static readonly MAX_CACHE_SIZE = 100;
 
-	/**
-	 * Derive encryption key from password using PBKDF2
-	 *
-	 * Uses FIXED salt "irssi-fe-web-v1" as per fe-web v1.5 protocol
-	 */
-	async deriveKey(): Promise<void> {
-		if (!this.enabled || !this.password) {
-			log.debug("[FeWebEncryption] Encryption disabled or no password");
-			return;
-		}
+    /**
+     * @param password - WebSocket password (used for key derivation with FIXED salt)
+     * @param enabled - Enable/disable encryption (default: true)
+     */
+    constructor(password: string, enabled: boolean = true) {
+        this.password = password;
+        this.enabled = enabled;
+    }
 
-		return new Promise((resolve, reject) => {
-			crypto.pbkdf2(
-				this.password,
-				FE_WEB_SALT, // FIXED salt for fe-web v1.5
-				10000, // iterations (MUST be 10,000)
-				32, // key length (256 bits)
-				"sha256",
-				(err, derivedKey) => {
-					if (err) {
-						reject(err);
-						return;
-					}
+    /**
+     * Derive encryption key from password using PBKDF2 with caching
+     *
+     * Uses FIXED salt "irssi-fe-web-v1" as per fe-web v1.5 protocol
+     * PBKDF2 is expensive (10,000 iterations), so cache the result
+     */
+    async deriveKey(): Promise<void> {
+        if (!this.enabled || !this.password) {
+            log.debug("[FeWebEncryption] Encryption disabled or no password");
+            return;
+        }
 
-					this.key = derivedKey;
-					log.debug(
-						"[FeWebEncryption] Encryption key derived successfully (fe-web v1.5)"
-					);
-					resolve();
-				}
-			);
-		});
-	}
+        // Check if key is already derived for this instance
+        if (this.key) {
+            return;
+        }
 
-	/**
-	 * Encrypt a JSON message
-	 *
-	 * @param plaintext - JSON string to encrypt
-	 * @returns Binary data: IV (12 bytes) + Ciphertext + Tag (16 bytes)
-	 */
-	async encrypt(plaintext: string): Promise<Buffer> {
-		if (!this.enabled || !this.key) {
-			// If encryption disabled, return plaintext as UTF-8 bytes
-			return Buffer.from(plaintext, "utf8");
-		}
+        const cacheKey = `${this.password}:${FE_WEB_SALT}:10000`;
 
-		// Generate random IV (12 bytes for GCM)
-		const iv = crypto.randomBytes(12);
+        // Check static cache first
+        if (FeWebEncryption.keyCache.has(cacheKey)) {
+            log.debug("[FeWebEncryption] Using cached derived key");
+            this.key = FeWebEncryption.keyCache.get(cacheKey)!;
+            return;
+        }
 
-		// Create cipher
-		const cipher = crypto.createCipheriv("aes-256-gcm", this.key, iv);
+        // Derive key (expensive operation)
+        log.debug("[FeWebEncryption] Deriving new encryption key (PBKDF2)");
 
-		// Encrypt plaintext
-		const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+        return new Promise((resolve, reject) => {
+            crypto.pbkdf2(
+                this.password,
+                FE_WEB_SALT, // FIXED salt for fe-web v1.5
+                10000, // iterations (MUST be 10,000)
+                32, // key length (256 bits)
+                "sha256",
+                (err, derivedKey) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
 
-		// Get authentication tag
-		const tag = cipher.getAuthTag();
+                    this.key = derivedKey;
 
-		// Build message: IV + ciphertext + tag
-		const message = Buffer.concat([iv, encrypted, tag]);
+                    // Cache with LRU eviction
+                    if (FeWebEncryption.keyCache.size >= FeWebEncryption.MAX_CACHE_SIZE) {
+                        const firstKey = FeWebEncryption.keyCache.keys().next().value;
 
-		return message;
-	}
+                        if (firstKey !== undefined) {
+                            FeWebEncryption.keyCache.delete(firstKey);
+                            log.debug("[FeWebEncryption] Evicted oldest cached key (LRU)");
+                        }
+                    }
 
-	/**
-	 * Decrypt a binary message
-	 *
-	 * @param data - Binary data: IV (12 bytes) + Ciphertext + Tag (16 bytes)
-	 * @returns Decrypted JSON string
-	 */
-	async decrypt(data: Buffer): Promise<string> {
-		if (!this.enabled || !this.key) {
-			// If encryption disabled, data is plain text
-			return data.toString("utf8");
-		}
+                    FeWebEncryption.keyCache.set(cacheKey, this.key);
+                    log.debug(
+                        "[FeWebEncryption] Encryption key derived successfully (fe-web v1.5)"
+                    );
+                    resolve();
+                }
+            );
+        });
+    }
 
-		// Extract IV, ciphertext, and tag
-		const iv = data.slice(0, 12);
-		const tag = data.slice(-16);
-		const ciphertext = data.slice(12, -16);
+    /**
+     * Encrypt a JSON message
+     *
+     * @param plaintext - JSON string to encrypt
+     * @returns Binary data: IV (12 bytes) + Ciphertext + Tag (16 bytes)
+     */
+    async encrypt(plaintext: string): Promise<Buffer> {
+        if (!this.enabled || !this.key) {
+            // If encryption disabled, return plaintext as UTF-8 bytes
+            return Buffer.from(plaintext, "utf8");
+        }
 
-		try {
-			// Create decipher
-			const decipher = crypto.createDecipheriv("aes-256-gcm", this.key, iv);
-			decipher.setAuthTag(tag);
+        // Generate random IV (12 bytes for GCM)
+        const iv = crypto.randomBytes(12);
 
-			// Decrypt and verify auth tag
-			const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+        // Create cipher
+        const cipher = crypto.createCipheriv("aes-256-gcm", this.key, iv);
 
-			// Decode to string
-			return plaintext.toString("utf8");
-		} catch (error) {
-			log.error(`[FeWebEncryption] Decryption failed: ${error}`);
-			throw new Error("Decryption failed - invalid key or corrupted data");
-		}
-	}
+        // Encrypt plaintext
+        const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
 
-	/**
-	 * Check if encryption is enabled and key is derived
-	 */
-	get isReady(): boolean {
-		return !this.enabled || this.key !== null;
-	}
+        // Get authentication tag
+        const tag = cipher.getAuthTag();
 
-	/**
-	 * Check if encryption is enabled
-	 */
-	get isEnabled(): boolean {
-		return this.enabled;
-	}
+        // Build message: IV + ciphertext + tag
+        const message = Buffer.concat([iv, encrypted, tag]);
 
-	/**
-	 * Update encryption key (used when password changes)
-	 */
-	async updateKey(newPassword: string): Promise<void> {
-		this.password = newPassword;
-		this.key = null;
-		await this.deriveKey();
-	}
+        return message;
+    }
+
+    /**
+     * Decrypt a binary message
+     *
+     * @param data - Binary data: IV (12 bytes) + Ciphertext + Tag (16 bytes)
+     * @returns Decrypted JSON string
+     */
+    async decrypt(data: Buffer): Promise<string> {
+        if (!this.enabled || !this.key) {
+            // If encryption disabled, data is plain text
+            return data.toString("utf8");
+        }
+
+        // Extract IV, ciphertext, and tag
+        const iv = data.slice(0, 12);
+        const tag = data.slice(-16);
+        const ciphertext = data.slice(12, -16);
+
+        try {
+            // Create decipher
+            const decipher = crypto.createDecipheriv("aes-256-gcm", this.key, iv);
+            decipher.setAuthTag(tag);
+
+            // Decrypt and verify auth tag
+            const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+
+            // Decode to string
+            return plaintext.toString("utf8");
+        } catch (error) {
+            log.error(`[FeWebEncryption] Decryption failed: ${error}`);
+            throw new Error("Decryption failed - invalid key or corrupted data");
+        }
+    }
+
+    /**
+     * Check if encryption is enabled and key is derived
+     */
+    get isReady(): boolean {
+        return !this.enabled || this.key !== null;
+    }
+
+    /**
+     * Check if encryption is enabled
+     */
+    get isEnabled(): boolean {
+        return this.enabled;
+    }
+
+    /**
+     * Clear all cached keys (call on password change)
+     */
+    static clearKeyCache(): void {
+        log.info("[FeWebEncryption] Clearing all cached encryption keys");
+        FeWebEncryption.keyCache.clear();
+    }
+
+    /**
+     * Clear specific user's cached key
+     */
+    static clearKeyCacheForPassword(password: string): void {
+        const cacheKey = `${password}:${FE_WEB_SALT}:10000`;
+        if (FeWebEncryption.keyCache.delete(cacheKey)) {
+            log.debug(`[FeWebEncryption] Cleared cached key for password`);
+        }
+    }
+
+    /**
+     * Update encryption key (used when password changes)
+     */
+    async updateKey(newPassword: string): Promise<void> {
+        // Remove old cache entry if password changed
+        if (this.password && this.password !== newPassword) {
+            FeWebEncryption.clearKeyCacheForPassword(this.password);
+        }
+
+        this.password = newPassword;
+        this.key = null;
+        await this.deriveKey();
+    }
 }
