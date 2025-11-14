@@ -13,7 +13,10 @@ app7.log
 node.log
 node.log
 PROMPT.md
-*.md
+/*.md
+!README.md
+!LICENSE.md
+!CHANGELOG.md
 *.log
 node.log
 PROMPT.md

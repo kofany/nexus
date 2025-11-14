@@ -16,26 +16,26 @@ process.chdir(__dirname);
 const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
 
 if (!semver.satisfies(process.version, pkg.engines.node)) {
-	/* eslint-disable no-console */
-	console.error(
-		"Nexus Lounge requires Node.js " +
-			pkg.engines.node +
-			" (current version: " +
-			process.version +
-			")"
-	);
-	console.error("Please upgrade Node.js in order to use Nexus Lounge");
-	console.error();
+    /* eslint-disable no-console */
+    console.error(
+        "NexusIRC requires Node.js " +
+            pkg.engines.node +
+            " (current version: " +
+            process.version +
+            ")"
+    );
+    console.error("Please upgrade Node.js in order to use NexusIRC");
+    console.error();
 
-	process.exit(1);
+    process.exit(1);
 }
 
 if (existsSync("./dist/server/index.js")) {
-	await import("./dist/server/index.js");
+    await import("./dist/server/index.js");
 } else {
-	console.error(
-		"Files in ./dist/server/ not found. Please run `yarn build` before trying to run `node index.mjs`."
-	);
+    console.error(
+        "Files in ./dist/server/ not found. Please run `yarn build` before trying to run `node index.mjs`."
+    );
 
-	process.exit(1);
+    process.exit(1);
 }

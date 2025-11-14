@@ -1,4 +1,6 @@
-# The Lounge Backend Architecture - irssi Proxy Mode
+# Legacy Backend Architecture Draft
+
+> **Archived notice:** This document captures an early exploratory design for the irssi proxy mode prior to the NexusIRC rebrand. It is preserved for historical reference only. For the current and supported architecture, refer to the [Architecture Documentation](Architecture.md).
 
 **Wersja:** 2.1 (Backend Proxy + fe-web v1.5 Dual-Layer Security)
 **Data:** 2025-10-13
