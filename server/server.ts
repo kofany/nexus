@@ -287,6 +287,23 @@ export default async function (
 			// TODO: type as Server.Transport[]
 			transports: Config.values.transports as any,
 			pingTimeout: 60000,
+
+			// Enable WebSocket compression for better performance
+			// Reduces bandwidth usage by ~60-80% for text messages
+			perMessageDeflate: {
+				threshold: 1024, // Only compress messages larger than 1KB
+				zlibDeflateOptions: {
+					level: 6, // Compression level (0-9, 6 is good balance)
+					memLevel: 8, // Memory usage (1-9)
+				},
+				zlibInflateOptions: {
+					chunkSize: 10 * 1024, // 10KB chunks
+				},
+				clientNoContextTakeover: true, // Don't reuse compression context
+				serverNoContextTakeover: true,
+				serverMaxWindowBits: 15, // Max window size
+				clientMaxWindowBits: 15,
+			},
 		});
 
 		sockets.on("connect", (socket) => {
