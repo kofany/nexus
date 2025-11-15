@@ -6,4 +6,5 @@ const __dirname = path.dirname(__filename);
 const home = path.join(__dirname, ".nexusirc");
 
 import config from "../../dist/server/config.js";
-config.setHome(home);
+// setHome() is now async due to ESM dynamic import() requirement
+await config.setHome(home);

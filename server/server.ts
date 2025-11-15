@@ -1,5 +1,5 @@
 import _ from "lodash";
-import ws from "ws";
+import {WebSocketServer} from "ws";
 import express, {NextFunction, Request, Response} from "express";
 import fs from "fs";
 import path from "path";
@@ -69,8 +69,6 @@ const basicIrcCommands = [
 	"/os",
 	"/rs",
 ].sort();
-
-const wsServer = ws.Server;
 
 type ServerOptions = {
 	dev: boolean;
@@ -280,7 +278,7 @@ export default async function (
 		}
 
 		const sockets: Server = new ioServer(server, {
-			wsEngine: wsServer,
+			wsEngine: WebSocketServer,
 			cookie: false,
 			serveClient: false,
 

@@ -51,14 +51,14 @@ describe("Server", function () {
 
 	describe("Express", () => {
 		it("should run a web server on " + webURL, async () => {
-			const response = await got(webURL);
+			const response = await got.default(webURL);
 			expect(response.statusCode).to.equal(200);
 			expect(response.body).to.include("<title>NexusIRC</title>");
 			expect(response.body).to.include("js/bundle.js");
 		});
 
 		it("should serve static content correctly", async () => {
-			const response = await got(webURL + "nexusirc.webmanifest");
+			const response = await got.default(webURL + "nexusirc.webmanifest");
 			const body = JSON.parse(response.body);
 
 			expect(response.statusCode).to.equal(200);
