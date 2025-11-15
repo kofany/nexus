@@ -15,8 +15,7 @@ loader: "ts-node/esm"
 node-option:
   - "experimental-specifier-resolution=node"
   - "no-warnings"
-require:
-  - "ts-node/register"
+import:
   - "test/fixtures/env.ts"
 globals:
   - "__VUE_PROD_DEVTOOLS__"

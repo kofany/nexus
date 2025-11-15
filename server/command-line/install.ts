@@ -1,5 +1,5 @@
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import semver from "semver";
 import Helper from "../helper.js";
 import Config from "../config.js";
@@ -11,6 +11,7 @@ type CustomMetadata = FullMetadata & {
 	nexusirc: {
 		supports: string;
 	};
+	version?: string;
 };
 
 const program = new Command("install");
@@ -56,7 +57,7 @@ program
 				packageName = packageName.slice(0, atIndex);
 			}
 
-			readFile = packageJson.default(packageName, {
+			readFile = (packageJson.default || packageJson)(packageName, {
 				fullMetadata: true,
 				version: packageVersion,
 			});
@@ -72,7 +73,7 @@ program
 				const humanVersion = isLocalFile ? packageName : `${json.name} v${json.version}`;
 
 				if (!("nexusirc" in json)) {
-					log.error(`${colors.red(humanVersion)} does not have NexusIRC metadata.`);
+					log.error(`${chalk.red(humanVersion)} does not have NexusIRC metadata.`);
 
 					process.exit(1);
 				}
@@ -84,7 +85,7 @@ program
 					})
 				) {
 					log.error(
-						`${colors.red(
+						`${chalk.red(
 							humanVersion
 						)} does not support NexusIRC v${Helper.getVersionNumber()}. Supported version(s): ${
 							json.nexusirc.supports
@@ -94,11 +95,11 @@ program
 					process.exit(2);
 				}
 
-				log.info(`Installing ${colors.green(humanVersion)}...`);
+				log.info(`Installing ${chalk.green(humanVersion)}...`);
 				const yarnVersion = isLocalFile ? packageName : `${json.name}@${json.version}`;
 				return Utils.executeYarnCommand("add", "--exact", yarnVersion)
 					.then(() => {
-						log.info(`${colors.green(humanVersion)} has been successfully installed.`);
+						log.info(`${chalk.green(humanVersion)} has been successfully installed.`);
 
 						if (isLocalFile) {
 							// yarn v1 is buggy if a local filepath is used and doesn't update
@@ -110,7 +111,7 @@ program
 						}
 					})
 					.catch((code) => {
-						throw `Failed to install ${colors.red(humanVersion)}. Exit code: ${code}`;
+						throw `Failed to install ${chalk.red(humanVersion)}. Exit code: ${code}`;
 					});
 			})
 			.catch((e) => {

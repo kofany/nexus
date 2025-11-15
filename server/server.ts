@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import {Server as ioServer, Socket as ioSocket} from "socket.io";
 import dns from "dns";
-import colors from "chalk";
+import chalk from "chalk";
 import net from "net";
 
 import log from "./log.js";
@@ -100,17 +100,17 @@ export default async function (
 		dev: false,
 	}
 ) {
-	log.info(`NexusIRC ${colors.green(Helper.getVersion())} \
-(Node.js ${colors.green(process.versions.node)} on ${colors.green(process.platform)} ${
+	log.info(`NexusIRC ${chalk.green(Helper.getVersion())} \
+(Node.js ${chalk.green(process.versions.node)} on ${chalk.green(process.platform)} ${
 		process.arch
 	})`);
-	log.info(`Configuration file: ${colors.green(Config.getConfigPath())}`);
+	log.info(`Configuration file: ${chalk.green(Config.getConfigPath())}`);
 
 	// Log level info
 	const logLevelNames = ["error", "warn", "info", "debug"];
 	const currentLogLevel = log.getLogLevel();
 	log.info(
-		`Log level: ${colors.green(
+		`Log level: ${chalk.green(
 			logLevelNames[currentLogLevel]
 		)} (set via LOG_LEVEL env var or NODE_ENV)`
 	);
@@ -252,7 +252,7 @@ export default async function (
 
 	server.listen(listenParams, () => {
 		if (typeof listenParams === "string") {
-			log.info("Available on socket " + colors.green(listenParams));
+			log.info("Available on socket " + chalk.green(listenParams));
 		} else {
 			const protocol = Config.values.https.enable ? "https" : "http";
 			const address = server?.address();
@@ -266,8 +266,8 @@ export default async function (
 
 				log.info(
 					"Available at " +
-						colors.green(`${protocol}://${address.address}:${address.port}/`) +
-						` in ${colors.bold("private")} mode`
+						chalk.green(`${protocol}://${address.address}:${address.port}/`) +
+						` in ${chalk.bold("private")} mode`
 				);
 			}
 		}
@@ -330,7 +330,7 @@ export default async function (
 
 			if (!(fs.existsSync(publicPath) || fs.existsSync(clientPath))) {
 				log.warn(
-					`The specified default theme "${colors.red(
+					`The specified default theme "${chalk.red(
 						Config.values.theme
 					)}" does not exist, verify your config.`
 				);
@@ -595,7 +595,7 @@ function initializeIrssiClient(
 		if (client.config.weechatRelay?.enabled && !client.weechatRelayServer) {
 			client.startWeeChatRelay().catch((error) => {
 				log.error(
-					`Failed to start WeeChat Relay for user ${colors.bold(client.name)}: ${error}`
+					`Failed to start WeeChat Relay for user ${chalk.bold(client.name)}: ${error}`
 				);
 			});
 		}
@@ -1130,9 +1130,7 @@ function initializeIrssiClient(
 		}
 	});
 
-	log.info(
-		`Browser ${colors.bold(socket.id)} attached to irssi user ${colors.bold(client.name)}`
-	);
+	log.info(`Browser ${chalk.bold(socket.id)} attached to irssi user ${chalk.bold(client.name)}`);
 }
 
 async function performAuthentication(this: Socket, data: AuthPerformData) {
@@ -1218,13 +1216,13 @@ async function performAuthentication(this: Socket, data: AuthPerformData) {
 		if (!success) {
 			if (!client) {
 				log.warn(
-					`Authentication for non existing user attempted from ${colors.bold(
+					`Authentication for non existing user attempted from ${chalk.bold(
 						getClientIp(socket)
 					)}`
 				);
 			} else {
 				log.warn(
-					`Authentication failed for user ${colors.bold(data.user)} from ${colors.bold(
+					`Authentication failed for user ${chalk.bold(data.user)} from ${chalk.bold(
 						getClientIp(socket)
 					)}`
 				);
@@ -1249,7 +1247,7 @@ async function performAuthentication(this: Socket, data: AuthPerformData) {
 			try {
 				await manager!.loginUser(client, (data as any).password);
 			} catch (error) {
-				log.error(`Failed to login irssi user ${colors.bold(data.user)}: ${error}`);
+				log.error(`Failed to login irssi user ${chalk.bold(data.user)}: ${error}`);
 				socket.emit("auth:failed");
 				return;
 			}

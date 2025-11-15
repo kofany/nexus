@@ -1,5 +1,5 @@
 import log from "../../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {Command} from "commander";
 import fs from "fs";
 import Config from "../../config.js";
@@ -21,9 +21,9 @@ program
 
 		try {
 			if (manager.removeUser(name)) {
-				log.info(`User ${colors.bold(name)} removed.`);
+				log.info(`User ${chalk.bold(name)} removed.`);
 			} else {
-				log.error(`User ${colors.bold(name)} does not exist.`);
+				log.error(`User ${chalk.bold(name)} does not exist.`);
 			}
 		} catch (e: any) {
 			// There was an error, already logged

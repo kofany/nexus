@@ -1,10 +1,10 @@
-import colors from "chalk";
-import read from "read";
+import chalk from "chalk";
+import {read} from "read";
 
 function timestamp() {
 	const datetime = new Date().toISOString().split(".")[0].replace("T", " ");
 
-	return colors.dim(datetime);
+	return chalk.dim(datetime);
 }
 
 // Log levels: error (0), warn (1), info (2), debug (3)
@@ -25,21 +25,21 @@ if (process.env.LOG_LEVEL) {
 const log = {
 	/* eslint-disable no-console */
 	error(...args: string[]) {
-		console.error(timestamp(), colors.red("[ERROR]"), ...args);
+		console.error(timestamp(), chalk.red("[ERROR]"), ...args);
 	},
 	warn(...args: string[]) {
 		if (logLevel >= 1) {
-			console.error(timestamp(), colors.yellow("[WARN]"), ...args);
+			console.error(timestamp(), chalk.yellow("[WARN]"), ...args);
 		}
 	},
 	info(...args: string[]) {
 		if (logLevel >= 2) {
-			console.log(timestamp(), colors.blue("[INFO]"), ...args);
+			console.log(timestamp(), chalk.blue("[INFO]"), ...args);
 		}
 	},
 	debug(...args: string[]) {
 		if (logLevel >= 3) {
-			console.log(timestamp(), colors.green("[DEBUG]"), ...args);
+			console.log(timestamp(), chalk.green("[DEBUG]"), ...args);
 		}
 	},
 	raw(...args: string[]) {
@@ -47,12 +47,18 @@ const log = {
 	},
 	/* eslint-enable no-console */
 
-	prompt(
+	async prompt(
 		options: {prompt?: string; default?: string; text: string; silent?: boolean},
-		callback: (error, result, isDefault) => void
-	): void {
-		options.prompt = [timestamp(), colors.cyan("[PROMPT]"), options.text].join(" ");
-		read(options, callback);
+		callback: (error: Error | null, result: string, isDefault: boolean) => void
+	): Promise<void> {
+		options.prompt = [timestamp(), chalk.cyan("[PROMPT]"), options.text].join(" ");
+
+		try {
+			const result = await read(options);
+			callback(null, result, false);
+		} catch (error) {
+			callback(error as Error, "", false);
+		}
 	},
 
 	// Expose log level for debugging

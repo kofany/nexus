@@ -1,4 +1,4 @@
-import colors from "chalk";
+import chalk from "chalk";
 // LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
 import {IrssiClient} from "../irssiClient.js";
 import ClientManager from "../clientManager.js";
@@ -58,7 +58,7 @@ const toExport = {
 
 function unimplemented(funcName: string) {
 	log.debug(
-		`Auth module ${colors.bold(toExport.moduleName)} doesn't implement function ${colors.bold(
+		`Auth module ${chalk.bold(toExport.moduleName)} doesn't implement function ${chalk.bold(
 			funcName
 		)}`
 	);

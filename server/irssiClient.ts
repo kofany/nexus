@@ -13,7 +13,7 @@
 import _ from "lodash";
 import {v4 as uuidv4} from "uuid";
 import crypto from "crypto";
-import colors from "chalk";
+import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import type {Socket} from "socket.io";
@@ -41,7 +41,7 @@ import {
 	serverFormToIrssi,
 	snakeToCamel,
 } from "./types/irssi-network.js";
-import UAParser from "ua-parser-js";
+import {UAParser} from "ua-parser-js";
 
 // LRU Cache for message deduplication (from encrypted.ts)
 class LRUCache<K, V> {
@@ -336,7 +336,7 @@ export class IrssiClient {
 			this.awayMessage = this.config.clientSettings.awayMessage;
 		}
 
-		log.info(`irssi client created for user ${colors.bold(this.name)}`);
+		log.info(`irssi client created for user ${chalk.bold(this.name)}`);
 	}
 
 	/**
@@ -347,7 +347,7 @@ export class IrssiClient {
 	 * - Message storage encryption uses derived key
 	 */
 	async login(userPassword: string): Promise<void> {
-		log.info(`User ${colors.bold(this.name)} logging in...`);
+		log.info(`User ${chalk.bold(this.name)} logging in...`);
 
 		// Store user password in memory (for message storage encryption)
 		this.userPassword = userPassword;
@@ -355,7 +355,7 @@ export class IrssiClient {
 		// Check if irssi password is configured
 		if (!this.config.irssiConnection.passwordEncrypted) {
 			log.warn(
-				`User ${colors.bold(
+				`User ${chalk.bold(
 					this.name
 				)} has no irssi password configured - skipping connection`
 			);
@@ -373,7 +373,7 @@ export class IrssiClient {
 			this.config.irssiConnection.port
 		);
 
-		log.info(`irssi password decrypted for user ${colors.bold(this.name)}`);
+		log.info(`irssi password decrypted for user ${chalk.bold(this.name)}`);
 
 		// Step 2: Derive message storage encryption key
 		if (!this.encryptionKey) {
@@ -384,7 +384,7 @@ export class IrssiClient {
 				32,
 				"sha256"
 			);
-			log.info(`Message storage encryption key derived for user ${colors.bold(this.name)}`);
+			log.info(`Message storage encryption key derived for user ${chalk.bold(this.name)}`);
 		} else {
 			log.info(`Message storage encryption key already exists (from autoconnect)`);
 		}
@@ -393,7 +393,7 @@ export class IrssiClient {
 		if (this.config.log && !this.messageStorage) {
 			this.messageStorage = new EncryptedMessageStorage(this.name, this.encryptionKey);
 			await this.messageStorage.enable();
-			log.info(`Encrypted message storage enabled for user ${colors.bold(this.name)}`);
+			log.info(`Encrypted message storage enabled for user ${chalk.bold(this.name)}`);
 		} else if (this.messageStorage) {
 			log.info(`Message storage already enabled (from autoconnect)`);
 		}
@@ -403,11 +403,11 @@ export class IrssiClient {
 		// If it fails, user can still use NexusIRC UI and fix config in Settings
 		// WeeChat Relay will be started automatically after erssi sync (in handleInit)
 		this.connectToIrssi().catch((error) => {
-			log.error(`Failed to connect to irssi for user ${colors.bold(this.name)}: ${error}`);
+			log.error(`Failed to connect to irssi for user ${chalk.bold(this.name)}: ${error}`);
 			// Don't throw - user is already logged in to NexusIRC
 		});
 
-		log.info(`User ${colors.bold(this.name)} logged in successfully`);
+		log.info(`User ${chalk.bold(this.name)} logged in successfully`);
 	}
 
 	/**
@@ -416,12 +416,12 @@ export class IrssiClient {
 	 * Message storage is enabled using irssiPassword (no userPassword needed!)
 	 */
 	async autoConnectToIrssi(): Promise<void> {
-		log.info(`User ${colors.bold(this.name)} auto-connecting to irssi...`);
+		log.info(`User ${chalk.bold(this.name)} auto-connecting to irssi...`);
 
 		// Check if irssi password is configured
 		if (!this.config.irssiConnection.passwordEncrypted) {
 			log.warn(
-				`User ${colors.bold(
+				`User ${chalk.bold(
 					this.name
 				)} has no irssi password configured - skipping autoconnect`
 			);
@@ -437,7 +437,7 @@ export class IrssiClient {
 			this.config.irssiConnection.port
 		);
 
-		log.info(`irssi password decrypted for user ${colors.bold(this.name)}`);
+		log.info(`irssi password decrypted for user ${chalk.bold(this.name)}`);
 
 		// Derive message storage encryption key from irssiPassword
 		// Use fixed salt since we don't have userPassword during autoconnect
@@ -449,13 +449,13 @@ export class IrssiClient {
 			"sha256"
 		);
 
-		log.info(`Message storage encryption key derived for user ${colors.bold(this.name)}`);
+		log.info(`Message storage encryption key derived for user ${chalk.bold(this.name)}`);
 
 		// Initialize encrypted message storage
 		if (this.config.log) {
 			this.messageStorage = new EncryptedMessageStorage(this.name, this.encryptionKey);
 			await this.messageStorage.enable();
-			log.info(`Encrypted message storage enabled for user ${colors.bold(this.name)}`);
+			log.info(`Encrypted message storage enabled for user ${chalk.bold(this.name)}`);
 		}
 
 		// Connect to irssi (with message storage enabled!)
@@ -467,7 +467,7 @@ export class IrssiClient {
 	 */
 	async connectToIrssi(): Promise<void> {
 		if (this.irssiConnection) {
-			log.warn(`User ${colors.bold(this.name)} already connected to irssi`);
+			log.warn(`User ${chalk.bold(this.name)} already connected to irssi`);
 			return;
 		}
 
@@ -483,7 +483,7 @@ export class IrssiClient {
 	 */
 	private async connectToIrssiInternal(): Promise<void> {
 		if (this.irssiConnection) {
-			log.warn(`User ${colors.bold(this.name)} already connected to irssi`);
+			log.warn(`User ${chalk.bold(this.name)} already connected to irssi`);
 			return;
 		}
 
@@ -554,7 +554,7 @@ export class IrssiClient {
 		await this.irssiConnection.connect();
 
 		log.info(
-			`User ${colors.bold(this.name)} connected to irssi at wss://${feWebConfig.host}:${
+			`User ${chalk.bold(this.name)} connected to irssi at wss://${feWebConfig.host}:${
 				feWebConfig.port
 			} (dual-layer security)`
 		);
@@ -571,14 +571,12 @@ export class IrssiClient {
 
 		// Connection events
 		(this.irssiConnection as any).on("connected", () => {
-			log.info(`User ${colors.bold(this.name)}: irssi WebSocket connected`);
+			log.info(`User ${chalk.bold(this.name)}: irssi WebSocket connected`);
 		});
 
 		// DISCONNECT HANDLER - czyści sieci i broadcast do przeglądarek
 		(this.irssiConnection as any).on("disconnected", (code: number, reason: string) => {
-			log.warn(
-				`User ${colors.bold(this.name)}: irssi WebSocket disconnected (code: ${code})`
-			);
+			log.warn(`User ${chalk.bold(this.name)}: irssi WebSocket disconnected (code: ${code})`);
 
 			log.info(`[DISCONNECT] ===============================================`);
 			log.info(`[DISCONNECT] BEFORE: this.networks.length = ${this.networks.length}`);
@@ -611,22 +609,22 @@ export class IrssiClient {
 			});
 
 			log.info(
-				`User ${colors.bold(
+				`User ${chalk.bold(
 					this.name
 				)}: cleared ${clearedCount} networks after irssi disconnect`
 			);
 		});
 
 		this.irssiConnection.on("error", (msg: FeWebMessage) => {
-			log.error(`User ${colors.bold(this.name)}: irssi WebSocket error: ${msg.text}`);
+			log.error(`User ${chalk.bold(this.name)}: irssi WebSocket error: ${msg.text}`);
 		});
 
 		this.irssiConnection.on("auth_ok", () => {
-			log.info(`User ${colors.bold(this.name)}: irssi authentication successful`);
+			log.info(`User ${chalk.bold(this.name)}: irssi authentication successful`);
 		});
 
 		(this.irssiConnection as any).on("auth_fail", () => {
-			log.error(`User ${colors.bold(this.name)}: irssi authentication failed`);
+			log.error(`User ${chalk.bold(this.name)}: irssi authentication failed`);
 		});
 
 		// Network/Server management handlers
@@ -655,7 +653,7 @@ export class IrssiClient {
 	async handleNamesRequest(socketId: string, data: {target: number}): Promise<void> {
 		if (!this.irssiConnection) {
 			log.error(
-				`User ${colors.bold(this.name)}: cannot request names, not connected to irssi`
+				`User ${chalk.bold(this.name)}: cannot request names, not connected to irssi`
 			);
 			return;
 		}
@@ -675,7 +673,7 @@ export class IrssiClient {
 
 		if (!channel || !network) {
 			log.warn(
-				`User ${colors.bold(this.name)}: channel ${data.target} not found for NAMES request`
+				`User ${chalk.bold(this.name)}: channel ${data.target} not found for NAMES request`
 			);
 			return;
 		}
@@ -685,7 +683,7 @@ export class IrssiClient {
 		await this.irssiConnection.executeCommand(command, network.serverTag);
 
 		log.info(
-			`User ${colors.bold(this.name)}: requested NAMES for ${channel.name} on ${
+			`User ${chalk.bold(this.name)}: requested NAMES for ${channel.name} on ${
 				network.serverTag
 			}`
 		);
@@ -727,7 +725,7 @@ export class IrssiClient {
 		);
 
 		if (!this.irssiConnection) {
-			log.error(`User ${colors.bold(this.name)}: cannot send input, not connected to irssi`);
+			log.error(`User ${chalk.bold(this.name)}: cannot send input, not connected to irssi`);
 			return;
 		}
 
@@ -756,7 +754,7 @@ export class IrssiClient {
 
 				if (!channel || !network) {
 					log.warn(
-						`User ${colors.bold(this.name)}: channel ${
+						`User ${chalk.bold(this.name)}: channel ${
 							data.target
 						} not found for command`
 					);
@@ -781,7 +779,7 @@ export class IrssiClient {
 
 				await this.irssiConnection.executeCommand(finalCommand, network.serverTag);
 				log.debug(
-					`User ${colors.bold(this.name)}: sent command: /${finalCommand} on ${
+					`User ${chalk.bold(this.name)}: sent command: /${finalCommand} on ${
 						network.serverTag
 					}`
 				);
@@ -817,7 +815,7 @@ export class IrssiClient {
 
 				if (!channel || !network) {
 					log.warn(
-						`User ${colors.bold(this.name)}: channel ${
+						`User ${chalk.bold(this.name)}: channel ${
 							data.target
 						} not found in any network`
 					);
@@ -832,7 +830,7 @@ export class IrssiClient {
 				const command = `msg ${channel.name} ${messageText}`;
 				await this.irssiConnection.executeCommand(command, network.serverTag);
 				log.debug(
-					`User ${colors.bold(this.name)}: sent message to ${channel.name} on ${
+					`User ${chalk.bold(this.name)}: sent message to ${channel.name} on ${
 						network.serverTag
 					}`
 				);
@@ -1149,15 +1147,13 @@ export class IrssiClient {
 		}
 
 		if (!targetChannel || !targetNetwork) {
-			log.warn(`User ${colors.bold(this.name)}: channel ${data.target} not found for more`);
+			log.warn(`User ${chalk.bold(this.name)}: channel ${data.target} not found for more`);
 			return null;
 		}
 
 		// ALWAYS load from storage (not from cache!)
 		if (!this.messageStorage) {
-			log.warn(
-				`User ${colors.bold(this.name)}: message storage not enabled, returning empty`
-			);
+			log.warn(`User ${chalk.bold(this.name)}: message storage not enabled, returning empty`);
 			return {
 				chan: data.target,
 				messages: [],
@@ -1197,7 +1193,7 @@ export class IrssiClient {
 			);
 
 			log.debug(
-				`User ${colors.bold(this.name)}: loaded ${messages.length} messages for channel ${
+				`User ${chalk.bold(this.name)}: loaded ${messages.length} messages for channel ${
 					data.target
 				} (total: ${totalMessages})`
 			);
@@ -1234,7 +1230,7 @@ export class IrssiClient {
 		socket.join(this.socketIoRoomName);
 
 		log.info(
-			`User ${colors.bold(this.name)}: browser attached (${socketId}), total: ${
+			`User ${chalk.bold(this.name)}: browser attached (${socketId}), total: ${
 				this.attachedBrowsers.size
 			}`
 		);
@@ -1245,14 +1241,14 @@ export class IrssiClient {
 		// 3. Irssi password configured but not connected yet → wait for state_dump
 		if (this.networks.length > 0) {
 			log.info(
-				`User ${colors.bold(this.name)}: sending init to new browser ${socketId} (${
+				`User ${chalk.bold(this.name)}: sending init to new browser ${socketId} (${
 					this.networks.length
 				} networks)`
 			);
 			void this.sendInitialState(socket, token);
 		} else if (!this.config.irssiConnection.passwordEncrypted) {
 			log.info(
-				`User ${colors.bold(
+				`User ${chalk.bold(
 					this.name
 				)}: no irssi password configured, sending empty init to ${socketId}`
 			);
@@ -1266,7 +1262,7 @@ export class IrssiClient {
 			// Irssi configured but no networks yet - send empty init with status
 			const isConnected = this.irssiConnection?.isConnected() ?? false;
 			log.info(
-				`User ${colors.bold(this.name)}: sending empty init to ${socketId} (irssi ${
+				`User ${chalk.bold(this.name)}: sending empty init to ${socketId} (irssi ${
 					isConnected ? "connecting" : "NOT connected"
 				})`
 			);
@@ -1291,7 +1287,7 @@ export class IrssiClient {
 		}
 
 		log.info(
-			`User ${colors.bold(this.name)}: browser detached (${socketId}), remaining: ${
+			`User ${chalk.bold(this.name)}: browser detached (${socketId}), remaining: ${
 				this.attachedBrowsers.size
 			}`
 		);
@@ -1522,7 +1518,7 @@ export class IrssiClient {
 				}
 			}
 
-			log.info(`User ${colors.bold(this.name)}: sent initial state to browser ${socket.id}`);
+			log.info(`User ${chalk.bold(this.name)}: sent initial state to browser ${socket.id}`);
 		} catch (error) {
 			log.error(`Failed to send initial state to browser ${socket.id}: ${error}`);
 		}
@@ -1619,7 +1615,7 @@ export class IrssiClient {
 	 * Disconnect from irssi and cleanup
 	 */
 	async quit(shouldSave = true): Promise<void> {
-		log.info(`User ${colors.bold(this.name)} quitting...`);
+		log.info(`User ${chalk.bold(this.name)} quitting...`);
 
 		// Disconnect all browsers via Socket.IO room (efficient)
 		const sockets = await this.manager.sockets.in(this.socketIoRoomName).fetchSockets();
@@ -1660,7 +1656,7 @@ export class IrssiClient {
 			this.manager.saveUser(this as any); // IrssiClient is compatible with Client interface
 		}
 
-		log.info(`User ${colors.bold(this.name)} quit successfully`);
+		log.info(`User ${chalk.bold(this.name)} quit successfully`);
 	}
 
 	/**
@@ -2292,7 +2288,7 @@ export class IrssiClient {
 
 		if (!network) {
 			log.warn(
-				`User ${colors.bold(this.name)}: Network ${
+				`User ${chalk.bold(this.name)}: Network ${
 					data.networkUuid
 				} not found for part_channel`
 			);
@@ -2303,7 +2299,7 @@ export class IrssiClient {
 
 		if (!channel) {
 			log.debug(
-				`User ${colors.bold(this.name)}: Channel ${
+				`User ${chalk.bold(this.name)}: Channel ${
 					data.channelId
 				} already removed (idempotent)`
 			);
@@ -2313,7 +2309,7 @@ export class IrssiClient {
 		const {ChanType} = await import("../shared/types/chan.js");
 
 		log.info(
-			`User ${colors.bold(this.name)}: Part channel ${channel.name} on ${
+			`User ${chalk.bold(this.name)}: Part channel ${channel.name} on ${
 				network.name
 			} (client-driven)`
 		);
@@ -2336,7 +2332,7 @@ export class IrssiClient {
 				// Send /part for channels (executeCommand returns void)
 				this.irssiConnection.executeCommand(`part ${channel.name}`, network.serverTag);
 				log.debug(
-					`User ${colors.bold(this.name)}: Sent /part ${
+					`User ${chalk.bold(this.name)}: Sent /part ${
 						channel.name
 					} to irssi in background`
 				);
@@ -2348,7 +2344,7 @@ export class IrssiClient {
 					nick: channel.name,
 				});
 				log.debug(
-					`User ${colors.bold(this.name)}: Sent close_query for ${
+					`User ${chalk.bold(this.name)}: Sent close_query for ${
 						channel.name
 					} to irssi in background`
 				);
@@ -2626,7 +2622,7 @@ export class IrssiClient {
 			log.info(`[IrssiClient] Starting WeeChat Relay after erssi sync...`);
 			this.startWeeChatRelay().catch((error) => {
 				log.error(
-					`Failed to start WeeChat Relay for user ${colors.bold(this.name)}: ${error}`
+					`Failed to start WeeChat Relay for user ${chalk.bold(this.name)}: ${error}`
 				);
 			});
 		}
@@ -2902,19 +2898,19 @@ export class IrssiClient {
 	 */
 	async startWeeChatRelay(): Promise<void> {
 		log.info(
-			`${colors.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${colors.bold(
+			`${chalk.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${chalk.bold(
 				this.name
 			)}`
 		);
 		log.info(
-			`${colors.cyan("[WeeChat Relay]")} Config:`,
+			`${chalk.cyan("[WeeChat Relay]")} Config:`,
 			JSON.stringify(this.config.weechatRelay)
 		);
 
 		// Validate config
 		if (!this.config.weechatRelay?.enabled) {
 			log.info(
-				`${colors.yellow("[WeeChat Relay]")} Not enabled for user ${colors.bold(this.name)}`
+				`${chalk.yellow("[WeeChat Relay]")} Not enabled for user ${chalk.bold(this.name)}`
 			);
 			return;
 		}
@@ -2925,7 +2921,7 @@ export class IrssiClient {
 			this.config.weechatRelay.port > 65535
 		) {
 			log.warn(
-				`${colors.yellow("[WeeChat Relay]")} Invalid port for user ${colors.bold(
+				`${chalk.yellow("[WeeChat Relay]")} Invalid port for user ${chalk.bold(
 					this.name
 				)}: ${this.config.weechatRelay.port}`
 			);
@@ -2934,7 +2930,7 @@ export class IrssiClient {
 
 		if (!this.config.weechatRelay.passwordEncrypted) {
 			log.warn(
-				`${colors.yellow("[WeeChat Relay]")} No password configured for user ${colors.bold(
+				`${chalk.yellow("[WeeChat Relay]")} No password configured for user ${chalk.bold(
 					this.name
 				)}`
 			);
@@ -2943,7 +2939,7 @@ export class IrssiClient {
 
 		if (this.weechatRelayServer) {
 			log.warn(
-				`${colors.yellow("[WeeChat Relay]")} Already running for user ${colors.bold(
+				`${chalk.yellow("[WeeChat Relay]")} Already running for user ${chalk.bold(
 					this.name
 				)}`
 			);
@@ -2952,9 +2948,7 @@ export class IrssiClient {
 
 		// Decrypt WeeChat password
 		log.info(
-			`${colors.cyan("[WeeChat Relay]")} Decrypting password for user ${colors.bold(
-				this.name
-			)}`
+			`${chalk.cyan("[WeeChat Relay]")} Decrypting password for user ${chalk.bold(this.name)}`
 		);
 		const {decryptIrssiPassword} = await import("./irssiConfigHelper.js");
 		this.weechatRelayPassword = await decryptIrssiPassword(
@@ -2979,14 +2973,14 @@ export class IrssiClient {
 
 			if (useSelfSigned) {
 				// OPTION 1: Self-signed (auto-generate)
-				log.info(`${colors.cyan("[WeeChat Relay]")} Using self-signed certificate...`);
+				log.info(`${chalk.cyan("[WeeChat Relay]")} Using self-signed certificate...`);
 				const {generateSelfSignedCert} = await import("./weechatRelay/sslCertGenerator.js");
 				const certInfo = await generateSelfSignedCert(this.name, certsDir);
 				certPath = certInfo.certPath;
 				keyPath = certInfo.keyPath;
 			} else {
 				// OPTION 2: Custom cert
-				log.info(`${colors.cyan("[WeeChat Relay]")} Using custom certificate...`);
+				log.info(`${chalk.cyan("[WeeChat Relay]")} Using custom certificate...`);
 
 				// Check if cert files already exist (e.g., Let's Encrypt)
 				const certExists = fs.existsSync(certPath);
@@ -2995,23 +2989,23 @@ export class IrssiClient {
 				if (certExists && keyExists) {
 					// Files exist - use them!
 					log.info(
-						`${colors.green("[WeeChat Relay]")} ✅ Using existing certificate files`
+						`${chalk.green("[WeeChat Relay]")} ✅ Using existing certificate files`
 					);
-					log.info(`${colors.green("[WeeChat Relay]")}    Cert: ${certPath}`);
-					log.info(`${colors.green("[WeeChat Relay]")}    Key:  ${keyPath}`);
+					log.info(`${chalk.green("[WeeChat Relay]")}    Cert: ${certPath}`);
+					log.info(`${chalk.green("[WeeChat Relay]")}    Key:  ${keyPath}`);
 				} else if (
 					this.config.weechatRelay.customCert &&
 					this.config.weechatRelay.customKey
 				) {
 					// Files don't exist but user provided cert/key in config - save them!
 					log.info(
-						`${colors.cyan("[WeeChat Relay]")} Saving custom certificate from config...`
+						`${chalk.cyan("[WeeChat Relay]")} Saving custom certificate from config...`
 					);
 					fs.writeFileSync(certPath, this.config.weechatRelay.customCert);
 					fs.writeFileSync(keyPath, this.config.weechatRelay.customKey);
 					fs.chmodSync(keyPath, 0o600); // Secure permissions
 					log.info(
-						`${colors.green(
+						`${chalk.green(
 							"[WeeChat Relay]"
 						)} ✅ Custom certificate saved to ${certPath}`
 					);
@@ -3032,19 +3026,19 @@ export class IrssiClient {
 		}
 
 		// Import WeeChat Relay components
-		log.info(`${colors.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
+		log.info(`${chalk.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
 		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer.js");
 		const {NodeToWeeChatAdapter} = await import("./weechatRelay/nodeToWeechatAdapter.js");
 		const {WeeChatToNodeAdapter} = await import("./weechatRelay/weechatToNodeAdapter.js");
 
 		// Create shared NodeToWeeChatAdapter (one per user, shared by all clients)
 		if (!this.weechatNodeAdapter) {
-			log.info(`${colors.cyan("[WeeChat Relay]")} Creating NodeToWeeChatAdapter...`);
+			log.info(`${chalk.cyan("[WeeChat Relay]")} Creating NodeToWeeChatAdapter...`);
 			this.weechatNodeAdapter = new NodeToWeeChatAdapter(this);
 		}
 
 		// Create server
-		log.info(`${colors.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer...`);
+		log.info(`${chalk.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer...`);
 		this.weechatRelayServer = new WeeChatRelayServer({
 			port: this.config.weechatRelay.port,
 			host: "0.0.0.0", // Listen on all interfaces
@@ -3062,7 +3056,7 @@ export class IrssiClient {
 		// Setup event handlers
 		this.weechatRelayServer.on("client:authenticated", (clientId: string, username: string) => {
 			log.info(
-				`${colors.green("[WeeChat Relay]")} Client authenticated: ${clientId} for user ${
+				`${chalk.green("[WeeChat Relay]")} Client authenticated: ${clientId} for user ${
 					this.name
 				}`
 			);
@@ -3082,7 +3076,7 @@ export class IrssiClient {
 			// Connect line_data events to THIS relayClient
 			const lineDataHandler = async (data: any) => {
 				log.info(
-					`${colors.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${
+					`${chalk.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${
 						data.message
 					}`
 				);
@@ -3155,7 +3149,7 @@ export class IrssiClient {
 		});
 
 		this.weechatRelayServer.on("client:close", (clientId: string) => {
-			log.info(`${colors.yellow("[WeeChat Relay]")} Client closed: ${clientId}`);
+			log.info(`${chalk.yellow("[WeeChat Relay]")} Client closed: ${clientId}`);
 
 			// Cleanup adapters and handlers
 			const relayClient = this.weechatRelayServer.getClient(clientId);
@@ -3180,11 +3174,11 @@ export class IrssiClient {
 		});
 
 		// Start server
-		log.info(`${colors.cyan("[WeeChat Relay]")} Starting server...`);
+		log.info(`${chalk.cyan("[WeeChat Relay]")} Starting server...`);
 		await this.weechatRelayServer.start();
 
 		log.info(
-			`${colors.green("[WeeChat Relay]")} ✅ Started for user ${colors.bold(
+			`${chalk.green("[WeeChat Relay]")} ✅ Started for user ${chalk.bold(
 				this.name
 			)} on port ${this.config.weechatRelay.port}`
 		);
@@ -3202,7 +3196,7 @@ export class IrssiClient {
 		this.weechatRelayServer = null;
 		this.weechatRelayPassword = null;
 
-		log.info(`${colors.yellow("[WeeChat Relay]")} Stopped for user ${colors.bold(this.name)}`);
+		log.info(`${chalk.yellow("[WeeChat Relay]")} Stopped for user ${chalk.bold(this.name)}`);
 	}
 }
 

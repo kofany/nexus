@@ -1,4 +1,4 @@
-import colors from "chalk";
+import chalk from "chalk";
 import log from "../../log.js";
 import Helper from "../../helper.js";
 import type {AuthHandler} from "../auth.js";
@@ -13,7 +13,7 @@ const localAuth: AuthHandler = (_manager, client, user, password, callback) => {
 	// If this user has no password set, fail the authentication
 	if (!client.config.password) {
 		log.error(
-			`User ${colors.bold(
+			`User ${chalk.bold(
 				user
 			)} with no local password set tried to sign in. (Probably a LDAP user)`
 		);
@@ -29,7 +29,7 @@ const localAuth: AuthHandler = (_manager, client, user, password, callback) => {
 				client.setPassword(hash, (success) => {
 					if (success) {
 						log.info(
-							`User ${colors.bold(
+							`User ${chalk.bold(
 								client.name
 							)} logged in and their hashed password has been updated to match new security requirements`
 						);

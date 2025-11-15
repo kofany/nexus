@@ -9,7 +9,7 @@
  */
 
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {VariableMutationTracker} from "./variableMutationTracker.js";
 
 /**
@@ -78,13 +78,13 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 	// Log mutations
 	tracker.on("mutate", (event) => {
 		log.warn(
-			`${colors.magenta("[MUTATION]")} lineRequestedKeys: "${event.oldValue}" → "${
+			`${chalk.magenta("[MUTATION]")} lineRequestedKeys: "${event.oldValue}" → "${
 				event.newValue
 			}"`
 		);
 
 		if (event.stack) {
-			log.debug(`${colors.dim("  Stack:")} ${event.stack}`);
+			log.debug(`${chalk.dim("  Stack:")} ${event.stack}`);
 		}
 
 		// EARLY WARNING: Suspicious field counts
@@ -92,7 +92,7 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 
 		if (event.oldValue && newKeys.length === 0) {
 			log.error(
-				`${colors.red("[BUG RISK]")} lineRequestedKeys was cleared! Old value had ${
+				`${chalk.red("[BUG RISK]")} lineRequestedKeys was cleared! Old value had ${
 					event.oldValue.split(",").length
 				} fields`
 			);
@@ -104,7 +104,7 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 			newKeys.length !== event.oldValue.split(",").length
 		) {
 			log.warn(
-				`${colors.yellow("[WARNING]")} Suspiciously few fields (${
+				`${chalk.yellow("[WARNING]")} Suspiciously few fields (${
 					newKeys.length
 				}) in lineRequestedKeys`
 			);
@@ -114,10 +114,10 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 	// Log validation errors
 	tracker.on("validation-error", (event) => {
 		log.error(
-			`${colors.red("[VALIDATION ERROR]")} Invalid lineRequestedKeys: "${event.newValue}"`
+			`${chalk.red("[VALIDATION ERROR]")} Invalid lineRequestedKeys: "${event.newValue}"`
 		);
-		log.error(`${colors.red("  Error:")} ${event.validationError}`);
-		log.error(`${colors.red("  This will cause wrong field count in _buffer_line_added!")}`);
+		log.error(`${chalk.red("  Error:")} ${event.validationError}`);
+		log.error(`${chalk.red("  This will cause wrong field count in _buffer_line_added!")}`);
 	});
 
 	return tracker;
@@ -167,7 +167,7 @@ export function logHDataRequest(id: string, args: string, currentLineRequestedKe
  */
 export function logLineKeysUpdate(source: string, newValue: string, oldValue: string): void {
 	log.info(`
-${colors.magenta("[SET lineRequestedKeys]")} from ${source}
+${chalk.magenta("[SET lineRequestedKeys]")} from ${source}
   Old: "${oldValue}"
   New: "${newValue}"
   Field count: ${newValue.split(",").length} fields
@@ -220,7 +220,7 @@ export function validateLineAddedState(
 
 	if (issues.length > 0) {
 		log.error(`
-${colors.red("[ASSERTION FAILURE]")} sendLineAdded state is invalid:
+${chalk.red("[ASSERTION FAILURE]")} sendLineAdded state is invalid:
 ${issues.map((issue) => `  - ${issue}`).join("\n")}
 lineRequestedKeys: "${lineRequestedKeys}"
 clientUsesHDataHistory: ${clientUsesHDataHistory}
@@ -335,7 +335,7 @@ export function logLineAddedState(
 		: [];
 
 	log.info(`
-${colors.cyan("[_buffer_line_added]")}
+${chalk.cyan("[_buffer_line_added]")}
   buffer: ${buffer.fullName || buffer.pointer}
   message: "${(message.text || "").substring(0, 50)}"
   lineRequestedKeys: "${lineRequestedKeys}"

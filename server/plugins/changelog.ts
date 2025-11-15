@@ -1,5 +1,5 @@
-import got, {Response} from "got";
-import colors from "chalk";
+import got, {HTTPError} from "got";
+import chalk from "chalk";
 import log from "../log.js";
 import pkg from "../../package.json" with {type: "json"};
 import ClientManager from "../clientManager.js";
@@ -30,6 +30,13 @@ const versions: SharedChangelogData = {
 	packages: undefined,
 };
 
+type GithubRelease = {
+	tag_name: string;
+	body_html: string;
+	prerelease: boolean;
+	html_url: string;
+};
+
 async function fetch() {
 	const time = Date.now();
 
@@ -39,7 +46,7 @@ async function fetch() {
 	}
 
 	try {
-		const response = await (got as any)(
+		const response = await got.get<GithubRelease[]>(
 			"https://api.github.com/repos/thelounge/thelounge/releases",
 			{
 				headers: {
@@ -47,34 +54,39 @@ async function fetch() {
 					"User-Agent": pkg.name + "; +" + pkg.repository.url, // Identify the client
 				},
 				localAddress: Config.values.bind,
+				responseType: "json",
 			}
 		);
 
-		if (response.statusCode !== 200) {
+		if (response.statusCode !== 200 || !Array.isArray(response.body)) {
 			return versions;
 		}
 
-		updateVersions(response);
+		updateVersions(response.body);
 
 		// Add expiration date to the data to send to the client for later refresh
 		versions.expiresAt = time + TIME_TO_LIVE;
 	} catch (error) {
-		log.error(`Failed to fetch changelog: ${error}`);
+		if (error instanceof HTTPError) {
+			log.error(`Failed to fetch changelog: ${error.response.statusCode} ${error.message}`);
+		} else {
+			log.error(
+				`Failed to fetch changelog: ${error instanceof Error ? error.message : error}`
+			);
+		}
 	}
 
 	return versions;
 }
 
-function updateVersions(response: Response<string>) {
+function updateVersions(releases: GithubRelease[]) {
 	let i: number;
-	let release: {tag_name: string; body_html: any; prerelease: boolean; html_url: any};
+	let release: GithubRelease;
 	let prerelease = false;
 
-	const body = JSON.parse(response.body);
-
 	// Find the current release among releases on GitHub
-	for (i = 0; i < body.length; i++) {
-		release = body[i];
+	for (i = 0; i < releases.length; i++) {
+		release = releases[i];
 
 		if (release.tag_name === versions.current.version) {
 			versions.current.changelog = release.body_html;
@@ -87,7 +99,7 @@ function updateVersions(response: Response<string>) {
 	// Find the latest release made after the current one if there is one
 	if (i > 0) {
 		for (let j = 0; j < i; j++) {
-			release = body[j];
+			release = releases[j];
 
 			// Find latest release or pre-release if current version is also a pre-release
 			if (!release.prerelease || release.prerelease === prerelease) {
@@ -121,7 +133,7 @@ function checkForUpdates(manager: ClientManager) {
 			}
 
 			log.info(
-				`NexusIRC ${colors.green(
+				`NexusIRC ${chalk.green(
 					versionData.latest.version
 				)} is available. Read more on GitHub: ${versionData.latest.url}`
 			);

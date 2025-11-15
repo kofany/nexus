@@ -26,7 +26,7 @@
 
 import {EventEmitter} from "events";
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {WeeChatMessage, OBJ_HDATA, OBJ_STRING} from "./weechatProtocol.js";
 import {
 	buildHData,
@@ -62,7 +62,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		this.setMaxListeners(300);
 
 		log.info(
-			`${colors.cyan("[Node->WeeChat]")} Adapter initialized for user ${irssiClient.name}`
+			`${chalk.cyan("[Node->WeeChat]")} Adapter initialized for user ${irssiClient.name}`
 		);
 	}
 
@@ -111,7 +111,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!found) {
 			log.warn(
-				`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for msg event`
+				`${chalk.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for msg event`
 			);
 			return;
 		}
@@ -119,9 +119,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const {network, channel} = found;
 		const bufferPtr = this.getBufferPointer(data.chan);
 
-		log.debug(
-			`${colors.cyan("[Node->WeeChat]")} msg event: ${channel.name} on ${network.name}`
-		);
+		log.debug(`${chalk.cyan("[Node->WeeChat]")} msg event: ${channel.name} on ${network.name}`);
 
 		// Emit _buffer_line_added event for WeeChat clients
 		this.emit("buffer_line_added", {
@@ -144,7 +142,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			data.msg.type === "quit"
 		) {
 			log.info(
-				`${colors.cyan(
+				`${chalk.cyan(
 					"[Node->WeeChat]"
 				)} ${data.msg.type.toUpperCase()} detected - sending nicklist_diff for ${
 					channel.name
@@ -171,7 +169,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!found) {
 			log.warn(
-				`${colors.yellow("[Node->WeeChat]")} Channel ${data.id} not found for names event`
+				`${chalk.yellow("[Node->WeeChat]")} Channel ${data.id} not found for names event`
 			);
 			return;
 		}
@@ -180,7 +178,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const bufferPtr = this.getBufferPointer(data.id);
 
 		log.debug(
-			`${colors.cyan("[Node->WeeChat]")} names event: ${channel.name} (${
+			`${chalk.cyan("[Node->WeeChat]")} names event: ${channel.name} (${
 				data.users.length
 			} users)`
 		);
@@ -208,7 +206,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!network) {
 			log.warn(
-				`${colors.yellow("[Node->WeeChat]")} Network ${
+				`${chalk.yellow("[Node->WeeChat]")} Network ${
 					data.network
 				} not found for join event`
 			);
@@ -219,7 +217,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!channel) {
 			log.warn(
-				`${colors.yellow("[Node->WeeChat]")} Channel ${
+				`${chalk.yellow("[Node->WeeChat]")} Channel ${
 					data.chan.id
 				} not found for join event`
 			);
@@ -228,9 +226,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		const bufferPtr = this.getBufferPointer(data.chan.id);
 
-		log.info(
-			`${colors.cyan("[Node->WeeChat]")} join event: ${channel.name} on ${network.name}`
-		);
+		log.info(`${chalk.cyan("[Node->WeeChat]")} join event: ${channel.name} on ${network.name}`);
 
 		// Emit buffer_opened event for WeeChat clients
 		this.emit("buffer_opened", {
@@ -248,7 +244,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	public handlePartEvent(data: {chan: number}): void {
 		const bufferPtr = this.getBufferPointer(data.chan);
 
-		log.info(`${colors.cyan("[Node->WeeChat]")} part event: channel ${data.chan}`);
+		log.info(`${chalk.cyan("[Node->WeeChat]")} part event: channel ${data.chan}`);
 
 		// Emit buffer_closing event for WeeChat clients
 		this.emit("buffer_closing", {
@@ -266,7 +262,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!found) {
 			log.warn(
-				`${colors.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for topic event`
+				`${chalk.yellow("[Node->WeeChat]")} Channel ${data.chan} not found for topic event`
 			);
 			return;
 		}
@@ -274,7 +270,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const {network, channel} = found;
 		const bufferPtr = this.getBufferPointer(data.chan);
 
-		log.debug(`${colors.cyan("[Node->WeeChat]")} topic event: ${channel.name}`);
+		log.debug(`${chalk.cyan("[Node->WeeChat]")} topic event: ${channel.name}`);
 
 		// Emit buffer_title_changed event for WeeChat clients
 		this.emit("buffer_title_changed", {
@@ -298,7 +294,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!found) {
 			log.warn(
-				`${colors.yellow("[Node->WeeChat]")} Channel ${
+				`${chalk.yellow("[Node->WeeChat]")} Channel ${
 					data.chan
 				} not found for activity_update event`
 			);
@@ -309,7 +305,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const bufferPtr = this.getBufferPointer(data.chan);
 
 		log.debug(
-			`${colors.cyan("[Node->WeeChat]")} activity_update: ${channel.name} (unread=${
+			`${chalk.cyan("[Node->WeeChat]")} activity_update: ${channel.name} (unread=${
 				data.unread
 			}, highlight=${data.highlight})`
 		);
@@ -338,7 +334,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	): Promise<void> {
 		if (!this.irssiClient.messageStorage) {
 			log.warn(
-				`${colors.yellow(
+				`${chalk.yellow(
 					"[Node->WeeChat]"
 				)} No message storage available, skipping history load`
 			);
@@ -347,7 +343,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		try {
 			log.info(
-				`${colors.cyan(
+				`${chalk.cyan(
 					"[Node->WeeChat]"
 				)} Loading message history for ${channelName} (${networkUuid})`
 			);
@@ -360,7 +356,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			);
 
 			log.info(
-				`${colors.cyan("[Node->WeeChat]")} Loaded ${
+				`${chalk.cyan("[Node->WeeChat]")} Loaded ${
 					messages.length
 				} messages for ${channelName}`
 			);
@@ -383,13 +379,13 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			}
 
 			log.info(
-				`${colors.green("[Node->WeeChat]")} ✅ Sent ${
+				`${chalk.green("[Node->WeeChat]")} ✅ Sent ${
 					messages.length
 				} history messages for ${channelName}`
 			);
 		} catch (error) {
 			log.error(
-				`${colors.red(
+				`${chalk.red(
 					"[Node->WeeChat]"
 				)} Failed to load messages for ${channelName}: ${error}`
 			);
@@ -401,7 +397,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * Called after sync to send initial message history to Lith
 	 */
 	async loadAllMessages(): Promise<void> {
-		log.info(`${colors.cyan("[Node->WeeChat]")} Loading message history for all buffers...`);
+		log.info(`${chalk.cyan("[Node->WeeChat]")} Loading message history for all buffers...`);
 
 		for (const network of this.irssiClient.networks) {
 			for (const channel of network.channels) {
@@ -416,7 +412,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		log.info(
-			`${colors.green("[Node->WeeChat]")} ✅ Finished loading message history for all buffers`
+			`${chalk.green("[Node->WeeChat]")} ✅ Finished loading message history for all buffers`
 		);
 	}
 
@@ -425,7 +421,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 * Uses data directly from IrssiClient.networks
 	 */
 	buildBuffersHData(id: string): WeeChatMessage {
-		log.info(`${colors.cyan("[Node->WeeChat]")} Building buffers HData for id: ${id}`);
+		log.info(`${chalk.cyan("[Node->WeeChat]")} Building buffers HData for id: ${id}`);
 		const msg = new WeeChatMessage(id);
 
 		const fields: HDataField[] = [
@@ -509,12 +505,10 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		if (objects.length > 0) {
-			log.info(
-				`${colors.cyan("[Node->WeeChat]")} Sending ${objects.length} buffers in HData`
-			);
+			log.info(`${chalk.cyan("[Node->WeeChat]")} Sending ${objects.length} buffers in HData`);
 			buildHData(msg, "buffer", fields, objects);
 		} else {
-			log.warn(`${colors.yellow("[Node->WeeChat]")} No buffers to send!`);
+			log.warn(`${chalk.yellow("[Node->WeeChat]")} No buffers to send!`);
 			buildEmptyHData(msg);
 		}
 
@@ -528,7 +522,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 */
 	buildBulkLinesHData(id: string, count: number = 25, keys: string = ""): WeeChatMessage {
 		log.warn(
-			`${colors.magenta(
+			`${chalk.magenta(
 				"[Node->WeeChat DEBUG]"
 			)} 📜 buildBulkLinesHData: id="${id}", count=${count}, keys="${keys}"`
 		);
@@ -541,7 +535,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// Parse requested keys
 		const requestedKeys = keys ? keys.split(",").map((k) => k.trim()) : [];
 		log.info(
-			`${colors.cyan("[Node->WeeChat DEBUG]")} Requested keys: ${requestedKeys.join(", ")}`
+			`${chalk.cyan("[Node->WeeChat DEBUG]")} Requested keys: ${requestedKeys.join(", ")}`
 		);
 
 		// Build fields based on requested keys
@@ -706,7 +700,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			// So hpath MUST be: buffer/own_lines/last_line/data (NOT buffer/lines/line/line_data!)
 			buildHData(msg, "buffer/own_lines/last_line/data", fields, objects);
 			log.info(
-				`${colors.green(
+				`${chalk.green(
 					"[Node->WeeChat DEBUG]"
 				)} ✅ Built ${totalLines} lines for ${this.irssiClient.networks.reduce(
 					(sum, n) => sum + n.channels.length - 1,
@@ -715,7 +709,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			);
 		} else {
 			buildEmptyHData(msg);
-			log.warn(`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send (bulk)`);
+			log.warn(`${chalk.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send (bulk)`);
 		}
 
 		return msg;
@@ -732,7 +726,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	 */
 	buildLastReadLinesHData(id: string, requestedKeys: string): WeeChatMessage {
 		log.info(
-			`${colors.magenta(
+			`${chalk.magenta(
 				"[Node->WeeChat]"
 			)} 📖 Building last read lines HData, keys="${requestedKeys}"`
 		);
@@ -743,7 +737,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// Validate keys (MUST be exactly: id,buffer)
 		if (keys.length !== 2 || keys[0] !== "id" || keys[1] !== "buffer") {
 			log.error(
-				`${colors.red(
+				`${chalk.red(
 					"[Node->WeeChat]"
 				)} ❌ Invalid keys for last_read_lines: "${requestedKeys}" (expected: "id,buffer")`
 			);
@@ -798,11 +792,11 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			// CRITICAL: HPath MUST be 4 levels!
 			buildHData(msg, "buffer/own_lines/last_read_line/data", fields, objects);
 			log.info(
-				`${colors.green("[Node->WeeChat]")} ✅ Built ${objects.length} last read lines`
+				`${chalk.green("[Node->WeeChat]")} ✅ Built ${objects.length} last read lines`
 			);
 		} else {
 			buildEmptyHData(msg);
-			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No last read lines to send`);
+			log.warn(`${chalk.yellow("[Node->WeeChat]")} ⚠️ No last read lines to send`);
 		}
 
 		return msg;
@@ -826,7 +820,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		requestedKeys: string
 	): Promise<WeeChatMessage> {
 		log.info(
-			`${colors.magenta(
+			`${chalk.magenta(
 				"[Node->WeeChat]"
 			)} 📄 Building per-buffer lines HData: buffer=${bufferPtr}, count=${count}, keys="${requestedKeys}"`
 		);
@@ -852,7 +846,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		// Validate keys (MUST be exactly: id,date,displayed,prefix,message,highlight,notify,tags_array)
 		if (keys.length !== 8 || !keys.every((k, i) => k === expectedKeys[i])) {
 			log.error(
-				`${colors.red(
+				`${chalk.red(
 					"[Node->WeeChat]"
 				)} ❌ Invalid keys for per-buffer lines: "${requestedKeys}" (expected: "${expectedKeys.join(
 					","
@@ -868,7 +862,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!found) {
 			log.error(
-				`${colors.red(
+				`${chalk.red(
 					"[Node->WeeChat]"
 				)} ❌ Channel not found: bufferPtr=${bufferPtr}, channelId=${channelId}`
 			);
@@ -883,7 +877,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (this.irssiClient.messageStorage) {
 			log.info(
-				`${colors.cyan("[Node->WeeChat]")} 📜 Loading ${count} messages from storage for ${
+				`${chalk.cyan("[Node->WeeChat]")} 📜 Loading ${count} messages from storage for ${
 					channel.name
 				}...`
 			);
@@ -893,7 +887,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				count
 			);
 			log.info(
-				`${colors.green("[Node->WeeChat]")} ✅ Loaded ${
+				`${chalk.green("[Node->WeeChat]")} ✅ Loaded ${
 					messages.length
 				} messages from storage`
 			);
@@ -902,13 +896,13 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			// See WEECHAT_ANDROID_PROTOCOL.md line 423: obj.forEachReversed
 			messages = messages.reverse();
 			log.debug(
-				`${colors.cyan(
+				`${chalk.cyan(
 					"[Node->WeeChat]"
 				)} 🔄 Reversed messages for weechat-android (newest first)`
 			);
 		} else {
 			log.warn(
-				`${colors.yellow(
+				`${chalk.yellow(
 					"[Node->WeeChat]"
 				)} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`
 			);
@@ -980,13 +974,13 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 			// CRITICAL: HPath MUST be 4 levels!
 			buildHData(msg, "buffer/own_lines/last_line/data", fields, objects);
 			log.info(
-				`${colors.green("[Node->WeeChat]")} ✅ Built ${
+				`${chalk.green("[Node->WeeChat]")} ✅ Built ${
 					objects.length
 				} lines for buffer ${bufferPtr}`
 			);
 		} else {
 			buildEmptyHData(msg);
-			log.warn(`${colors.yellow("[Node->WeeChat]")} ⚠️ No messages for buffer ${bufferPtr}`);
+			log.warn(`${chalk.yellow("[Node->WeeChat]")} ⚠️ No messages for buffer ${bufferPtr}`);
 		}
 
 		return msg;
@@ -1003,7 +997,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		keys: string = ""
 	): WeeChatMessage {
 		log.warn(
-			`${colors.magenta(
+			`${chalk.magenta(
 				"[Node->WeeChat DEBUG]"
 			)} 📜 buildBufferOwnLinesHData: id="${id}", bufferPtr=${bufferPtr.toString(
 				16
@@ -1134,7 +1128,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 	): Promise<WeeChatMessage> {
 		// 🚨 DEBUG: Log buildLinesHData call
 		log.warn(
-			`${colors.magenta(
+			`${chalk.magenta(
 				"[Node->WeeChat DEBUG]"
 			)} 📜 buildLinesHData: id="${id}", bufferPtr=${bufferPtr}, count=${count}`
 		);
@@ -1147,7 +1141,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (!found) {
 			log.warn(
-				`${colors.yellow(
+				`${chalk.yellow(
 					"[Node->WeeChat DEBUG]"
 				)} ⚠️ Channel not found for bufferPtr=${bufferPtr}`
 			);
@@ -1163,7 +1157,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		if (this.irssiClient.messageStorage) {
 			log.info(
-				`${colors.cyan(
+				`${chalk.cyan(
 					"[Node->WeeChat DEBUG]"
 				)} 📜 Loading ${count} messages from storage for ${channel.name}...`
 			);
@@ -1173,13 +1167,13 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 				count
 			);
 			log.info(
-				`${colors.green("[Node->WeeChat DEBUG]")} ✅ Loaded ${
+				`${chalk.green("[Node->WeeChat DEBUG]")} ✅ Loaded ${
 					messages.length
 				} messages from storage`
 			);
 		} else {
 			log.warn(
-				`${colors.yellow(
+				`${chalk.yellow(
 					"[Node->WeeChat DEBUG]"
 				)} ⚠️ No message storage, using in-memory messages (${channel.messages.length})`
 			);
@@ -1234,14 +1228,14 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		if (objects.length > 0) {
 			buildHData(msg, "line_data", fields, objects);
 			log.info(
-				`${colors.green("[Node->WeeChat DEBUG]")} ✅ Built ${objects.length} lines for ${
+				`${chalk.green("[Node->WeeChat DEBUG]")} ✅ Built ${objects.length} lines for ${
 					channel.name
 				}`
 			);
 		} else {
 			buildEmptyHData(msg);
 			log.warn(
-				`${colors.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send for ${
+				`${chalk.yellow("[Node->WeeChat DEBUG]")} ⚠️ No messages to send for ${
 					channel.name
 				}`
 			);

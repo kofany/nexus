@@ -1,7 +1,7 @@
 import log from "../../log.js";
 import {Command} from "commander";
 import child from "child_process";
-import colors from "chalk";
+import chalk from "chalk";
 import fs from "fs";
 import Config from "../../config.js";
 import Utils from "../utils.js";
@@ -9,7 +9,7 @@ import ClientManager from "../../clientManager.js";
 
 const program = new Command("edit");
 program
-	.description(`Edit user file located at ${colors.green(Config.getUserConfigPath("<name>"))}`)
+	.description(`Edit user file located at ${chalk.green(Config.getUserConfigPath("<name>"))}`)
 	.argument("<name>", "name of the user")
 	.on("--help", Utils.extraHelp)
 	.action(function (name) {
@@ -26,7 +26,7 @@ program
 		}
 
 		if (!users.includes(name)) {
-			log.error(`User ${colors.bold(name)} does not exist.`);
+			log.error(`User ${chalk.bold(name)} does not exist.`);
 			return;
 		}
 
@@ -37,9 +37,9 @@ program
 		);
 		child_spawn.on("error", function () {
 			log.error(
-				`Unable to open ${colors.green(Config.getUserConfigPath(name))}. ${colors.bold(
+				`Unable to open ${chalk.green(Config.getUserConfigPath(name))}. ${chalk.bold(
 					"$EDITOR"
-				)} is not set, and ${colors.bold("vi")} was not found.`
+				)} is not set, and ${chalk.bold("vi")} was not found.`
 			);
 		});
 	});

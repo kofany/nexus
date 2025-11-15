@@ -1,6 +1,6 @@
 import _ from "lodash";
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import fs from "fs";
 import Helper from "../helper.js";
 import Config from "../config.js";
@@ -19,7 +19,7 @@ class Utils {
 		[
 			"",
 			"Environment variable:",
-			`  NEXUSIRC_HOME          Path for all configuration files and folders. Defaults to ${colors.green(
+			`  NEXUSIRC_HOME          Path for all configuration files and folders. Defaults to ${chalk.green(
 				Helper.expandHome(Utils.defaultHome())
 			)}`,
 			"",
@@ -103,7 +103,7 @@ class Utils {
 		const parsedValue = parseValue(value);
 
 		if (_.has(memo, key)) {
-			log.warn(`Configuration key ${colors.bold(key)} was already specified, ignoring...`);
+			log.warn(`Configuration key ${chalk.bold(key)} was already specified, ignoring...`);
 		} else {
 			memo = _.set(memo, key, parsedValue);
 		}
