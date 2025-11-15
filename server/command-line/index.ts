@@ -27,7 +27,8 @@ program
 // Parse options from `argv` returning `argv` void of these options.
 const argvWithoutOptions = program.parseOptions(process.argv);
 
-Config.setHome(process.env.NEXUSIRC_HOME || process.env.THELOUNGE_HOME || Utils.defaultHome());
+// setHome() is now async due to ESM dynamic import() requirement (TypeScript 5.8+)
+await Config.setHome(process.env.NEXUSIRC_HOME || process.env.THELOUNGE_HOME || Utils.defaultHome());
 
 // Check config file owner and warn if we're running under a different user
 try {

@@ -1,5 +1,4 @@
 import {fileURLToPath} from "url";
-import {createRequire} from "module";
 import path, {dirname} from "path";
 import fs, {Stats} from "fs";
 import os from "os";
@@ -15,10 +14,6 @@ import defaultConfig from "../defaults/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Keep createRequire for legacy user config.js support (CommonJS format)
-// New users should use ESM format, but existing configs may use module.exports
-const require = createRequire(import.meta.url);
 
 // TODO: Type this
 export type WebIRC = {
@@ -212,22 +207,21 @@ class Config {
 		});
 	}
 
-	setHome(newPath: string) {
+	async setHome(newPath: string): Promise<void> {
 		this.#homePath = Helper.expandHome(newPath);
 
 		// Reload config from new home location
 		const configPath = this.getConfigPath();
 
 		if (fs.existsSync(configPath)) {
-			const loadedModule = require(configPath);
+			// Use dynamic import() for ESM compatibility (TypeScript 5.8+)
+			// Cannot use require() in ESM context ("type": "module" in package.json)
+			const loadedModule = await import(configPath);
 
 			// Handle ESM modules with default export vs CommonJS modules
-			// ESM: import config from "./config.js" → {__esModule: true, default: {...}}
-			// CJS: module.exports = {...} → {...}
-			const userConfig =
-				loadedModule.__esModule && loadedModule.default
-					? loadedModule.default
-					: loadedModule;
+			// ESM: import config from "./config.js" → {default: {...}}
+			// CJS: module.exports = {...} → {...} (wrapped by Node.js)
+			const userConfig = loadedModule.default || loadedModule;
 
 			if (_.isEmpty(userConfig)) {
 				log.warn(
@@ -237,8 +231,8 @@ class Config {
 				);
 				log.warn(
 					`Make sure it is non-empty and the configuration is exported using ${colors.bold(
-						"module.exports = { ... }"
-					)}.`
+						"export default { ... }"
+					)} or ${colors.bold("module.exports = { ... }")}.`
 				);
 				log.warn("Using default configuration...");
 			}
