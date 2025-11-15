@@ -1,4 +1,4 @@
-import {fileURLToPath} from "url";
+import {fileURLToPath, pathToFileURL} from "url";
 import path, {dirname} from "path";
 import fs, {Stats} from "fs";
 import os from "os";
@@ -216,7 +216,8 @@ class Config {
 		if (fs.existsSync(configPath)) {
 			// Use dynamic import() for ESM compatibility (TypeScript 5.8+)
 			// Cannot use require() in ESM context ("type": "module" in package.json)
-			const loadedModule = await import(configPath);
+			// Convert to file:// URL for Windows compatibility (avoids ERR_UNSUPPORTED_ESM_URL_SCHEME)
+			const loadedModule = await import(pathToFileURL(configPath).href);
 
 			// Handle ESM modules with default export vs CommonJS modules
 			// ESM: import config from "./config.js" → {default: {...}}
