@@ -198,9 +198,7 @@ ${sanEntries
 		}
 
 		log.info(
-			`${chalk.green("[SSL]")} ✅ Generated CA-signed certificate for ${chalk.bold(
-				username
-			)}`
+			`${chalk.green("[SSL]")} ✅ Generated CA-signed certificate for ${chalk.bold(username)}`
 		);
 		log.info(`${chalk.green("[SSL]")}    CA Cert: ${caCertPath}`);
 		log.info(`${chalk.green("[SSL]")}    CA Key:  ${caKeyPath}`);

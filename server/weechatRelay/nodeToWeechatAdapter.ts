@@ -119,9 +119,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		const {network, channel} = found;
 		const bufferPtr = this.getBufferPointer(data.chan);
 
-		log.debug(
-			`${chalk.cyan("[Node->WeeChat]")} msg event: ${channel.name} on ${network.name}`
-		);
+		log.debug(`${chalk.cyan("[Node->WeeChat]")} msg event: ${channel.name} on ${network.name}`);
 
 		// Emit _buffer_line_added event for WeeChat clients
 		this.emit("buffer_line_added", {
@@ -228,9 +226,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 
 		const bufferPtr = this.getBufferPointer(data.chan.id);
 
-		log.info(
-			`${chalk.cyan("[Node->WeeChat]")} join event: ${channel.name} on ${network.name}`
-		);
+		log.info(`${chalk.cyan("[Node->WeeChat]")} join event: ${channel.name} on ${network.name}`);
 
 		// Emit buffer_opened event for WeeChat clients
 		this.emit("buffer_opened", {
@@ -509,9 +505,7 @@ export class NodeToWeeChatAdapter extends EventEmitter {
 		}
 
 		if (objects.length > 0) {
-			log.info(
-				`${chalk.cyan("[Node->WeeChat]")} Sending ${objects.length} buffers in HData`
-			);
+			log.info(`${chalk.cyan("[Node->WeeChat]")} Sending ${objects.length} buffers in HData`);
 			buildHData(msg, "buffer", fields, objects);
 		} else {
 			log.warn(`${chalk.yellow("[Node->WeeChat]")} No buffers to send!`);

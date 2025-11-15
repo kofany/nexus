@@ -151,9 +151,7 @@ class ClientManager {
 			// AUTOCONNECT: If irssi password is configured, connect immediately!
 			// This allows backend to connect to irssi BEFORE user logs in
 			if ((userConfig as IrssiUserConfig).irssiConnection?.passwordEncrypted) {
-				log.info(
-					`User ${chalk.bold(name)} has irssi config - auto-connecting to irssi...`
-				);
+				log.info(`User ${chalk.bold(name)} has irssi config - auto-connecting to irssi...`);
 				irssiClient.autoConnectToIrssi().catch((err) => {
 					log.error(`Autoconnect failed for user ${chalk.bold(name)}: ${err}`);
 				});

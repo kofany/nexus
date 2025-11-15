@@ -1130,9 +1130,7 @@ function initializeIrssiClient(
 		}
 	});
 
-	log.info(
-		`Browser ${chalk.bold(socket.id)} attached to irssi user ${chalk.bold(client.name)}`
-	);
+	log.info(`Browser ${chalk.bold(socket.id)} attached to irssi user ${chalk.bold(client.name)}`);
 }
 
 async function performAuthentication(this: Socket, data: AuthPerformData) {

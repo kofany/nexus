@@ -323,9 +323,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 		client.on("close", () => {
 			log.info(
-				`${chalk.yellow(
-					"[WeeChat Relay Bridge]"
-				)} WebSocket connection closed: ${clientId}`
+				`${chalk.yellow("[WeeChat Relay Bridge]")} WebSocket connection closed: ${clientId}`
 			);
 			this.clients.delete(clientId);
 			this.emit("client:close", clientId);

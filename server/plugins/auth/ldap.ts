@@ -172,9 +172,7 @@ async function advancedLdapLoadUsers(users: string[], callbackLoadUser) {
 		}
 
 		remainingUsers.forEach((user) => {
-			log.warn(
-				`No account info in LDAP for ${chalk.bold(user)} but user config file exists`
-			);
+			log.warn(`No account info in LDAP for ${chalk.bold(user)} but user config file exists`);
 		});
 	} catch (err) {
 		log.error(`LDAP search error: ${(err as Error).toString()}`);

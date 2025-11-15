@@ -248,9 +248,7 @@ class Config {
 				this.values.fileUpload.baseUrl = undefined;
 
 				log.warn(
-					`The ${chalk.bold("fileUpload.baseUrl")} you specified is invalid: ${String(
-						e
-					)}`
+					`The ${chalk.bold("fileUpload.baseUrl")} you specified is invalid: ${String(e)}`
 				);
 			}
 		}

@@ -106,9 +106,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 	private setupRelayHandlers(): void {
 		this.relayClient.on("command", (data: {command: string; id: string; args: string}) => {
 			log.info(
-				`${chalk.cyan("[WeeChat->Node]")} Received command: ${data.command}, id: ${
-					data.id
-				}`
+				`${chalk.cyan("[WeeChat->Node]")} Received command: ${data.command}, id: ${data.id}`
 			);
 
 			switch (data.command) {
@@ -273,9 +271,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		) {
 			// LAST READ LINES REQUEST (weechat-android ONLY)
 			// Example: "buffer:gui_buffers(*)/own_lines/last_read_line/data id,buffer"
-			log.info(
-				`${chalk.cyan("[WeeChat->Node]")} 📖 LAST READ LINES request, keys="${keys}"`
-			);
+			log.info(`${chalk.cyan("[WeeChat->Node]")} 📖 LAST READ LINES request, keys="${keys}"`);
 			const msg = this.nodeAdapter.buildLastReadLinesHData(id, keys);
 			this.relayClient.send(msg);
 		} else if (path.startsWith("buffer:gui_buffers")) {
@@ -894,9 +890,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		const network = this.irssiClient.networks.find((n) => n.uuid === buffer.networkUuid);
 
 		if (!network) {
-			log.warn(
-				`${chalk.yellow("[WeeChat->Node]")} Network not found: ${buffer.networkUuid}`
-			);
+			log.warn(`${chalk.yellow("[WeeChat->Node]")} Network not found: ${buffer.networkUuid}`);
 			return;
 		}
 
@@ -974,9 +968,7 @@ export class WeeChatToNodeAdapter extends EventEmitter {
 		// If no args, default to "* buffer,nicklist" (sync all buffers)
 		if (!args || args.trim().length === 0) {
 			args = "* buffer,nicklist";
-			log.info(
-				`${chalk.cyan("[WeeChat->Node]")} No args provided, defaulting to: "${args}"`
-			);
+			log.info(`${chalk.cyan("[WeeChat->Node]")} No args provided, defaulting to: "${args}"`);
 		}
 
 		// Parse: "* buffer,nicklist" or "0x12345 buffer"
