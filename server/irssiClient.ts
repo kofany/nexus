@@ -2180,6 +2180,7 @@ export class IrssiClient {
 
 		// Periodic cleanup (every 5 minutes)
 		const now = Date.now();
+
 		if (now - this.lastMessageDedupCleanup > 300000) {
 			this.messageDedup.cleanup();
 			this.lastMessageDedupCleanup = now;

@@ -212,6 +212,7 @@ export class FeWebEncryption {
 	 */
 	static clearKeyCacheForPassword(password: string): void {
 		const cacheKey = `${password}:${FE_WEB_SALT}:10000`;
+
 		if (FeWebEncryption.keyCache.delete(cacheKey)) {
 			log.debug(`[FeWebEncryption] Cleared cached key for password`);
 		}
