@@ -9,7 +9,7 @@ import * as path from "path";
 import * as os from "os";
 import {execSync} from "child_process";
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 
 export interface CertificateInfo {
 	certPath: string;
@@ -56,7 +56,7 @@ export async function generateSelfSignedCert(
 	certsDir: string
 ): Promise<CertificateInfo> {
 	log.info(
-		`${colors.cyan("[SSL]")} Generating CA-signed certificate for user ${colors.bold(
+		`${chalk.cyan("[SSL]")} Generating CA-signed certificate for user ${chalk.bold(
 			username
 		)}...`
 	);
@@ -77,7 +77,7 @@ export async function generateSelfSignedCert(
 	// Check if cert already exists
 	if (fs.existsSync(serverCertPath) && fs.existsSync(serverKeyPath)) {
 		log.info(
-			`${colors.yellow("[SSL]")} Certificate already exists for ${colors.bold(
+			`${chalk.yellow("[SSL]")} Certificate already exists for ${chalk.bold(
 				username
 			)}, reusing`
 		);
@@ -89,8 +89,8 @@ export async function generateSelfSignedCert(
 		const localIPs = getLocalIPs();
 		const hostname = os.hostname();
 
-		log.info(`${colors.cyan("[SSL]")} Local IPs: ${localIPs.join(", ")}`);
-		log.info(`${colors.cyan("[SSL]")} Hostname: ${hostname}`);
+		log.info(`${chalk.cyan("[SSL]")} Local IPs: ${localIPs.join(", ")}`);
+		log.info(`${chalk.cyan("[SSL]")} Hostname: ${hostname}`);
 
 		// Create SAN entries
 		const sanEntries = [
@@ -101,7 +101,7 @@ export async function generateSelfSignedCert(
 		];
 
 		// STEP 1: Generate CA certificate (root, self-signed)
-		log.info(`${colors.cyan("[SSL]")} Step 1: Generating CA certificate...`);
+		log.info(`${chalk.cyan("[SSL]")} Step 1: Generating CA certificate...`);
 
 		const caConfig = `
 [req]
@@ -127,10 +127,10 @@ subjectKeyIdentifier = hash
 		const caCmd = `openssl req -x509 -newkey rsa:4096 -keyout "${caKeyPath}" -out "${caCertPath}" -days 3650 -nodes -config "${caConfigPath}" -extensions v3_ca`;
 		execSync(caCmd, {stdio: "pipe"});
 
-		log.info(`${colors.green("[SSL]")} ✅ CA certificate generated`);
+		log.info(`${chalk.green("[SSL]")} ✅ CA certificate generated`);
 
 		// STEP 2: Generate server private key and CSR
-		log.info(`${colors.cyan("[SSL]")} Step 2: Generating server key and CSR...`);
+		log.info(`${chalk.cyan("[SSL]")} Step 2: Generating server key and CSR...`);
 
 		const serverConfig = `
 [req]
@@ -165,19 +165,19 @@ ${sanEntries
 		const serverKeyCmd = `openssl req -newkey rsa:4096 -keyout "${serverKeyPath}" -out "${serverCsrPath}" -nodes -config "${serverConfigPath}"`;
 		execSync(serverKeyCmd, {stdio: "pipe"});
 
-		log.info(`${colors.green("[SSL]")} ✅ Server key and CSR generated`);
+		log.info(`${chalk.green("[SSL]")} ✅ Server key and CSR generated`);
 
 		// STEP 3: Sign server certificate with CA
-		log.info(`${colors.cyan("[SSL]")} Step 3: Signing server certificate with CA...`);
+		log.info(`${chalk.cyan("[SSL]")} Step 3: Signing server certificate with CA...`);
 
 		const signCmd = `openssl x509 -req -in "${serverCsrPath}" -CA "${caCertPath}" -CAkey "${caKeyPath}" -CAcreateserial -out "${serverCertPath}" -days 365 -sha256 -extfile "${serverConfigPath}" -extensions v3_req`;
 		execSync(signCmd, {stdio: "pipe"});
 
-		log.info(`${colors.green("[SSL]")} ✅ Server certificate signed by CA`);
+		log.info(`${chalk.green("[SSL]")} ✅ Server certificate signed by CA`);
 
 		// STEP 4: Create full chain certificate (server cert + CA cert)
 		// This is REQUIRED for Qt/Lith - they need the full chain in one file!
-		log.info(`${colors.cyan("[SSL]")} Step 4: Creating full chain certificate...`);
+		log.info(`${chalk.cyan("[SSL]")} Step 4: Creating full chain certificate...`);
 
 		const serverCertContent = fs.readFileSync(serverCertPath, "utf8");
 		const caCertContent = fs.readFileSync(caCertPath, "utf8");
@@ -186,7 +186,7 @@ ${sanEntries
 		// Concatenate: server cert FIRST, then CA cert
 		fs.writeFileSync(fullChainPath, serverCertContent + "\n" + caCertContent);
 
-		log.info(`${colors.green("[SSL]")} ✅ Full chain certificate created`);
+		log.info(`${chalk.green("[SSL]")} ✅ Full chain certificate created`);
 
 		// Clean up temporary files
 		fs.unlinkSync(caConfigPath);
@@ -198,22 +198,22 @@ ${sanEntries
 		}
 
 		log.info(
-			`${colors.green("[SSL]")} ✅ Generated CA-signed certificate for ${colors.bold(
+			`${chalk.green("[SSL]")} ✅ Generated CA-signed certificate for ${chalk.bold(
 				username
 			)}`
 		);
-		log.info(`${colors.green("[SSL]")}    CA Cert: ${caCertPath}`);
-		log.info(`${colors.green("[SSL]")}    CA Key:  ${caKeyPath}`);
-		log.info(`${colors.green("[SSL]")}    Server Cert: ${serverCertPath}`);
-		log.info(`${colors.green("[SSL]")}    Full Chain: ${fullChainPath}`);
-		log.info(`${colors.green("[SSL]")}    Server Key:  ${serverKeyPath}`);
-		log.info(`${colors.green("[SSL]")}    SAN entries: ${sanEntries.length}`);
+		log.info(`${chalk.green("[SSL]")}    CA Cert: ${caCertPath}`);
+		log.info(`${chalk.green("[SSL]")}    CA Key:  ${caKeyPath}`);
+		log.info(`${chalk.green("[SSL]")}    Server Cert: ${serverCertPath}`);
+		log.info(`${chalk.green("[SSL]")}    Full Chain: ${fullChainPath}`);
+		log.info(`${chalk.green("[SSL]")}    Server Key:  ${serverKeyPath}`);
+		log.info(`${chalk.green("[SSL]")}    SAN entries: ${sanEntries.length}`);
 
 		// Return FULL CHAIN cert (not just server cert!)
 		return {certPath: fullChainPath, keyPath: serverKeyPath};
 	} catch (error: any) {
 		log.error(
-			`${colors.red("[SSL]")} ❌ Failed to generate certificate for ${colors.bold(
+			`${chalk.red("[SSL]")} ❌ Failed to generate certificate for ${chalk.bold(
 				username
 			)}: ${error.message}`
 		);
@@ -226,12 +226,12 @@ ${sanEntries
  */
 export function validateCertificate(certPath: string, keyPath: string): boolean {
 	if (!fs.existsSync(certPath)) {
-		log.error(`${colors.red("[SSL]")} Certificate file not found: ${certPath}`);
+		log.error(`${chalk.red("[SSL]")} Certificate file not found: ${certPath}`);
 		return false;
 	}
 
 	if (!fs.existsSync(keyPath)) {
-		log.error(`${colors.red("[SSL]")} Private key file not found: ${keyPath}`);
+		log.error(`${chalk.red("[SSL]")} Private key file not found: ${keyPath}`);
 		return false;
 	}
 
@@ -240,7 +240,7 @@ export function validateCertificate(certPath: string, keyPath: string): boolean 
 		fs.accessSync(keyPath, fs.constants.R_OK);
 		return true;
 	} catch (error) {
-		log.error(`${colors.red("[SSL]")} Certificate files are not readable`);
+		log.error(`${chalk.red("[SSL]")} Certificate files are not readable`);
 		return false;
 	}
 }
@@ -252,14 +252,14 @@ export function deleteCertificate(certPath: string, keyPath: string): void {
 	try {
 		if (fs.existsSync(certPath)) {
 			fs.unlinkSync(certPath);
-			log.info(`${colors.green("[SSL]")} Deleted certificate: ${certPath}`);
+			log.info(`${chalk.green("[SSL]")} Deleted certificate: ${certPath}`);
 		}
 
 		if (fs.existsSync(keyPath)) {
 			fs.unlinkSync(keyPath);
-			log.info(`${colors.green("[SSL]")} Deleted private key: ${keyPath}`);
+			log.info(`${chalk.green("[SSL]")} Deleted private key: ${keyPath}`);
 		}
 	} catch (error: any) {
-		log.error(`${colors.red("[SSL]")} Failed to delete certificate: ${error.message}`);
+		log.error(`${chalk.red("[SSL]")} Failed to delete certificate: ${error.message}`);
 	}
 }

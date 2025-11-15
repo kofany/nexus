@@ -1,5 +1,5 @@
 import log from "../../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {Command} from "commander";
 import Utils from "../utils.js";
 
@@ -18,7 +18,7 @@ program
 
 		if (users.length === 0) {
 			log.info(
-				`There are currently no users. Create one with ${colors.bold(
+				`There are currently no users. Create one with ${chalk.bold(
 					"nexuslounge add <name>"
 				)}.`
 			);
@@ -27,7 +27,7 @@ program
 
 		log.info("Users:");
 		users.forEach((user, i) => {
-			log.info(`${i + 1}. ${colors.bold(user)}`);
+			log.info(`${i + 1}. ${chalk.bold(user)}`);
 		});
 	});
 

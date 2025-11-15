@@ -1,5 +1,5 @@
 import {Client} from "ldapts";
-import colors from "chalk";
+import chalk from "chalk";
 
 import log from "../../log.js";
 import Config from "../../config.js";
@@ -173,7 +173,7 @@ async function advancedLdapLoadUsers(users: string[], callbackLoadUser) {
 
 		remainingUsers.forEach((user) => {
 			log.warn(
-				`No account info in LDAP for ${colors.bold(user)} but user config file exists`
+				`No account info in LDAP for ${chalk.bold(user)} but user config file exists`
 			);
 		});
 	} catch (err) {

@@ -3,7 +3,7 @@ import path, {dirname} from "path";
 import fs, {Stats} from "fs";
 import os from "os";
 import _ from "lodash";
-import colors from "chalk";
+import chalk from "chalk";
 import type {SearchOptions} from "ldapts";
 
 import log from "./log.js";
@@ -182,7 +182,7 @@ class Config {
 
 		for (const key in newConfig) {
 			if (!Object.prototype.hasOwnProperty.call(oldConfig, key)) {
-				log.warn(`Unknown key "${colors.bold(key)}", please verify your config.`);
+				log.warn(`Unknown key "${chalk.bold(key)}", please verify your config.`);
 			}
 		}
 
@@ -193,7 +193,7 @@ class Config {
 				objValue !== null &&
 				typeof objValue !== typeof srcValue
 			) {
-				log.warn(`Incorrect type for "${colors.bold(key)}", please verify your config.`);
+				log.warn(`Incorrect type for "${chalk.bold(key)}", please verify your config.`);
 
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 				return objValue;
@@ -226,14 +226,14 @@ class Config {
 
 			if (_.isEmpty(userConfig)) {
 				log.warn(
-					`The file located at ${colors.green(
+					`The file located at ${chalk.green(
 						configPath
 					)} does not appear to expose anything.`
 				);
 				log.warn(
-					`Make sure it is non-empty and the configuration is exported using ${colors.bold(
+					`Make sure it is non-empty and the configuration is exported using ${chalk.bold(
 						"export default { ... }"
-					)} or ${colors.bold("module.exports = { ... }")}.`
+					)} or ${chalk.bold("module.exports = { ... }")}.`
 				);
 				log.warn("Using default configuration...");
 			}
@@ -248,7 +248,7 @@ class Config {
 				this.values.fileUpload.baseUrl = undefined;
 
 				log.warn(
-					`The ${colors.bold("fileUpload.baseUrl")} you specified is invalid: ${String(
+					`The ${chalk.bold("fileUpload.baseUrl")} you specified is invalid: ${String(
 						e
 					)}`
 				);
@@ -260,7 +260,7 @@ class Config {
 		// Check if manifest exists, if not, the app most likely was not built
 		if (!fs.existsSync(manifestPath)) {
 			log.error(
-				`The client application was not built. Run ${colors.bold(
+				`The client application was not built. Run ${chalk.bold(
 					"NODE_ENV=production yarn build"
 				)} to resolve this.`
 			);

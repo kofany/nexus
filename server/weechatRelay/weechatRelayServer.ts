@@ -25,7 +25,7 @@ import * as fs from "fs";
 import WebSocket, {WebSocketServer} from "ws";
 import {EventEmitter} from "events";
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {WeeChatMessage, WeeChatParser} from "./weechatProtocol.js";
 import {WeeChatRelayClient} from "./weechatRelayClient.js";
 
@@ -75,7 +75,7 @@ export class WeeChatRelayServer extends EventEmitter {
 		};
 
 		log.info(
-			`${colors.green("[WeeChat Relay]")} Creating WeeChatRelayServer: ` +
+			`${chalk.green("[WeeChat Relay]")} Creating WeeChatRelayServer: ` +
 				`protocol=${this.config.protocol}, port=${this.config.port}, tls=${this.config.tls}`
 		);
 	}
@@ -94,7 +94,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 		const tlsStr = this.config.tls ? "TLS" : "plain";
 		log.info(
-			`${colors.green(
+			`${chalk.green(
 				"[WeeChat Relay]"
 			)} ✅ Started ${this.config.protocol.toUpperCase()} server (${tlsStr}) on ${
 				this.config.host
@@ -122,26 +122,26 @@ export class WeeChatRelayServer extends EventEmitter {
 				};
 
 				log.info(
-					`${colors.cyan("[WeeChat Relay]")} Using certificate: ${this.config.certPath}`
+					`${chalk.cyan("[WeeChat Relay]")} Using certificate: ${this.config.certPath}`
 				);
 
 				this.server = tls.createServer(options, (socket: tls.TLSSocket) => {
 					// Log TLS errors (handshake failures, etc.)
 					socket.on("error", (err) => {
 						log.error(
-							`${colors.red("[WeeChat Relay]")} TLS socket error: ${err.message}`
+							`${chalk.red("[WeeChat Relay]")} TLS socket error: ${err.message}`
 						);
-						log.error(`${colors.red("[WeeChat Relay]")} TLS error stack: ${err.stack}`);
+						log.error(`${chalk.red("[WeeChat Relay]")} TLS error stack: ${err.stack}`);
 					});
 
 					socket.on("secureConnect", () => {
-						log.info(`${colors.green("[WeeChat Relay]")} TLS handshake successful`);
+						log.info(`${chalk.green("[WeeChat Relay]")} TLS handshake successful`);
 					});
 
 					this.handleTcpConnection(socket);
 				});
 
-				log.info(`${colors.cyan("[WeeChat Relay]")} Starting TLS TCP server...`);
+				log.info(`${chalk.cyan("[WeeChat Relay]")} Starting TLS TCP server...`);
 			} else {
 				// Plain TCP server
 				this.server = new NetServer();
@@ -149,17 +149,17 @@ export class WeeChatRelayServer extends EventEmitter {
 					this.handleTcpConnection(socket);
 				});
 
-				log.info(`${colors.cyan("[WeeChat Relay]")} Starting plain TCP server...`);
+				log.info(`${chalk.cyan("[WeeChat Relay]")} Starting plain TCP server...`);
 			}
 
 			this.server.on("error", (err) => {
-				log.error(`${colors.red("[WeeChat Relay]")} TCP server error: ${err}`);
+				log.error(`${chalk.red("[WeeChat Relay]")} TCP server error: ${err}`);
 				reject(err);
 			});
 
 			this.server.listen(this.config.port, this.config.host, () => {
 				log.info(
-					`${colors.green("[WeeChat Relay]")} TCP server listening on ${
+					`${chalk.green("[WeeChat Relay]")} TCP server listening on ${
 						this.config.host
 					}:${this.config.port}`
 				);
@@ -187,7 +187,7 @@ export class WeeChatRelayServer extends EventEmitter {
 				});
 
 				log.info(
-					`${colors.cyan("[WeeChat Relay]")} Using certificate for WSS: ${
+					`${chalk.cyan("[WeeChat Relay]")} Using certificate for WSS: ${
 						this.config.certPath
 					}`
 				);
@@ -199,7 +199,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 				httpsServer.listen(this.config.port, this.config.host, () => {
 					log.info(
-						`${colors.green("[WeeChat Relay]")} WSS server listening on ${
+						`${chalk.green("[WeeChat Relay]")} WSS server listening on ${
 							this.config.host
 						}:${this.config.port}${this.config.wsPath}`
 					);
@@ -207,13 +207,13 @@ export class WeeChatRelayServer extends EventEmitter {
 				});
 
 				httpsServer.on("error", (err) => {
-					log.error(`${colors.red("[WeeChat Relay]")} HTTPS server error: ${err}`);
+					log.error(`${chalk.red("[WeeChat Relay]")} HTTPS server error: ${err}`);
 					reject(err);
 				});
 
 				this.server = httpsServer;
 				log.info(
-					`${colors.cyan("[WeeChat Relay]")} Starting WSS (WebSocket Secure) server...`
+					`${chalk.cyan("[WeeChat Relay]")} Starting WSS (WebSocket Secure) server...`
 				);
 			} else {
 				// Plain WebSocket
@@ -225,14 +225,14 @@ export class WeeChatRelayServer extends EventEmitter {
 
 				this.wsServer.on("listening", () => {
 					log.info(
-						`${colors.green("[WeeChat Relay]")} WebSocket server listening on ${
+						`${chalk.green("[WeeChat Relay]")} WebSocket server listening on ${
 							this.config.host
 						}:${this.config.port}${this.config.wsPath}`
 					);
 					resolve();
 				});
 
-				log.info(`${colors.cyan("[WeeChat Relay]")} Starting plain WebSocket server...`);
+				log.info(`${chalk.cyan("[WeeChat Relay]")} Starting plain WebSocket server...`);
 			}
 
 			this.wsServer.on("connection", (ws: WebSocket) => {
@@ -240,7 +240,7 @@ export class WeeChatRelayServer extends EventEmitter {
 			});
 
 			this.wsServer.on("error", (err) => {
-				log.error(`${colors.red("[WeeChat Relay]")} WebSocket server error: ${err}`);
+				log.error(`${chalk.red("[WeeChat Relay]")} WebSocket server error: ${err}`);
 				reject(err);
 			});
 		});
@@ -257,18 +257,18 @@ export class WeeChatRelayServer extends EventEmitter {
 		if ((socket as any).encrypted) {
 			const tlsSocket = socket as tls.TLSSocket;
 			log.info(
-				`${colors.green(
+				`${chalk.green(
 					"[WeeChat Relay]"
 				)} New TLS connection: ${clientId} from ${remoteAddr}`
 			);
 			log.info(
-				`${colors.cyan(
+				`${chalk.cyan(
 					"[WeeChat Relay]"
 				)} TLS version: ${tlsSocket.getProtocol()}, cipher: ${tlsSocket.getCipher()?.name}`
 			);
 		} else {
 			log.info(
-				`${colors.green(
+				`${chalk.green(
 					"[WeeChat Relay Bridge]"
 				)} New TCP connection: ${clientId} from ${remoteAddr}`
 			);
@@ -288,7 +288,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 		client.on("close", () => {
 			log.info(
-				`${colors.yellow("[WeeChat Relay Bridge]")} TCP connection closed: ${clientId}`
+				`${chalk.yellow("[WeeChat Relay Bridge]")} TCP connection closed: ${clientId}`
 			);
 			this.clients.delete(clientId);
 			this.emit("client:close", clientId);
@@ -296,7 +296,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 		client.on("error", (err) => {
 			log.error(
-				`${colors.red("[WeeChat Relay Bridge]")} TCP client error: ${clientId} - ${err}`
+				`${chalk.red("[WeeChat Relay Bridge]")} TCP client error: ${clientId} - ${err}`
 			);
 		});
 	}
@@ -307,7 +307,7 @@ export class WeeChatRelayServer extends EventEmitter {
 	private handleWebSocketConnection(ws: WebSocket): void {
 		const clientId = `ws-${this.clientIdCounter++}`;
 
-		log.info(`${colors.green("[WeeChat Relay Bridge]")} New WebSocket connection: ${clientId}`);
+		log.info(`${chalk.green("[WeeChat Relay Bridge]")} New WebSocket connection: ${clientId}`);
 
 		const client = new WeeChatRelayClient(clientId, ws, this.config);
 		this.clients.set(clientId, client);
@@ -323,7 +323,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 		client.on("close", () => {
 			log.info(
-				`${colors.yellow(
+				`${chalk.yellow(
 					"[WeeChat Relay Bridge]"
 				)} WebSocket connection closed: ${clientId}`
 			);
@@ -333,7 +333,7 @@ export class WeeChatRelayServer extends EventEmitter {
 
 		client.on("error", (err) => {
 			log.error(
-				`${colors.red(
+				`${chalk.red(
 					"[WeeChat Relay Bridge]"
 				)} WebSocket client error: ${clientId} - ${err}`
 			);
@@ -381,6 +381,6 @@ export class WeeChatRelayServer extends EventEmitter {
 			this.wsServer = null;
 		}
 
-		log.info(`${colors.yellow("[WeeChat Relay]")} Server stopped`);
+		log.info(`${chalk.yellow("[WeeChat Relay]")} Server stopped`);
 	}
 }

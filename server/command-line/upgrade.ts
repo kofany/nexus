@@ -1,5 +1,5 @@
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import {Command} from "commander";
@@ -28,13 +28,13 @@ program
 		if (packages.length) {
 			log.info("Upgrading the following packages:");
 			packages.forEach((p) => {
-				log.info(`- ${colors.green(p)}`);
+				log.info(`- ${chalk.green(p)}`);
 
 				if (Object.prototype.hasOwnProperty.call(packagesList, p)) {
 					argsList.push(p);
 					count++;
 				} else {
-					log.error(`${colors.green(p)} is not installed.`);
+					log.error(`${chalk.green(p)} is not installed.`);
 				}
 			});
 		} else {

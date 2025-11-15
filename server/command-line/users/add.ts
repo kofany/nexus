@@ -1,5 +1,5 @@
 import log from "../../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {Command} from "commander";
 import fs from "fs";
 import Helper from "../../helper.js";
@@ -29,7 +29,7 @@ program
 		}
 
 		if (users.includes(name)) {
-			log.error(`User ${colors.bold(name)} already exists.`);
+			log.error(`User ${chalk.bold(name)} already exists.`);
 			return;
 		}
 
@@ -75,8 +75,8 @@ function add(manager, name, password, enableLog) {
 	const hash = Helper.password.hash(password);
 	manager.addUser(name, hash, enableLog);
 
-	log.info(`User ${colors.bold(name)} created.`);
-	log.info(`User file located at ${colors.green(Config.getUserConfigPath(name))}.`);
+	log.info(`User ${chalk.bold(name)} created.`);
+	log.info(`User file located at ${chalk.green(Config.getUserConfigPath(name))}.`);
 }
 
 export default program;

@@ -1,6 +1,6 @@
 import _ from "lodash";
 import log from "../../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import path from "path";
 import semver from "semver";
 import Helper from "../../helper.js";
@@ -112,7 +112,7 @@ function getEnabledPackages(packageJson: string) {
 		const json = JSON.parse(fs.readFileSync(packageJson, "utf-8"));
 		return Object.keys(json.dependencies);
 	} catch (e: any) {
-		log.error(`Failed to read packages/package.json: ${colors.red(e)}`);
+		log.error(`Failed to read packages/package.json: ${chalk.red(e)}`);
 	}
 
 	return [];
@@ -149,7 +149,7 @@ function loadPackage(packageName: string) {
 
 		packageFile = require(packagePath);
 	} catch (e: any) {
-		log.error(`Package ${colors.bold(packageName)} could not be loaded: ${colors.red(e)}`);
+		log.error(`Package ${chalk.bold(packageName)} could not be loaded: ${chalk.red(e)}`);
 
 		if (e instanceof Error) {
 			log.debug(e.stack ? e.stack : e.message);
@@ -180,7 +180,7 @@ function loadPackage(packageName: string) {
 		packageFile.onServerStart(packageApis(packageInfo));
 	}
 
-	log.info(`Package ${colors.bold(packageName)} ${colors.green("v" + version)} loaded`);
+	log.info(`Package ${chalk.bold(packageName)} ${chalk.green("v" + version)} loaded`);
 
 	if (packageInfo.type !== "theme" && !experimentalWarningPrinted) {
 		experimentalWarningPrinted = true;

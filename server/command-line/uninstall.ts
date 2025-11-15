@@ -1,5 +1,5 @@
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {Command} from "commander";
 import Config from "../config.js";
 import Utils from "./utils.js";
@@ -20,17 +20,17 @@ program
 			!packages.dependencies ||
 			!Object.prototype.hasOwnProperty.call(packages.dependencies, packageName)
 		) {
-			log.warn(`${colors.green(packageName)} is not installed.`);
+			log.warn(`${chalk.green(packageName)} is not installed.`);
 			process.exit(1);
 		}
 
-		log.info(`Uninstalling ${colors.green(packageName)}...`);
+		log.info(`Uninstalling ${chalk.green(packageName)}...`);
 
 		try {
 			await Utils.executeYarnCommand("remove", packageName);
-			log.info(`${colors.green(packageName)} has been successfully uninstalled.`);
+			log.info(`${chalk.green(packageName)} has been successfully uninstalled.`);
 		} catch (code_1) {
-			log.error(`Failed to uninstall ${colors.green(packageName)}. Exit code: ${code_1}`);
+			log.error(`Failed to uninstall ${chalk.green(packageName)}. Exit code: ${code_1}`);
 			process.exit(1);
 		}
 	});

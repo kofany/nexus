@@ -1,5 +1,5 @@
 import _ from "lodash";
-import colors from "chalk";
+import chalk from "chalk";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -46,7 +46,7 @@ class ClientManager {
 
 		if (users.length === 0) {
 			log.info(
-				`There are currently no users. Create one with ${colors.bold(
+				`There are currently no users. Create one with ${chalk.bold(
 					"nexusirc add <name>"
 				)}.`
 			);
@@ -60,7 +60,7 @@ class ClientManager {
 
 			if (alreadySeenUsers.has(user)) {
 				log.error(
-					`There is more than one user named "${colors.bold(
+					`There is more than one user named "${chalk.bold(
 						user
 					)}". Usernames are now case insensitive, duplicate users will not load.`
 				);
@@ -104,7 +104,7 @@ class ClientManager {
 			if (client) {
 				client.quit(true);
 				this.clients = _.without(this.clients, client);
-				log.info(`User ${colors.bold(name)} disconnected and removed.`);
+				log.info(`User ${chalk.bold(name)} disconnected and removed.`);
 			}
 		});
 	}
@@ -128,7 +128,7 @@ class ClientManager {
 				 * @see https://github.com/thelounge/thelounge/issues/598
 				 */
 				client.config.password = userConfig.password;
-				log.info(`Password for user ${colors.bold(name)} was reset.`);
+				log.info(`Password for user ${chalk.bold(name)} was reset.`);
 			}
 		} else {
 			// SINGLE MODE: Always create IrssiClient (this fork is irssi-only)
@@ -145,17 +145,17 @@ class ClientManager {
 				};
 			}
 
-			log.info(`Loading user ${colors.bold(name)} in irssi proxy mode`);
+			log.info(`Loading user ${chalk.bold(name)} in irssi proxy mode`);
 			const irssiClient = new IrssiClient(this, name, userConfig as IrssiUserConfig);
 
 			// AUTOCONNECT: If irssi password is configured, connect immediately!
 			// This allows backend to connect to irssi BEFORE user logs in
 			if ((userConfig as IrssiUserConfig).irssiConnection?.passwordEncrypted) {
 				log.info(
-					`User ${colors.bold(name)} has irssi config - auto-connecting to irssi...`
+					`User ${chalk.bold(name)} has irssi config - auto-connecting to irssi...`
 				);
 				irssiClient.autoConnectToIrssi().catch((err) => {
-					log.error(`Autoconnect failed for user ${colors.bold(name)}: ${err}`);
+					log.error(`Autoconnect failed for user ${chalk.bold(name)}: ${err}`);
 				});
 			}
 
@@ -172,7 +172,7 @@ class ClientManager {
 	 * SINGLE MODE: All clients are IrssiClient
 	 */
 	async loginUser(client: IrssiClient, password: string): Promise<void> {
-		log.info(`Logging in irssi user ${colors.bold(client.name)}...`);
+		log.info(`Logging in irssi user ${chalk.bold(client.name)}...`);
 		await client.login(password);
 	}
 
@@ -195,7 +195,7 @@ class ClientManager {
 		const userPath = Config.getUserConfigPath(name);
 
 		if (fs.existsSync(userPath)) {
-			log.error(`User ${colors.green(name)} already exists.`);
+			log.error(`User ${chalk.green(name)} already exists.`);
 			return false;
 		}
 
@@ -223,7 +223,7 @@ class ClientManager {
 			});
 			fs.renameSync(tmpPath, userPath);
 		} catch (e: any) {
-			log.error(`Failed to create user ${colors.green(name)} (${e})`);
+			log.error(`Failed to create user ${chalk.green(name)} (${e})`);
 			throw e;
 		}
 
@@ -237,7 +237,7 @@ class ClientManager {
 				(userFolderStat.uid !== userFileStat.uid || userFolderStat.gid !== userFileStat.gid)
 			) {
 				log.warn(
-					`User ${colors.green(
+					`User ${chalk.green(
 						name
 					)} has been created, but with a different uid (or gid) than expected.`
 				);
@@ -292,7 +292,7 @@ class ClientManager {
 
 			return callback ? callback() : true;
 		} catch (e: any) {
-			log.error(`Failed to update user ${colors.green(client.name)} (${e})`);
+			log.error(`Failed to update user ${chalk.green(client.name)} (${e})`);
 
 			if (callback) {
 				callback(e);
@@ -304,7 +304,7 @@ class ClientManager {
 		const userPath = Config.getUserConfigPath(name);
 
 		if (!fs.existsSync(userPath)) {
-			log.error(`Tried to remove non-existing user ${colors.green(name)}.`);
+			log.error(`Tried to remove non-existing user ${chalk.green(name)}.`);
 			return false;
 		}
 
@@ -317,7 +317,7 @@ class ClientManager {
 		const userPath = Config.getUserConfigPath(name);
 
 		if (!fs.existsSync(userPath)) {
-			log.error(`Tried to read non-existing user ${colors.green(name)}`);
+			log.error(`Tried to read non-existing user ${chalk.green(name)}`);
 			return false;
 		}
 
@@ -325,7 +325,7 @@ class ClientManager {
 			const data = fs.readFileSync(userPath, "utf-8");
 			return JSON.parse(data) as IrssiUserConfig;
 		} catch (e: any) {
-			log.error(`Failed to read user ${colors.bold(name)}: ${e}`);
+			log.error(`Failed to read user ${chalk.bold(name)}: ${e}`);
 		}
 
 		return false;

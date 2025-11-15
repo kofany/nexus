@@ -1,5 +1,5 @@
 import log from "../../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import {Command} from "commander";
 import fs from "fs";
 import Helper from "../../helper.js";
@@ -27,7 +27,7 @@ program
 		}
 
 		if (!users.includes(name)) {
-			log.error(`User ${colors.bold(name)} does not exist.`);
+			log.error(`User ${chalk.bold(name)} does not exist.`);
 			return;
 		}
 
@@ -68,7 +68,7 @@ function change(name, password) {
 	});
 	fs.renameSync(pathTemp, pathReal);
 
-	log.info(`Successfully reset password for ${colors.bold(name)}.`);
+	log.info(`Successfully reset password for ${chalk.bold(name)}.`);
 }
 
 export default program;

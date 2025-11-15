@@ -1,6 +1,6 @@
 import fs from "fs";
 import net, {Socket} from "net";
-import colors from "chalk";
+import chalk from "chalk";
 import Helper from "./helper.js";
 import Config from "./config.js";
 import log from "./log.js";
@@ -20,7 +20,7 @@ class Identification {
 
 		if (typeof Config.values.oidentd === "string") {
 			this.oidentdFile = Helper.expandHome(Config.values.oidentd);
-			log.info(`Oidentd file: ${colors.green(this.oidentdFile)}`);
+			log.info(`Oidentd file: ${chalk.green(this.oidentdFile)}`);
 
 			this.refresh();
 		}
@@ -47,10 +47,10 @@ class Identification {
 					const address = server.address();
 
 					if (typeof address === "string") {
-						log.info(`Identd server available on ${colors.green(address)}`);
+						log.info(`Identd server available on ${chalk.green(address)}`);
 					} else if (address?.address) {
 						log.info(
-							`Identd server available on ${colors.green(
+							`Identd server available on ${chalk.green(
 								address.address + ":" + address.port.toString()
 							)}`
 						);

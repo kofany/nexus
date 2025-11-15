@@ -1,5 +1,5 @@
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 import fs from "fs";
 import path, {dirname} from "path";
 import {fileURLToPath} from "url";
@@ -30,7 +30,7 @@ function initalizeConfig() {
 			path.resolve(path.join(__dirname, "..", "..", "defaults", "config.js")),
 			Config.getConfigPath()
 		);
-		log.info(`Configuration file created at ${colors.green(Config.getConfigPath())}.`);
+		log.info(`Configuration file created at ${chalk.green(Config.getConfigPath())}.`);
 	}
 
 	fs.mkdirSync(Config.getUsersPath(), {recursive: true, mode: 0o700});

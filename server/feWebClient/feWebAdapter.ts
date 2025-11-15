@@ -19,7 +19,7 @@ import Prefix from "../models/prefix.js";
 import {ChanType, ChanState} from "../../shared/types/chan.js";
 import {MessageType} from "../../shared/types/msg.js";
 import log from "../log.js";
-import colors from "chalk";
+import chalk from "chalk";
 
 // Callback types for IrssiClient integration
 export type NetworkData = {

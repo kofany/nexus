@@ -1,7 +1,7 @@
 import log from "../log.js";
 import fs from "fs";
 import path from "path";
-import colors from "chalk";
+import chalk from "chalk";
 import {Command} from "commander";
 import Helper from "../helper.js";
 import Config from "../config.js";
@@ -101,7 +101,7 @@ function verifyFileOwner() {
 
 	if (uid === 0) {
 		log.warn(
-			`You are currently running NexusIRC as root. ${colors.bold.red(
+			`You are currently running NexusIRC as root. ${chalk.bold.red(
 				"We highly discourage running as root!"
 			)}`
 		);
