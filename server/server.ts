@@ -362,11 +362,21 @@ export default async function (
 
 			log.info("Exiting...");
 
-			// Close all client and IRC connections
+			// 1. Stop accepting new Socket.IO connections immediately
+			// This prevents race condition where new browsers connect during shutdown
+			sockets.close();
+			log.info("Stopped accepting new connections");
+
+			// 2. Wait for all clients to quit gracefully
 			if (manager) {
-				manager.clients.forEach((client) => {
-					void client.quit().catch((err) => log.error("Error during client quit:", err));
-				});
+				const quitPromises = manager.clients.map((client) =>
+					client.quit().catch((err) => {
+						log.error("Error during client quit:", err);
+					})
+				);
+
+				await Promise.all(quitPromises);
+				log.info("All clients quit successfully");
 			}
 
 			if (Config.values.prefetchStorage) {
@@ -375,10 +385,10 @@ export default async function (
 				(await import("./plugins/storage.js")).default.emptyDir();
 			}
 
-			// Forcefully exit after 3 seconds
+			// 3. Forcefully exit after 3 seconds (safety net)
 			suicideTimeout = setTimeout(() => process.exit(1), 3000);
 
-			// Close http server
+			// 4. Close HTTP server (now safe - no new connections)
 			server?.close(() => {
 				if (suicideTimeout !== null) {
 					clearTimeout(suicideTimeout);
