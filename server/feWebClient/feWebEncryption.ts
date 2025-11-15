@@ -36,11 +36,18 @@ const FE_WEB_SALT = "irssi-fe-web-v1";
  *
  * Message Format:
  * [IV (12 bytes)] [Ciphertext (variable)] [Auth Tag (16 bytes)]
+ *
+ * Performance: Static cache for derived keys (shared across instances)
+ * - Eliminates repeated PBKDF2 derivations (10,000 iterations each)
  */
 export class FeWebEncryption {
 	private password: string;
 	private key: Buffer | null = null;
 	private enabled: boolean;
+
+	// Static cache for derived keys (shared across instances)
+	private static keyCache = new Map<string, Buffer>();
+	private static readonly MAX_CACHE_SIZE = 100;
 
 	/**
 	 * @param password - WebSocket password (used for key derivation with FIXED salt)
@@ -52,15 +59,33 @@ export class FeWebEncryption {
 	}
 
 	/**
-	 * Derive encryption key from password using PBKDF2
+	 * Derive encryption key from password using PBKDF2 with caching
 	 *
 	 * Uses FIXED salt "irssi-fe-web-v1" as per fe-web v1.5 protocol
+	 * PBKDF2 is expensive (10,000 iterations), so cache the result
 	 */
 	async deriveKey(): Promise<void> {
 		if (!this.enabled || !this.password) {
 			log.debug("[FeWebEncryption] Encryption disabled or no password");
 			return;
 		}
+
+		// Check if key is already derived for this instance
+		if (this.key) {
+			return;
+		}
+
+		const cacheKey = `${this.password}:${FE_WEB_SALT}:10000`;
+
+		// Check static cache first
+		if (FeWebEncryption.keyCache.has(cacheKey)) {
+			log.debug("[FeWebEncryption] Using cached derived key");
+			this.key = FeWebEncryption.keyCache.get(cacheKey)!;
+			return;
+		}
+
+		// Derive key (expensive operation)
+		log.debug("[FeWebEncryption] Deriving new encryption key (PBKDF2)");
 
 		return new Promise((resolve, reject) => {
 			crypto.pbkdf2(
@@ -76,6 +101,18 @@ export class FeWebEncryption {
 					}
 
 					this.key = derivedKey;
+
+					// Cache with LRU eviction
+					if (FeWebEncryption.keyCache.size >= FeWebEncryption.MAX_CACHE_SIZE) {
+						const firstKey = FeWebEncryption.keyCache.keys().next().value;
+
+						if (firstKey !== undefined) {
+							FeWebEncryption.keyCache.delete(firstKey);
+							log.debug("[FeWebEncryption] Evicted oldest cached key (LRU)");
+						}
+					}
+
+					FeWebEncryption.keyCache.set(cacheKey, this.key);
 					log.debug(
 						"[FeWebEncryption] Encryption key derived successfully (fe-web v1.5)"
 					);
@@ -163,9 +200,33 @@ export class FeWebEncryption {
 	}
 
 	/**
+	 * Clear all cached keys (call on password change)
+	 */
+	static clearKeyCache(): void {
+		log.info("[FeWebEncryption] Clearing all cached encryption keys");
+		FeWebEncryption.keyCache.clear();
+	}
+
+	/**
+	 * Clear specific user's cached key
+	 */
+	static clearKeyCacheForPassword(password: string): void {
+		const cacheKey = `${password}:${FE_WEB_SALT}:10000`;
+
+		if (FeWebEncryption.keyCache.delete(cacheKey)) {
+			log.debug(`[FeWebEncryption] Cleared cached key for password`);
+		}
+	}
+
+	/**
 	 * Update encryption key (used when password changes)
 	 */
 	async updateKey(newPassword: string): Promise<void> {
+		// Remove old cache entry if password changed
+		if (this.password && this.password !== newPassword) {
+			FeWebEncryption.clearKeyCacheForPassword(this.password);
+		}
+
 		this.password = newPassword;
 		this.key = null;
 		await this.deriveKey();

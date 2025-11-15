@@ -43,6 +43,112 @@ import {
 } from "./types/irssi-network.js";
 import UAParser from "ua-parser-js";
 
+// LRU Cache for message deduplication (from encrypted.ts)
+class LRUCache<K, V> {
+	private cache: Map<K, V>;
+	private maxSize: number;
+
+	constructor(maxSize: number = 1000) {
+		this.cache = new Map();
+		this.maxSize = maxSize;
+	}
+
+	get(key: K): V | undefined {
+		const value = this.cache.get(key);
+
+		if (value !== undefined) {
+			// Move to end (most recently used)
+			this.cache.delete(key);
+			this.cache.set(key, value);
+		}
+
+		return value;
+	}
+
+	set(key: K, value: V): void {
+		// Remove oldest if at capacity
+		if (this.cache.size >= this.maxSize) {
+			const firstKey = this.cache.keys().next().value;
+
+			if (firstKey !== undefined) {
+				this.cache.delete(firstKey);
+			}
+		}
+
+		this.cache.set(key, value);
+	}
+
+	has(key: K): boolean {
+		return this.cache.has(key);
+	}
+
+	delete(key: K): void {
+		this.cache.delete(key);
+	}
+
+	clear(): void {
+		this.cache.clear();
+	}
+
+	get size(): number {
+		return this.cache.size;
+	}
+
+	entries(): IterableIterator<[K, V]> {
+		return this.cache.entries();
+	}
+}
+
+/**
+ * Message deduplication cache
+ * Prevents processing duplicate messages during reconnects/glitches
+ */
+class MessageDeduplicator {
+	private cache: LRUCache<string, number>; // messageKey -> timestamp
+	private readonly TTL_MS = 60000; // 1 minute
+
+	constructor(maxSize = 10000) {
+		this.cache = new LRUCache(maxSize);
+	}
+
+	/**
+	 * Check if message was recently processed
+	 */
+	isDuplicate(networkUuid: string, channelId: number, msgTime: number, msgText: string): boolean {
+		const key = `${networkUuid}:${channelId}:${msgTime}:${msgText.substring(0, 50)}`;
+
+		if (this.cache.has(key)) {
+			return true; // Duplicate
+		}
+
+		// Mark as seen
+		this.cache.set(key, Date.now());
+		return false;
+	}
+
+	/**
+	 * Clean expired entries (call periodically)
+	 */
+	cleanup(): void {
+		const now = Date.now();
+		const keysToDelete: string[] = [];
+
+		for (const [key, timestamp] of this.cache.entries()) {
+			if (now - timestamp > this.TTL_MS) {
+				keysToDelete.push(key);
+			}
+		}
+
+		for (const key of keysToDelete) {
+			this.cache.delete(key);
+		}
+
+		if (keysToDelete.length > 0) {
+			log.debug(`[MessageDeduplicator] Cleaned ${keysToDelete.length} expired entries`);
+		}
+	}
+}
+
 // irssi connection config (stored in user.json)
 export type IrssiConnectionConfig = {
 	host: string;
@@ -140,6 +246,16 @@ export class IrssiClient {
 	// Browser sessions (multiple browsers per user)
 	attachedBrowsers: Map<string, BrowserSession> = new Map();
 
+	// Message deduplication cache
+	private messageDedup = new MessageDeduplicator();
+	private lastMessageDedupCleanup = 0;
+
+	// Throttled nicklist updates (max 1 update per 500ms per channel)
+	private throttledNicklistUpdates = new Map<number, ReturnType<typeof _.throttle>>();
+
+	// Socket.IO room name for efficient broadcasts
+	private socketIoRoomName: string;
+
 	// WeeChat Relay server (for Lith clients) - per user!
 	weechatRelayServer: any = null; // WeeChatRelayServer instance
 	weechatRelayPassword: string | null = null; // Decrypted WeeChat password (in memory)
@@ -191,6 +307,7 @@ export class IrssiClient {
 		this.name = name;
 		this.manager = manager;
 		this.config = config;
+		this.socketIoRoomName = `user:${this.name}`;
 
 		// Ensure config has required fields
 		this.config.log = Boolean(this.config.log);
@@ -1113,6 +1230,9 @@ export class IrssiClient {
 			openChannel,
 		});
 
+		// JOIN Socket.IO room for efficient broadcasts
+		socket.join(this.socketIoRoomName);
+
 		log.info(
 			`User ${colors.bold(this.name)}: browser attached (${socketId}), total: ${
 				this.attachedBrowsers.size
@@ -1162,7 +1282,13 @@ export class IrssiClient {
 	 * Detach a browser session
 	 */
 	detachBrowser(socketId: string): void {
-		this.attachedBrowsers.delete(socketId);
+		const session = this.attachedBrowsers.get(socketId);
+
+		if (session) {
+			// LEAVE Socket.IO room
+			session.socket.leave(this.socketIoRoomName);
+			this.attachedBrowsers.delete(socketId);
+		}
 
 		log.info(
 			`User ${colors.bold(this.name)}: browser detached (${socketId}), remaining: ${
@@ -1404,15 +1530,14 @@ export class IrssiClient {
 
 	/**
 	 * Broadcast event to all attached browsers AND WeeChat clients
+	 * Uses Socket.IO rooms for efficient broadcasting (O(1) instead of O(n))
 	 */
 	private broadcastToAllBrowsers<Ev extends keyof ServerToClientEvents>(
 		event: Ev,
 		...args: Parameters<ServerToClientEvents[Ev]>
 	): void {
-		// Broadcast to Vue browsers
-		for (const [socketId, session] of this.attachedBrowsers) {
-			session.socket.emit(event, ...args);
-		}
+		// Broadcast to Vue browsers using Socket.IO room (efficient!)
+		this.manager.sockets.to(this.socketIoRoomName).emit(event, ...args);
 
 		// Forward to WeeChat Relay (Lith clients)
 		if (this.weechatNodeAdapter) {
@@ -1496,9 +1621,11 @@ export class IrssiClient {
 	async quit(shouldSave = true): Promise<void> {
 		log.info(`User ${colors.bold(this.name)} quitting...`);
 
-		// Disconnect all browsers
-		for (const [socketId, session] of this.attachedBrowsers) {
-			session.socket.disconnect(true);
+		// Disconnect all browsers via Socket.IO room (efficient)
+		const sockets = await this.manager.sockets.in(this.socketIoRoomName).fetchSockets();
+
+		for (const socket of sockets) {
+			socket.disconnect(true);
 		}
 
 		this.attachedBrowsers.clear();
@@ -2042,6 +2169,23 @@ export class IrssiClient {
 	private handleMessage(networkUuid: string, channelId: number, msg: Msg): void {
 		log.debug(`[IrssiClient] Message: ${msg.text?.substring(0, 50)}`);
 
+		// Check for duplicate messages (prevents double processing on reconnects)
+		const msgText = msg.text ?? "";
+		const msgTime = msg.time ? msg.time.getTime() : Date.now();
+
+		if (this.messageDedup.isDuplicate(networkUuid, channelId, msgTime, msgText)) {
+			log.debug(`[IrssiClient] Skipping duplicate message: ${msgText.substring(0, 30)}`);
+			return;
+		}
+
+		// Periodic cleanup (every 5 minutes)
+		const now = Date.now();
+
+		if (now - this.lastMessageDedupCleanup > 300000) {
+			this.messageDedup.cleanup();
+			this.lastMessageDedupCleanup = now;
+		}
+
 		const network = this.networks.find((n) => n.uuid === networkUuid);
 		const channel = network?.channels.find((c) => c.id === channelId);
 
@@ -2224,16 +2368,46 @@ export class IrssiClient {
 		});
 	}
 
+	/**
+	 * Get throttled nicklist update function for a channel
+	 * Throttles updates to max 1 per 500ms per channel (prevents spam during mass join/part)
+	 */
+	private getNicklistUpdateThrottle(channelId: number) {
+		if (!this.throttledNicklistUpdates.has(channelId)) {
+			const throttled = _.throttle(
+				(chanId: number, users: User[]) => {
+					this.broadcastToAllBrowsers("names", {
+						id: chanId,
+						users: users,
+					});
+				},
+				500, // Max 1 update per 500ms
+				{leading: true, trailing: true} // Fire immediately + after burst ends
+			);
+
+			this.throttledNicklistUpdates.set(channelId, throttled);
+		}
+
+		return this.throttledNicklistUpdates.get(channelId)!;
+	}
+
 	private handleNicklistUpdate(networkUuid: string, channelId: number, users: User[]): void {
 		log.debug(`[IrssiClient] Nicklist update: ${channelId} (${users.length} users)`);
 
 		// DON'T send 'users' event - it triggers frontend to request /names which is wasteful!
 		// In irssi mode we already have the data, just send 'names' event directly
 
-		this.broadcastToAllBrowsers("names", {
-			id: channelId,
-			users: users,
-		});
+		// Update internal state immediately (convert User[] to Map<string, User>)
+		const network = this.networks.find((n) => n.uuid === networkUuid);
+		const channel = network?.channels.find((c) => c.id === channelId);
+
+		if (channel) {
+			// Convert array to Map (key: lowercase nick)
+			channel.users = new Map(users.map((user) => [user.nick.toLowerCase(), user]));
+		}
+
+		// Broadcast to browsers with throttling (prevents spam during mass join/part)
+		this.getNicklistUpdateThrottle(channelId)(channelId, users);
 	}
 
 	private handleTopicUpdate(networkUuid: string, channelId: number, topic: string): void {
