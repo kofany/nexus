@@ -11,7 +11,7 @@
     {"path": "./shared"}
   ] /* Referenced projects. Requires TypeScript version 3.0 or later. */,
   "compilerOptions": {
-      // TODO: Remove eventually
-      "noImplicitAny": false /*Enable error reporting for expressions and declarations with an implied any type. See more: https://www.typescriptlang.org/tsconfig#noImplicitAny */
+    // TODO: Remove eventually
+    "noImplicitAny": false /*Enable error reporting for expressions and declarations with an implied any type. See more: https://www.typescriptlang.org/tsconfig#noImplicitAny */
   } /* Instructs the TypeScript compiler how to compile .ts files. */
 }
