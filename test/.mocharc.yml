@@ -16,6 +16,7 @@ node-option:
   - "experimental-specifier-resolution=node"
   - "no-warnings"
 require:
+  - "ts-node/register"
   - "test/fixtures/env.ts"
 globals:
   - "__VUE_PROD_DEVTOOLS__"
