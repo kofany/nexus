@@ -361,20 +361,24 @@ export class FeWebSocket extends EventEmitter {
 			try {
 				const socket = (this.ws as any)._socket;
 				if (socket) {
-					log.debug("[FeWebSocket] Destroying underlying TLS socket");
+					log.info("[FeWebSocket] Destroying underlying TLS socket");
+					log.info(`[FeWebSocket] Socket type: ${socket.constructor?.name}`);
 					socket.removeAllListeners(); // Remove all socket listeners
 					socket.destroy(); // Force close the TCP connection
 					socket.unref(); // Don't keep process alive
+					log.info("[FeWebSocket] TLS socket destroyed and unref'd");
+				} else {
+					log.warn("[FeWebSocket] No underlying socket found (ws._socket is null/undefined)");
 				}
 			} catch (err) {
-				log.warn(`[FeWebSocket] Failed to destroy underlying socket: ${err}`);
+				log.error(`[FeWebSocket] Failed to destroy underlying socket: ${err}`);
 			}
 
 			// Terminate the WebSocket immediately
 			this.ws.terminate();
 			this.ws = null;
 
-			log.debug("[FeWebSocket] Disconnect complete");
+			log.info("[FeWebSocket] Disconnect complete");
 			resolve();
 		});
 	}

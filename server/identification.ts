@@ -186,28 +186,37 @@ class Identification {
 	 */
 	close(): Promise<void> {
 		return new Promise((resolve) => {
+			log.info("[Identd] Starting close()...");
+
 			// Destroy all active connections
+			const connectionCount = this.connections.size;
+			log.info(`[Identd] Destroying ${connectionCount} active connections...`);
 			for (const connection of this.connections.values()) {
 				if (connection.socket) {
 					connection.socket.destroy();
 				}
 			}
 			this.connections.clear();
+			log.info("[Identd] All connections destroyed");
 
 			// Close identd server
 			if (this.server) {
-				log.info("Closing identd server...");
-				this.server.close(() => {
-					log.info("Identd server closed");
-					resolve();
-				});
+				log.info("[Identd] Server exists, attempting to close...");
 
-				// Force close after 100ms if callback doesn't fire
-				setTimeout(() => {
-					log.warn("Identd server close timeout, forcing resolve");
-					resolve();
-				}, 100);
+				// Try to close, but don't wait - resolve immediately
+				try {
+					this.server.close(() => {
+						log.info("[Identd] Server close callback fired");
+					});
+				} catch (err) {
+					log.error(`[Identd] Server close error: ${err}`);
+				}
+
+				// Resolve IMMEDIATELY - don't wait for callback or timeout
+				log.info("[Identd] Resolving immediately (not waiting for callback)");
+				resolve();
 			} else {
+				log.info("[Identd] No server to close, resolving");
 				resolve();
 			}
 		});
