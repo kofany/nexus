@@ -357,6 +357,19 @@ export class FeWebSocket extends EventEmitter {
 			this._isConnected = false;
 			this.isAuthenticated = false;
 
+			// AGGRESSIVE SHUTDOWN: Destroy underlying TLS socket first
+			try {
+				const socket = (this.ws as any)._socket;
+				if (socket) {
+					log.debug("[FeWebSocket] Destroying underlying TLS socket");
+					socket.removeAllListeners(); // Remove all socket listeners
+					socket.destroy(); // Force close the TCP connection
+					socket.unref(); // Don't keep process alive
+				}
+			} catch (err) {
+				log.warn(`[FeWebSocket] Failed to destroy underlying socket: ${err}`);
+			}
+
 			// Terminate the WebSocket immediately
 			this.ws.terminate();
 			this.ws = null;

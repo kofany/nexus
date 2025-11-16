@@ -487,6 +487,12 @@ export default async function (
 			}
 			log.info("All Socket.IO clients disconnected");
 
+			// 1b. Close identd server to prevent socket leak
+			if (manager?.identHandler && typeof manager.identHandler.close === "function") {
+				log.info("Closing identd server...");
+				await manager.identHandler.close();
+			}
+
 			// 2. Wait for all clients to quit gracefully
 			if (manager) {
 				const quitPromises = manager.clients.map((client) =>
@@ -542,9 +548,16 @@ export default async function (
 				server.close((err) => {
 					if (err) {
 						log.error(`HTTP server close error: ${err}`);
-					} else {
-						log.info("HTTP server closed successfully");
+						// Force exit even on error - server might already be closed
+						log.warn("Forcing exit despite server close error - killing process");
+						// Use process.kill for more forceful exit
+						process.kill(process.pid, "SIGTERM");
+						// Fallback to process.exit after 10ms
+						setTimeout(() => process.exit(0), 10);
+						return;
 					}
+
+					log.info("HTTP server closed successfully");
 
 					if (suicideTimeout !== null) {
 						clearTimeout(suicideTimeout);

@@ -13,6 +13,7 @@ class Identification {
 	private connectionId: number;
 	private connections: Map<number, Connection>;
 	private oidentdFile?: string;
+	private server?: net.Server; // Store server reference for shutdown
 
 	constructor(startedCallback: (identHandler: Identification, err?: Error) => void) {
 		this.connectionId = 0;
@@ -32,19 +33,19 @@ class Identification {
 				);
 			}
 
-			const server = net.createServer(this.serverConnection.bind(this));
+			this.server = net.createServer(this.serverConnection.bind(this));
 
-			server.on("error", (err) => {
+			this.server.on("error", (err) => {
 				startedCallback(this, err);
 			});
 
-			server.listen(
+			this.server.listen(
 				{
 					port: Config.values.identd.port || 113,
 					host: Config.values.bind,
 				},
 				() => {
-					const address = server.address();
+					const address = this.server!.address();
 
 					if (typeof address === "string") {
 						log.info(`Identd server available on ${chalk.green(address)}`);
@@ -178,6 +179,38 @@ class Identification {
 				}
 			});
 		}
+	}
+
+	/**
+	 * Close identd server and cleanup connections
+	 */
+	close(): Promise<void> {
+		return new Promise((resolve) => {
+			// Destroy all active connections
+			for (const connection of this.connections.values()) {
+				if (connection.socket) {
+					connection.socket.destroy();
+				}
+			}
+			this.connections.clear();
+
+			// Close identd server
+			if (this.server) {
+				log.info("Closing identd server...");
+				this.server.close(() => {
+					log.info("Identd server closed");
+					resolve();
+				});
+
+				// Force close after 100ms if callback doesn't fire
+				setTimeout(() => {
+					log.warn("Identd server close timeout, forcing resolve");
+					resolve();
+				}, 100);
+			} else {
+				resolve();
+			}
+		});
 	}
 }
 
