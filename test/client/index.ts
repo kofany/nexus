@@ -1,6 +1,10 @@
 // Recursively load all JS files (test files) in the `js` folder
-// @ts-expect-error ts-migrate(2339) FIXME: Property 'context' does not exist on type 'NodeReq... Remove this comment to see the full error message
-const context = require.context("./js", true, /.+\.js$/);
-context.keys().forEach(context);
+// Vite uses import.meta.glob() instead of Webpack's require.context()
+const modules = import.meta.glob<any>("./js/**/*.js", {eager: true});
 
-module.exports = context;
+// Execute each module (load the tests)
+Object.values(modules).forEach((module) => {
+	// The modules are already loaded due to eager: true
+});
+
+export default modules;

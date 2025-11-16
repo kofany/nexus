@@ -3,7 +3,9 @@
 	font-family: FontAwesome;
 	font-weight: normal;
 	font-style: normal;
-	src:
-		url("../fonts/fa-solid-900.woff2") format("woff2"),
-		url("../fonts/fa-solid-900.woff") format("woff");
+
+	/* Import directly from node_modules - Vite will process and bundle this */
+
+	/* Modern FontAwesome only ships woff2 (all modern browsers support it) */
+	src: url("@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2") format("woff2");
 }
