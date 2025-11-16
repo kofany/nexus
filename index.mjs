@@ -15,17 +15,20 @@ process.chdir(__dirname);
 // avoid ES6 parser errors or other issues
 const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
 
+const writeError = (...parts) => {
+	process.stderr.write(`${parts.join("")}${process.platform === "win32" ? "\r\n" : "\n"}`);
+};
+
 if (!semver.satisfies(process.version, pkg.engines.node)) {
-	/* eslint-disable no-console */
-	console.error(
-		"NexusIRC requires Node.js " +
-			pkg.engines.node +
-			" (current version: " +
-			process.version +
-			")"
+	writeError(
+		"NexusIRC requires Node.js ",
+		pkg.engines.node,
+		" (current version: ",
+		process.version,
+		")"
 	);
-	console.error("Please upgrade Node.js in order to use NexusIRC");
-	console.error();
+	writeError("Please upgrade Node.js in order to use NexusIRC");
+	writeError("");
 
 	process.exit(1);
 }
@@ -33,7 +36,7 @@ if (!semver.satisfies(process.version, pkg.engines.node)) {
 if (existsSync("./dist/server/index.js")) {
 	await import("./dist/server/index.js");
 } else {
-	console.error(
+	writeError(
 		"Files in ./dist/server/ not found. Please run `yarn build` before trying to run `node index.mjs`."
 	);
 

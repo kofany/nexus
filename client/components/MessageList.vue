@@ -81,6 +81,7 @@ import {
 } from "vue";
 import {useStore} from "../js/store";
 import {ClientChan, ClientMessage, ClientNetwork, ClientLinkPreview} from "../js/types";
+import logger from "../js/logger";
 
 type CondensedMessageContainer = {
 	type: "condensed";
@@ -174,8 +175,7 @@ export default defineComponent({
 
 			jumpToBottom();
 		}).catch((e) => {
-			// eslint-disable-next-line no-console
-			console.error("Error in new IntersectionObserver", e);
+			logger.error("Error in new IntersectionObserver", e);
 		});
 
 		const condensedMessages = computed(() => {

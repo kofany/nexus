@@ -1,5 +1,6 @@
 import socket from "./socket";
 import {store} from "./store";
+import logger from "./logger";
 
 export default {togglePushSubscription};
 
@@ -42,7 +43,7 @@ socket.once("push:issubscribed", function (hasSubscriptionOnServer) {
 		})
 		.catch((err) => {
 			store.commit("pushNotificationState", "unsupported");
-			console.error(err); // eslint-disable-line no-console
+			logger.error("Service worker registration failed", err);
 		});
 });
 
@@ -78,7 +79,7 @@ function togglePushSubscription() {
 		.catch((err) => {
 			store.commit("pushNotificationState", "unsupported");
 			store.commit("refreshDesktopNotificationState");
-			console.error(err); // eslint-disable-line no-console
+			logger.error("Push subscription toggle failed", err);
 		});
 }
 

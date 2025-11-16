@@ -3,6 +3,7 @@ import {store} from "../store";
 import {switchToChannel} from "../router";
 import {ClientChan} from "../types";
 import {toClientChan} from "../chan";
+import logger from "../logger";
 
 socket.on("join", function (data) {
 	const network = store.getters.findNetwork(data.network);
@@ -24,7 +25,6 @@ socket.on("join", function (data) {
 	if (chan) {
 		switchToChannel(chan.channel);
 	} else {
-		// eslint-disable-next-line no-console
-		console.error("Could not find channel", data.chan.id);
+		logger.error("Could not find channel", data.chan.id);
 	}
 });

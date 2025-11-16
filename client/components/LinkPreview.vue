@@ -148,6 +148,7 @@ import friendlysize from "../js/helpers/friendlysize";
 import {useStore} from "../js/store";
 import type {ClientChan, ClientLinkPreview} from "../js/types";
 import {imageViewerKey} from "./App.vue";
+import logger from "../js/logger";
 
 export default defineComponent({
 	name: "LinkPreview",
@@ -202,8 +203,7 @@ export default defineComponent({
 
 				showMoreButton.value = content.value.offsetWidth >= container.value.offsetWidth;
 			}).catch((e) => {
-				// eslint-disable-next-line no-console
-				console.error("Error in LinkPreview.handleResize", e);
+				logger.error("Error in LinkPreview.handleResize", e);
 			});
 		};
 
