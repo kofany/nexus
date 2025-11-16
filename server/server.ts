@@ -453,11 +453,16 @@ export default async function (
 				return;
 			}
 
+			log.info("Exiting...");
+
 			// Set suicide timeout IMMEDIATELY to prevent race condition
 			// (multiple Ctrl+C presses won't enter this function again)
-			suicideTimeout = setTimeout(() => process.exit(1), 3000);
-
-			log.info("Exiting...");
+			// Use unref() so it doesn't prevent process from exiting if event loop is empty
+			suicideTimeout = setTimeout(() => {
+				log.warn("Forced exit after 3s timeout");
+				process.exit(1);
+			}, 3000);
+			suicideTimeout.unref();
 
 			// 0. Stop metrics interval to prevent hanging
 			if (metricsInterval !== null) {
@@ -472,6 +477,15 @@ export default async function (
 			// This prevents race condition where new browsers connect during shutdown
 			sockets.close();
 			log.info("Stopped accepting new connections");
+
+			// Force disconnect ALL Socket.IO clients (close() only stops accepting new ones)
+			log.info("Disconnecting all Socket.IO clients...");
+			const connectedSockets = await sockets.fetchSockets();
+			log.info(`Found ${connectedSockets.length} connected Socket.IO clients`);
+			for (const socket of connectedSockets) {
+				socket.disconnect(true);
+			}
+			log.info("All Socket.IO clients disconnected");
 
 			// 2. Wait for all clients to quit gracefully
 			if (manager) {
@@ -491,38 +505,94 @@ export default async function (
 				(await import("./plugins/storage.js")).default.emptyDir();
 			}
 
-			// 3. Close HTTP server (now safe - no new connections)
-			server?.close(() => {
-				if (suicideTimeout !== null) {
-					clearTimeout(suicideTimeout);
-				}
+			// Debug: Show what's keeping the process alive BEFORE server.close()
+			log.info("Checking active handles before server.close()...");
+			const handlesBefore = (process as any)._getActiveHandles?.() || [];
+			const requestsBefore = (process as any)._getActiveRequests?.() || [];
 
-				// Debug: Show what's keeping the process alive
-				log.info("Checking active handles...");
-				const handles = (process as any)._getActiveHandles?.() || [];
-				const requests = (process as any)._getActiveRequests?.() || [];
+			log.info(`Active handles: ${handlesBefore.length}`);
+			log.info(`Active requests: ${requestsBefore.length}`);
 
-				log.info(`Active handles: ${handles.length}`);
-				log.info(`Active requests: ${requests.length}`);
+			if (handlesBefore.length > 0) {
+				log.warn("⚠️  Active handles preventing clean exit:");
+				handlesBefore.forEach((handle: any, idx: number) => {
+					const type = handle.constructor?.name || "Unknown";
+					const fd = (handle as any).fd || (handle as any)._handle?.fd || "N/A";
+					log.warn(`  [${idx}] ${type} (fd: ${fd})`);
+				});
+			}
 
-				if (handles.length > 0) {
-					log.warn("⚠️  Active handles preventing exit:");
-					handles.forEach((handle: any, idx: number) => {
-						const type = handle.constructor?.name || "Unknown";
-						log.warn(`  [${idx}] ${type}`);
+			if (requestsBefore.length > 0) {
+				log.warn("⚠️  Active requests:");
+				requestsBefore.forEach((req: any, idx: number) => {
+					const type = req.constructor?.name || "Unknown";
+					log.warn(`  [${idx}] ${type}`);
+				});
+			}
+
+			// 3. Close all active connections forcefully
+			if (server && typeof (server as any).closeAllConnections === "function") {
+				log.info("Closing all active HTTP connections...");
+				(server as any).closeAllConnections();
+			}
+
+			// 4. Close HTTP server
+			if (server) {
+				log.info("Closing HTTP server...");
+				server.close((err) => {
+					if (err) {
+						log.error(`HTTP server close error: ${err}`);
+					} else {
+						log.info("HTTP server closed successfully");
+					}
+
+					if (suicideTimeout !== null) {
+						clearTimeout(suicideTimeout);
+					}
+
+					process.exit(0);
+				});
+
+				// Use process.nextTick for immediate execution in next event loop iteration
+				// This will fire before any I/O operations, so it will show diagnostics
+				// even if server.close() callback is blocked
+				process.nextTick(() => {
+					log.info("nextTick: Waiting for server.close() callback...");
+
+					// Now use setImmediate to check shortly after
+					// setImmediate fires after I/O, so if server.close() hasn't fired by then,
+					// we know something is blocking it
+					setImmediate(() => {
+						// Give server.close() a bit more time with setTimeout
+						setTimeout(() => {
+							log.warn("⚠️  server.close() callback didn't fire after 100ms, forcing exit");
+							log.info("Final active handles check:");
+							const finalHandles = (process as any)._getActiveHandles?.() || [];
+							const finalRequests = (process as any)._getActiveRequests?.() || [];
+							log.info(`Active handles: ${finalHandles.length}`);
+							log.info(`Active requests: ${finalRequests.length}`);
+							if (finalHandles.length > 0) {
+								finalHandles.forEach((handle: any, idx: number) => {
+									const type = handle.constructor?.name || "Unknown";
+									log.warn(`  [${idx}] ${type}`);
+								});
+							}
+							if (finalRequests.length > 0) {
+								finalRequests.forEach((req: any, idx: number) => {
+									const type = req.constructor?.name || "Unknown";
+									log.warn(`  [${idx}] ${type}`);
+								});
+							}
+							// Force exit regardless of what's blocking
+							log.warn("Forcing process.exit(0) to bypass event loop blockers");
+							process.exit(0);
+						}, 100);
 					});
-				}
-
-				if (requests.length > 0) {
-					log.warn("⚠️  Active requests preventing exit:");
-					requests.forEach((req: any, idx: number) => {
-						const type = req.constructor?.name || "Unknown";
-						log.warn(`  [${idx}] ${type}`);
-					});
-				}
-
+				});
+			} else {
+				log.warn("No HTTP server to close, exiting immediately");
 				process.exit(0);
-			});
+			}
 		};
 
 		/* eslint-disable @typescript-eslint/no-misused-promises */
