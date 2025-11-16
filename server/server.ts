@@ -465,6 +465,9 @@ export default async function (
 				metricsInterval = null;
 			}
 
+			// 0b. Stop changelog update check timer to prevent hanging
+			changelog.cleanup();
+
 			// 1. Stop accepting new Socket.IO connections immediately
 			// This prevents race condition where new browsers connect during shutdown
 			sockets.close();

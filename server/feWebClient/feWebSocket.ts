@@ -344,28 +344,25 @@ export class FeWebSocket extends EventEmitter {
 				return;
 			}
 
-			// Wait for close event before resolving
-			const onClose = () => {
-				this._isConnected = false;
-				this.isAuthenticated = false;
-				log.debug("[FeWebSocket] Disconnect complete");
-				resolve();
-			};
+			// Remove all event listeners to prevent event loop blocking
+			this.ws.removeAllListeners("open");
+			this.ws.removeAllListeners("message");
+			this.ws.removeAllListeners("error");
+			this.ws.removeAllListeners("close");
 
-			this.ws.once("close", onClose);
+			// Clear all message handlers to prevent memory leaks
+			this.messageHandlers.clear();
 
-			// Timeout safety - resolve after 1s even if close doesn't come
-			setTimeout(() => {
-				this.ws?.removeListener("close", onClose);
-				this._isConnected = false;
-				this.isAuthenticated = false;
-				log.warn("[FeWebSocket] Disconnect timeout - forcing resolve");
-				resolve();
-			}, 1000);
+			// Set state before terminating
+			this._isConnected = false;
+			this.isAuthenticated = false;
 
-			// Terminate (should trigger close event)
+			// Terminate the WebSocket immediately
 			this.ws.terminate();
 			this.ws = null;
+
+			log.debug("[FeWebSocket] Disconnect complete");
+			resolve();
 		});
 	}
 

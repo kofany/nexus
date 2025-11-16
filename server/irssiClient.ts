@@ -1627,6 +1627,19 @@ export class IrssiClient {
 
 		this.attachedBrowsers.clear();
 
+		// Clear all pending request timeouts to prevent event loop blocking
+		for (const [requestId, pending] of this.pendingRequests.entries()) {
+			clearTimeout(pending.timeout);
+			pending.reject(new Error("Client shutdown"));
+		}
+		this.pendingRequests.clear();
+
+		for (const [requestId, pending] of this.pendingListRequests.entries()) {
+			clearTimeout(pending.timeout);
+			pending.reject(new Error("Client shutdown"));
+		}
+		this.pendingListRequests.clear();
+
 		// Stop WeeChat Relay server
 		if (this.weechatRelayServer) {
 			await this.stopWeeChatRelay();
@@ -3207,6 +3220,12 @@ export class IrssiClient {
 		if (!this.weechatRelayServer) {
 			return;
 		}
+
+		// Remove all event listeners to prevent event loop blocking
+		this.weechatRelayServer.removeAllListeners("clients:first");
+		this.weechatRelayServer.removeAllListeners("clients:none");
+		this.weechatRelayServer.removeAllListeners("client:authenticated");
+		this.weechatRelayServer.removeAllListeners("client:close");
 
 		await this.weechatRelayServer.stop();
 		this.weechatRelayServer = null;

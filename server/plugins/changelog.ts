@@ -11,12 +11,16 @@ const TIME_TO_LIVE = 15 * 60 * 1000; // 15 minutes, in milliseconds
 // Use local variable for mutable state instead of module.exports (ESM compatibility)
 let isUpdateAvailable = false;
 
+// Store the update check timer so it can be cleared on shutdown
+let updateCheckTimer: NodeJS.Timeout | null = null;
+
 export default {
 	get isUpdateAvailable() {
 		return isUpdateAvailable;
 	},
 	fetch,
 	checkForUpdates,
+	cleanup,
 };
 const versions: SharedChangelogData = {
 	current: {
@@ -122,7 +126,8 @@ function checkForUpdates(manager: ClientManager) {
 		.then((versionData) => {
 			if (!isUpdateAvailable) {
 				// Check for updates every 24 hours + random jitter of <3 hours
-				setTimeout(
+				// Store the timer so it can be cleared on shutdown
+				updateCheckTimer = setTimeout(
 					() => checkForUpdates(manager),
 					24 * 3600 * 1000 + Math.floor(Math.random() * 10000000)
 				);
@@ -144,4 +149,15 @@ function checkForUpdates(manager: ClientManager) {
 		.catch((error: Error) => {
 			log.error(`Failed to check for updates: ${error.message}`);
 		});
+}
+
+/**
+ * Clear the update check timer to allow clean shutdown
+ */
+function cleanup() {
+	if (updateCheckTimer !== null) {
+		clearTimeout(updateCheckTimer);
+		updateCheckTimer = null;
+		log.debug("Changelog update check timer cleared");
+	}
 }
