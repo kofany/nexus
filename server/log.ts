@@ -1,10 +1,43 @@
 import chalk from "chalk";
 import {read} from "read";
+import util from "util";
 
 function timestamp() {
 	const datetime = new Date().toISOString().split(".")[0].replace("T", " ");
 
 	return chalk.dim(datetime);
+}
+
+const EOL = process.platform === "win32" ? "\r\n" : "\n";
+
+function formatArgs(args: unknown[]): string {
+	return args
+		.map((arg) =>
+			typeof arg === "string"
+				? arg
+				: util.inspect(arg, {
+						breakLength: Number.POSITIVE_INFINITY,
+						colors: false,
+						depth: null,
+					})
+		)
+		.join(" ");
+}
+
+function writeLine(stream: NodeJS.WriteStream, prefix: string, args: unknown[]): void {
+	const formattedArgs = formatArgs(args);
+	const parts = [timestamp(), prefix];
+
+	if (formattedArgs) {
+		parts.push(formattedArgs);
+	}
+
+	stream.write(parts.join(" ") + EOL);
+}
+
+function writeRaw(stream: NodeJS.WriteStream, args: unknown[]): void {
+	const output = formatArgs(args);
+	stream.write((output || "") + EOL);
 }
 
 // Log levels: error (0), warn (1), info (2), debug (3)
@@ -23,29 +56,27 @@ if (process.env.LOG_LEVEL) {
 }
 
 const log = {
-	/* eslint-disable no-console */
-	error(...args: string[]) {
-		console.error(timestamp(), chalk.red("[ERROR]"), ...args);
+	error(...args: unknown[]) {
+		writeLine(process.stderr, chalk.red("[ERROR]"), args);
 	},
-	warn(...args: string[]) {
+	warn(...args: unknown[]) {
 		if (logLevel >= 1) {
-			console.error(timestamp(), chalk.yellow("[WARN]"), ...args);
+			writeLine(process.stderr, chalk.yellow("[WARN]"), args);
 		}
 	},
-	info(...args: string[]) {
+	info(...args: unknown[]) {
 		if (logLevel >= 2) {
-			console.log(timestamp(), chalk.blue("[INFO]"), ...args);
+			writeLine(process.stdout, chalk.blue("[INFO]"), args);
 		}
 	},
-	debug(...args: string[]) {
+	debug(...args: unknown[]) {
 		if (logLevel >= 3) {
-			console.log(timestamp(), chalk.green("[DEBUG]"), ...args);
+			writeLine(process.stdout, chalk.green("[DEBUG]"), args);
 		}
 	},
-	raw(...args: string[]) {
-		console.log(...args);
+	raw(...args: unknown[]) {
+		writeRaw(process.stdout, args);
 	},
-	/* eslint-enable no-console */
 
 	async prompt(
 		options: {prompt?: string; default?: string; text: string; silent?: boolean},

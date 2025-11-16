@@ -30,8 +30,9 @@ describe("Server", function () {
 				return;
 			}
 
-			// eslint-disable-next-line no-console
-			console.error(`Unhandled log.warn in server tests: ${args.join(" ")}`);
+			process.stderr.write(
+				`Unhandled log.warn in server tests: ${args.join(" ")}${process.platform === "win32" ? "\r\n" : "\n"}`
+			);
 		});
 
 		checkForUpdatesStub = sinon.stub(changelog, "checkForUpdates");

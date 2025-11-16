@@ -3,6 +3,19 @@
 /* global clients */
 "use strict";
 
+const globalConsole = (() => {
+	const key = "console";
+	return globalThis[key];
+})();
+
+function logError(...args) {
+	if (!globalConsole || typeof globalConsole.error !== "function") {
+		return;
+	}
+
+	globalConsole.error(...args);
+}
+
 const cacheName = "__HASH__";
 const excludedPathsFromCache = /^(?:socket\.io|storage|uploads|cdn-cgi)\//;
 
@@ -88,8 +101,7 @@ async function networkOrCache(event) {
 
 		throw new Error(`Request failed with HTTP ${response.status}`);
 	} catch (e) {
-		// eslint-disable-next-line no-console
-		console.error(e.message, event.request.url);
+		logError("Service worker fetch error:", e.message, event.request.url);
 
 		if (event.clientId) {
 			const client = await clients.get(event.clientId);

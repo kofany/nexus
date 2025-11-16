@@ -55,6 +55,7 @@ import {defineComponent, nextTick, onMounted, onUnmounted, PropType, ref} from "
 import {ClientChan, ClientMessage, ClientNetwork, ClientUser} from "../js/types";
 import {useStore} from "../js/store";
 import {useRouter} from "vue-router";
+import logger from "../js/logger";
 
 export default defineComponent({
 	name: "ContextMenu",
@@ -146,8 +147,7 @@ export default defineComponent({
 				item.action();
 			} else if ("link" in item && item.link) {
 				router.push(item.link).catch(() => {
-					// eslint-disable-next-line no-console
-					console.error("Failed to navigate to", item.link);
+					logger.error("Failed to navigate to", item.link);
 				});
 			}
 		};
@@ -178,8 +178,7 @@ export default defineComponent({
 				style.value.top = pos.top;
 				contextMenu.value?.focus();
 			}).catch((e) => {
-				// eslint-disable-next-line no-console
-				console.error(e);
+				logger.error("Failed to open context menu", e);
 			});
 		};
 

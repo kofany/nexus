@@ -9,6 +9,7 @@ import {router} from "./router";
 import socket from "./socket";
 import "./socket-events"; // this sets up all socket event listeners, do not remove
 import eventbus from "./eventbus";
+import logger from "./logger";
 
 import "./webpush";
 import "./keybinds";
@@ -79,6 +80,5 @@ VueApp.config.errorHandler = function (e) {
 		store.commit("currentUserVisibleError", `Vue error: ${String(e)}`);
 	}
 
-	// eslint-disable-next-line no-console
-	console.error(e);
+	logger.error("Vue error", e);
 };
