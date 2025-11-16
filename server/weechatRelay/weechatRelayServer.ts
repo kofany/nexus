@@ -280,6 +280,16 @@ export class WeeChatRelayServer extends EventEmitter {
 		// Forward events
 		client.on("authenticated", (user) => {
 			this.emit("client:authenticated", clientId, user);
+
+			// Emit "clients:first" when first client connects (for lazy emit optimization)
+			if (this.clients.size === 1) {
+				this.emit("clients:first");
+				log.info(
+					`${chalk.green(
+						"[WeeChat Relay]"
+					)} First client connected - starting event forwarding`
+				);
+			}
 		});
 
 		client.on("command", (command, args) => {
@@ -292,6 +302,16 @@ export class WeeChatRelayServer extends EventEmitter {
 			);
 			this.clients.delete(clientId);
 			this.emit("client:close", clientId);
+
+			// Emit "clients:none" when last client disconnects (for lazy emit optimization)
+			if (this.clients.size === 0) {
+				this.emit("clients:none");
+				log.info(
+					`${chalk.yellow(
+						"[WeeChat Relay]"
+					)} Last client disconnected - stopping event forwarding`
+				);
+			}
 		});
 
 		client.on("error", (err) => {
@@ -315,6 +335,16 @@ export class WeeChatRelayServer extends EventEmitter {
 		// Forward events
 		client.on("authenticated", (user) => {
 			this.emit("client:authenticated", clientId, user);
+
+			// Emit "clients:first" when first client connects (for lazy emit optimization)
+			if (this.clients.size === 1) {
+				this.emit("clients:first");
+				log.info(
+					`${chalk.green(
+						"[WeeChat Relay]"
+					)} First client connected - starting event forwarding`
+				);
+			}
 		});
 
 		client.on("command", (command, args) => {
@@ -327,6 +357,16 @@ export class WeeChatRelayServer extends EventEmitter {
 			);
 			this.clients.delete(clientId);
 			this.emit("client:close", clientId);
+
+			// Emit "clients:none" when last client disconnects (for lazy emit optimization)
+			if (this.clients.size === 0) {
+				this.emit("clients:none");
+				log.info(
+					`${chalk.yellow(
+						"[WeeChat Relay]"
+					)} Last client disconnected - stopping event forwarding`
+				);
+			}
 		});
 
 		client.on("error", (err) => {
@@ -350,6 +390,22 @@ export class WeeChatRelayServer extends EventEmitter {
 	 */
 	getClients(): WeeChatRelayClient[] {
 		return Array.from(this.clients.values());
+	}
+
+	/**
+	 * Check if any clients are connected
+	 * Used to optimize event forwarding - don't emit when no one is listening
+	 */
+	hasClients(): boolean {
+		return this.clients.size > 0;
+	}
+
+	/**
+	 * Get number of connected clients
+	 * Used for metrics and monitoring
+	 */
+	getConnectionCount(): number {
+		return this.clients.size;
 	}
 
 	/**
