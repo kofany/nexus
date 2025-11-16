@@ -47,7 +47,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.11.1"
   },
   "files": [
     "./.nexusirc_home",
@@ -69,6 +69,7 @@
     "commander": "14.0.2",
     "content-disposition": "0.5.4",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "file-type": "21.1.0",
     "filenamify": "7.0.1",
     "got": "14.6.4",
@@ -77,6 +78,7 @@
     "lodash": "4.17.21",
     "mime-types": "3.0.1",
     "package-json": "10.0.1",
+    "prom-client": "^15.1.3",
     "read": "5.0.1",
     "read-chunk": "5.0.0",
     "semver": "7.7.3",
