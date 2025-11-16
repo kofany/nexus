@@ -180,7 +180,7 @@ export default [
 	{
 		files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
 		languageOptions: {
-			ecmaVersion: 2022,
+			ecmaVersion: 2024,
 			sourceType: "module",
 			globals: {
 				...globals.es6,
@@ -227,7 +227,7 @@ export default [
 		files: ["**/*.vue"],
 		languageOptions: {
 			parser: vueParser,
-			ecmaVersion: 2022,
+			ecmaVersion: 2024,
 			parserOptions: {
 				ecmaFeatures: {
 					jsx: true,

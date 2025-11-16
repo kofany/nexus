@@ -17,6 +17,8 @@ import Config, {ConfigType} from "./config.js";
 import Identification from "./identification.js";
 import changelog from "./plugins/changelog.js";
 import Auth from "./plugins/auth.js";
+import {register as metricsRegister, updateMetrics} from "./plugins/metrics.js";
+import rateLimit from "express-rate-limit";
 
 import themes from "./plugins/packages/themes.js";
 themes.loadLocalThemes();
@@ -126,6 +128,21 @@ export default async function (
 		(await import("./plugins/dev-server.js")).default(app);
 	}
 
+	// Rate limiting configuration
+	const apiLimiter = rateLimit({
+		windowMs: 15 * 60 * 1000, // 15 minutes
+		max: 100, // Limit each IP to 100 requests per windowMs
+		message: "Too many requests from this IP, please try again later.",
+		standardHeaders: true, // Return rate limit info in headers
+		legacyHeaders: false,
+	});
+
+	const uploadLimiter = rateLimit({
+		windowMs: 60 * 60 * 1000, // 1 hour
+		max: 10, // 10 uploads per hour
+		message: "Upload limit exceeded, please try again later.",
+	});
+
 	app.set("env", "production")
 		.disable("x-powered-by")
 		.use(allRequests)
@@ -165,6 +182,7 @@ export default async function (
 	});
 
 	if (Config.values.fileUpload.enable) {
+		app.use("/uploads", uploadLimiter);
 		Uploader.router(app);
 	}
 
@@ -194,6 +212,70 @@ export default async function (
 
 		const packagePath = Config.getPackageModulePath(packageName);
 		return res.sendFile(path.join(packagePath, fileName));
+	});
+
+	// Health check endpoint (detailed)
+	app.get("/health", (req, res) => {
+		const health = {
+			status: "ok",
+			timestamp: new Date().toISOString(),
+			uptime: process.uptime(),
+			version: Helper.getVersion(),
+
+			system: {
+				memory: {
+					used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+					total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+					external: Math.round(process.memoryUsage().external / 1024 / 1024),
+					rss: Math.round(process.memoryUsage().rss / 1024 / 1024),
+				},
+				cpu: process.cpuUsage(),
+				platform: process.platform,
+				nodeVersion: process.version,
+			},
+
+			irssi: {
+				totalUsers: manager?.clients?.length || 0,
+				connectedUsers:
+					manager?.clients?.filter((c) => c.irssiConnection?.isConnected()).length || 0,
+				totalNetworks:
+					manager?.clients?.reduce((sum, c) => sum + c.networks.length, 0) || 0,
+			},
+
+			sockets: {
+				// Socket.IO v4: io.sockets.sockets is a Map<string, Socket>
+				connected: (manager?.sockets?.sockets as any)?.size || 0,
+			},
+		};
+
+		res.json(health);
+	});
+
+	// Liveness probe (for k8s/docker)
+	app.get("/healthz", (req, res) => {
+		res.sendStatus(200);
+	});
+
+	// Readiness probe
+	app.get("/ready", (req, res) => {
+		const isReady = manager && manager.clients.length > 0;
+
+		if (isReady) {
+			res.sendStatus(200);
+		} else {
+			res.sendStatus(503); // Service Unavailable
+		}
+	});
+
+	// Prometheus metrics endpoint
+	app.get("/metrics", async (req, res) => {
+		// Update metrics before serving
+		if (manager) {
+			updateMetrics(manager);
+		}
+
+		res.set("Content-Type", metricsRegister.contentType);
+		res.end(await metricsRegister.metrics());
 	});
 
 	let server: import("http").Server | import("https").Server;
@@ -319,6 +401,15 @@ export default async function (
 
 		manager = new ClientManager();
 		packages.loadPackages();
+
+		// Update metrics periodically (skip in test environment to prevent hanging)
+		if (process.env.NODE_ENV !== "test") {
+			setInterval(() => {
+				if (manager) {
+					updateMetrics(manager);
+				}
+			}, 5000); // Every 5 seconds
+		}
 
 		const defaultTheme = themes.getByName(Config.values.theme);
 
