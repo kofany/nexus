@@ -1,11 +1,13 @@
-// This creates a version of `require()` in the context of the current
-// directory, so we iterate over its content, which is a map statically built by
-// Webpack.
-// Second argument says it's recursive, third makes sure we only load templates.
-const requireViews = require.context(".", false, /\.vue$/);
+// Vite uses import.meta.glob() instead of Webpack's require.context()
+// This loads all .vue files in the current directory
+// { eager: true } makes it synchronous like require.context() was
+const modules = import.meta.glob<{default: any}>("./*.vue", {eager: true});
 
-export default requireViews.keys().reduce((acc: Record<string, any>, path) => {
-	acc["message-" + path.substring(2, path.length - 4)] = requireViews(path).default;
+export default Object.keys(modules).reduce((acc: Record<string, any>, path) => {
+	// Path format: "./ComponentName.vue"
+	// Extract component name without "./" and ".vue"
+	const componentName = path.substring(2, path.length - 4);
+	acc["message-" + componentName] = modules[path].default;
 
 	return acc;
 }, {});

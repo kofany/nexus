@@ -47,7 +47,7 @@ describe("public folder", function () {
 			expect(err).to.be.null;
 
 			expect(contents.includes("var(--body-color)")).to.be.true;
-			expect(contents.includes("url(../fonts/fa-solid-900.woff2)")).to.be.true;
+			expect(contents.includes("url(/fonts/fa-solid-900.woff2)")).to.be.true;
 			expect(contents.includes(".tooltipped{position:relative}")).to.be.true;
 			expect(contents.includes("sourceMappingURL")).to.be.true;
 

@@ -4,21 +4,21 @@ import type {ServerToClientEvents, ClientToServerEvents} from "../../shared/type
 type Socket = rawSocket<ServerToClientEvents, ClientToServerEvents>;
 
 const socket: Socket = io({
-    transports: JSON.parse(document.body.dataset.transports || "['polling', 'websocket']"),
-    path: window.location.pathname + "socket.io/",
-    autoConnect: false,
-    reconnection: !document.body.classList.contains("public"),
+	transports: JSON.parse(document.body.dataset.transports || "['polling', 'websocket']"),
+	path: window.location.pathname + "socket.io/",
+	autoConnect: false,
+	reconnection: !document.body.classList.contains("public"),
 });
 
 // Ease debugging socket during development
 if (import.meta.env.DEV) {
-    window.socket = socket;
+	window.socket = socket;
 }
 
 declare global {
-    interface Window {
-        socket: Socket;
-    }
+	interface Window {
+		socket: Socket;
+	}
 }
 
 export default socket;

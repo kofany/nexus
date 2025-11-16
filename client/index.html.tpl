@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, user-scalable=no">
 
     <link rel="preload" as="script" href="js/loading-error-handlers.js?v=<%- cacheBust %>">
-    <link rel="preload" as="script" href="js/bundle.vendor.js?v=<%- cacheBust %>">
-    <link rel="preload" as="script" href="js/bundle.js?v=<%- cacheBust %>">
+    <link rel="modulepreload" href="js/bundle.vendor.js?v=<%- cacheBust %>">
+    <link rel="modulepreload" href="js/bundle.js?v=<%- cacheBust %>">
 
     <link rel="stylesheet" href="css/style.css?v=<%- cacheBust %>">
     <link id="theme" rel="stylesheet" href="themes/<%- theme %>.css" data-server-theme="<%- theme %>">
@@ -63,7 +63,7 @@
             </div>
         </div>
         <script src="js/loading-error-handlers.js?v=<%- cacheBust %>"></script>
-        <script src="js/bundle.vendor.js?v=<%- cacheBust %>"></script>
-        <script src="js/bundle.js?v=<%- cacheBust %>"></script>
+        <script type="module" src="js/bundle.vendor.js?v=<%- cacheBust %>"></script>
+        <script type="module" src="js/bundle.js?v=<%- cacheBust %>"></script>
     </body>
 </html>

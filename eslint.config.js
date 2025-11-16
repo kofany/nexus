@@ -70,7 +70,15 @@ const baseRules = {
 	"prefer-const": "error",
 	"prefer-rest-params": "error",
 	"prefer-spread": "error",
-	"spaced-comment": ["error", "always"],
+	"spaced-comment": [
+		"error",
+		"always",
+		{
+			line: {
+				markers: ["/"], // Allow /// for TypeScript triple-slash directives
+			},
+		},
+	],
 	strict: "off",
 	yoda: "error",
 };
@@ -155,7 +163,14 @@ const vueRules = {
 export default [
 	// 1. Ignore patterns (replaces .eslintignore)
 	{
-		ignores: ["public/**", "coverage/**", "dist/**", "test/public/**", "defaults/config.d.ts"],
+		ignores: [
+			"public/**",
+			"coverage/**",
+			"dist/**",
+			"test/public/**",
+			"defaults/config.d.ts",
+			"vite.config.ts", // Vite config is not part of TypeScript project
+		],
 	},
 
 	// 2. ESLint recommended config for all files
