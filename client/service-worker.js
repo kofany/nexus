@@ -3,6 +3,17 @@
 /* global clients */
 "use strict";
 
+// Simple logger for service worker
+// Service workers cannot import ES modules, so we define logging locally
+const logger = {
+	error(...args) {
+		console.error("[ERROR]", ...args);
+	},
+	info(...args) {
+		console.info("[INFO]", ...args);
+	},
+};
+
 const cacheName = "__HASH__";
 const excludedPathsFromCache = /^(?:socket\.io|storage|uploads|cdn-cgi)\//;
 
@@ -88,8 +99,7 @@ async function networkOrCache(event) {
 
 		throw new Error(`Request failed with HTTP ${response.status}`);
 	} catch (e) {
-		// eslint-disable-next-line no-console
-		console.error(e.message, event.request.url);
+		logger.error(e.message, event.request.url);
 
 		if (event.clientId) {
 			const client = await clients.get(event.clientId);

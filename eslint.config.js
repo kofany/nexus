@@ -275,6 +275,15 @@ export default [
 		},
 	},
 
-	// 7. Prettier config (must be last to override conflicting rules)
+	// 7. Logging modules - allow console usage
+	// These files are logging utilities where console usage is intentional
+	{
+		files: ["server/log.ts", "client/service-worker.js", "client/js/logger.ts"],
+		rules: {
+			"no-console": "off",
+		},
+	},
+
+	// 8. Prettier config (must be last to override conflicting rules)
 	prettierConfig,
 ];

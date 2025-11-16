@@ -23,6 +23,7 @@ import {condensedTypes} from "../../shared/irc";
 import {MessageType} from "../../shared/types/msg";
 import {ClientMessage, ClientNetwork} from "../js/types";
 import Message from "./Message.vue";
+import logger from "../js/logger";
 
 export default defineComponent({
 	name: "MessageCondensed",
@@ -70,8 +71,7 @@ export default defineComponent({
 					obj[message.type] += modeChangesCount;
 				} else {
 					if (!message.type) {
-						/* eslint-disable no-console */
-						console.log(`empty message type, this should not happen: ${message.id}`);
+						logger.error(`empty message type, this should not happen: ${message.id}`);
 						continue;
 					}
 

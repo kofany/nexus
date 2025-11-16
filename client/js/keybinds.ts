@@ -7,6 +7,7 @@ import isIgnoredKeybind from "./helpers/isIgnoredKeybind";
 import listenForTwoFingerSwipes from "./helpers/listenForTwoFingerSwipes";
 import {ClientChan} from "./types";
 import {ChanType} from "../../shared/types/chan";
+import logger from "./logger";
 
 // Switch to the next/previous window in the channel list.
 Mousetrap.bind(["alt+up", "alt+down"], function (e, keys) {
@@ -148,8 +149,7 @@ Mousetrap.bind(["alt+/"], function (e) {
 		return true;
 	}
 
-	/* eslint-disable no-console */
-	navigate("Help").catch((err) => console.log(err));
+	navigate("Help").catch((err) => logger.error(err));
 	return false;
 });
 

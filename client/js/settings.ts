@@ -1,5 +1,6 @@
 import socket from "./socket";
 import type {TypedStore} from "./store";
+import logger from "./logger";
 
 const defaultSettingConfig = {
 	apply() {},
@@ -42,8 +43,7 @@ const defaultConfig = {
 				Notification.requestPermission(() =>
 					store.commit("refreshDesktopNotificationState", null, {root: true})
 				).catch((e) => {
-					// eslint-disable-next-line no-console
-					console.error(e);
+					logger.error(e);
 				});
 			}
 		},

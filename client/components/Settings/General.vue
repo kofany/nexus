@@ -95,6 +95,7 @@
 import {computed, defineComponent, onMounted, ref} from "vue";
 import {useStore} from "../../js/store";
 import {BeforeInstallPromptEvent} from "../../js/types";
+import logger from "../../js/logger";
 
 let installPromptEvent: BeforeInstallPromptEvent | null = null;
 
@@ -128,8 +129,7 @@ export default defineComponent({
 			}
 
 			installPromptEvent.prompt().catch((e) => {
-				// eslint-disable-next-line no-console
-				console.error(e);
+				logger.error(e);
 			});
 
 			installPromptEvent = null;
@@ -137,8 +137,7 @@ export default defineComponent({
 
 		const onForceSyncClick = () => {
 			store.dispatch("settings/syncAll", true).catch((e) => {
-				// eslint-disable-next-line no-console
-				console.error(e);
+				logger.error(e);
 			});
 
 			store
@@ -148,8 +147,7 @@ export default defineComponent({
 					sync: true,
 				})
 				.catch((e) => {
-					// eslint-disable-next-line no-console
-					console.error(e);
+					logger.error(e);
 				});
 		};
 

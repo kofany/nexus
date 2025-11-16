@@ -5,6 +5,7 @@ import {switchToChannel} from "../router";
 import {TypedStore} from "../store";
 import useCloseChannel from "../hooks/use-close-channel";
 import {ChanType} from "../../../shared/types/chan";
+import logger from "../logger";
 
 type BaseContextMenuItem = {
 	label: string;
@@ -257,8 +258,7 @@ export function generateInlineChannelContextMenu(
 				text: "/join " + chan,
 			});
 		} else {
-			// eslint-disable-next-line no-console
-			console.error("Unable to join channel: activeChannel is undefined");
+			logger.error("Unable to join channel: activeChannel is undefined");
 		}
 	};
 

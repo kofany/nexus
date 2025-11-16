@@ -1,5 +1,6 @@
 import {store} from "../store";
 import {router} from "../router";
+import logger from "../logger";
 
 export function input(args: string[]): boolean {
 	if (!store.state.settings.searchEnabled) {
@@ -17,8 +18,7 @@ export function input(args: string[]): boolean {
 			},
 		})
 		.catch((e: Error) => {
-			// eslint-disable-next-line no-console
-			console.error(`Failed to push SearchResults route: ${e.message}`);
+			logger.error(`Failed to push SearchResults route: ${e.message}`);
 		});
 
 	return true;

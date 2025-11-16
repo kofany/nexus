@@ -23,7 +23,6 @@ if (process.env.LOG_LEVEL) {
 }
 
 const log = {
-	/* eslint-disable no-console */
 	error(...args: string[]) {
 		console.error(timestamp(), chalk.red("[ERROR]"), ...args);
 	},
@@ -45,7 +44,6 @@ const log = {
 	raw(...args: string[]) {
 		console.log(...args);
 	},
-	/* eslint-enable no-console */
 
 	async prompt(
 		options: {prompt?: string; default?: string; text: string; silent?: boolean},
