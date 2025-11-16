@@ -260,6 +260,7 @@ export class IrssiClient {
 	weechatRelayServer: any = null; // WeeChatRelayServer instance
 	weechatRelayPassword: string | null = null; // Decrypted WeeChat password (in memory)
 	weechatNodeAdapter: any = null; // NodeToWeeChatAdapter instance (shared by all Lith clients)
+	shouldForwardToWeechat = false; // Flag: only forward when WeeChat clients are connected (lazy emit optimization)
 
 	// Message storage (encrypted)
 	messageStorage: EncryptedMessageStorage | null = null;
@@ -1535,8 +1536,8 @@ export class IrssiClient {
 		// Broadcast to Vue browsers using Socket.IO room (efficient!)
 		this.manager.sockets.to(this.socketIoRoomName).emit(event, ...args);
 
-		// Forward to WeeChat Relay (Lith clients)
-		if (this.weechatNodeAdapter) {
+		// Forward to WeeChat Relay (Lith clients) - only if clients are connected (lazy emit)
+		if (this.weechatNodeAdapter && this.shouldForwardToWeechat) {
 			this.forwardEventToWeeChatAdapter(event, args);
 		}
 	}
@@ -3051,6 +3052,21 @@ export class IrssiClient {
 			passwordHashAlgo: ["plain", "sha256", "sha512", "pbkdf2+sha256", "pbkdf2+sha512"],
 			passwordHashIterations: 100000,
 			compression: this.config.weechatRelay.compression,
+		});
+
+		// Setup lazy emit optimization - start forwarding when first client connects
+		this.weechatRelayServer.on("clients:first", () => {
+			this.shouldForwardToWeechat = true;
+			log.info(
+				`${chalk.green("[WeeChat Relay]")} Starting event forwarding for user ${this.name}`
+			);
+		});
+
+		this.weechatRelayServer.on("clients:none", () => {
+			this.shouldForwardToWeechat = false;
+			log.info(
+				`${chalk.yellow("[WeeChat Relay]")} Stopping event forwarding for user ${this.name}`
+			);
 		});
 
 		// Setup event handlers

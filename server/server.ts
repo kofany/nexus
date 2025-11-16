@@ -403,8 +403,10 @@ export default async function (
 		packages.loadPackages();
 
 		// Update metrics periodically (skip in test environment to prevent hanging)
+		let metricsInterval: NodeJS.Timeout | null = null;
+
 		if (process.env.NODE_ENV !== "test") {
-			setInterval(() => {
+			metricsInterval = setInterval(() => {
 				if (manager) {
 					updateMetrics(manager);
 				}
@@ -451,7 +453,17 @@ export default async function (
 				return;
 			}
 
+			// Set suicide timeout IMMEDIATELY to prevent race condition
+			// (multiple Ctrl+C presses won't enter this function again)
+			suicideTimeout = setTimeout(() => process.exit(1), 3000);
+
 			log.info("Exiting...");
+
+			// 0. Stop metrics interval to prevent hanging
+			if (metricsInterval !== null) {
+				clearInterval(metricsInterval);
+				metricsInterval = null;
+			}
 
 			// 1. Stop accepting new Socket.IO connections immediately
 			// This prevents race condition where new browsers connect during shutdown
@@ -476,13 +488,34 @@ export default async function (
 				(await import("./plugins/storage.js")).default.emptyDir();
 			}
 
-			// 3. Forcefully exit after 3 seconds (safety net)
-			suicideTimeout = setTimeout(() => process.exit(1), 3000);
-
-			// 4. Close HTTP server (now safe - no new connections)
+			// 3. Close HTTP server (now safe - no new connections)
 			server?.close(() => {
 				if (suicideTimeout !== null) {
 					clearTimeout(suicideTimeout);
+				}
+
+				// Debug: Show what's keeping the process alive
+				log.info("Checking active handles...");
+				const handles = (process as any)._getActiveHandles?.() || [];
+				const requests = (process as any)._getActiveRequests?.() || [];
+
+				log.info(`Active handles: ${handles.length}`);
+				log.info(`Active requests: ${requests.length}`);
+
+				if (handles.length > 0) {
+					log.warn("⚠️  Active handles preventing exit:");
+					handles.forEach((handle: any, idx: number) => {
+						const type = handle.constructor?.name || "Unknown";
+						log.warn(`  [${idx}] ${type}`);
+					});
+				}
+
+				if (requests.length > 0) {
+					log.warn("⚠️  Active requests preventing exit:");
+					requests.forEach((req: any, idx: number) => {
+						const type = req.constructor?.name || "Unknown";
+						log.warn(`  [${idx}] ${type}`);
+					});
 				}
 
 				process.exit(0);

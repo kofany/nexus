@@ -325,24 +325,48 @@ export class FeWebSocket extends EventEmitter {
 	/**
 	 * Disconnect from fe-web server
 	 */
-	disconnect(): void {
-		log.debug("[FeWebSocket] Disconnecting...");
-		this.config.reconnect = false; // Disable auto-reconnect
+	disconnect(): Promise<void> {
+		return new Promise((resolve) => {
+			log.debug("[FeWebSocket] Disconnecting...");
+			this.config.reconnect = false; // Disable auto-reconnect
 
-		if (this.reconnectTimer !== null) {
-			clearTimeout(this.reconnectTimer);
-			this.reconnectTimer = null;
-		}
+			if (this.reconnectTimer !== null) {
+				clearTimeout(this.reconnectTimer);
+				this.reconnectTimer = null;
+			}
 
-		this.stopPing();
+			this.stopPing();
 
-		if (this.ws) {
-			this.ws.close(1000, "Client disconnect");
+			if (!this.ws) {
+				this._isConnected = false;
+				this.isAuthenticated = false;
+				resolve();
+				return;
+			}
+
+			// Wait for close event before resolving
+			const onClose = () => {
+				this._isConnected = false;
+				this.isAuthenticated = false;
+				log.debug("[FeWebSocket] Disconnect complete");
+				resolve();
+			};
+
+			this.ws.once("close", onClose);
+
+			// Timeout safety - resolve after 1s even if close doesn't come
+			setTimeout(() => {
+				this.ws?.removeListener("close", onClose);
+				this._isConnected = false;
+				this.isAuthenticated = false;
+				log.warn("[FeWebSocket] Disconnect timeout - forcing resolve");
+				resolve();
+			}, 1000);
+
+			// Terminate (should trigger close event)
+			this.ws.terminate();
 			this.ws = null;
-		}
-
-		this._isConnected = false;
-		this.isAuthenticated = false;
+		});
 	}
 
 	/**

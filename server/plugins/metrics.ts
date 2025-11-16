@@ -69,8 +69,8 @@ export function updateMetrics(manager: ClientManager) {
 		const isConnected = irssiClient.irssiConnection?.isConnected() ? 1 : 0;
 		metrics.irssiConnected.set({user: irssiClient.name}, isConnected);
 
-		// TODO: Add getConnectionCount() method to WeeChatRelayServer
-		// const weechatConns = irssiClient.weechatRelayServer?.getConnectionCount() || 0;
-		// metrics.weechatConnections.set({user: irssiClient.name}, weechatConns);
+		// WeeChat Relay connection count (lazy emit optimization)
+		const weechatConns = irssiClient.weechatRelayServer?.getConnectionCount() || 0;
+		metrics.weechatConnections.set({user: irssiClient.name}, weechatConns);
 	});
 }
