@@ -45,7 +45,13 @@ describe("Server", function () {
 		logInfoStub.restore();
 		logWarnStub.restore();
 		checkForUpdatesStub.restore();
-		server.close(done);
+
+		// The server might be closed by the graceful shutdown test
+		if (server && server.listening) {
+			server.close(done);
+		} else {
+			done();
+		}
 	});
 
 	const webURL = `http://${Config.values.host}:${Config.values.port}/`;
@@ -73,4 +79,28 @@ describe("Server", function () {
 	// 1. Public mode authentication (removed in 8ac5febd)
 	// 2. Direct IRC network creation (not available in proxy mode)
 	// 3. Client-side network management (managed by irssi backend)
+
+	describe("Graceful Shutdown", () => {
+		it("should close the server and exit gracefully on SIGINT", (done) => {
+			const processExitStub = sinon.stub(process, "exit");
+
+			processExitStub.callsFake((code) => {
+				try {
+					expect(code).to.equal(0);
+					// Check if the server is no longer listening. This is a more robust check
+					// than spying on the close method, which can be tricky with async operations.
+					expect(server.listening).to.be.false;
+					done();
+				} catch (e) {
+					done(e);
+				} finally {
+					// IMPORTANT: Restore stubs to not interfere with other tests or mocha's own exit
+					processExitStub.restore();
+				}
+			});
+
+			// Trigger the graceful shutdown
+			process.emit("SIGINT");
+		});
+	});
 });
