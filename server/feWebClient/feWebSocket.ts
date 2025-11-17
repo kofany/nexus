@@ -364,10 +364,12 @@ export class FeWebSocket extends EventEmitter {
 			// Timeout safety - resolve after 1s even if close doesn't come
 			const timeoutId = setTimeout(() => {
 				this.ws?.removeListener("close", onClose);
+
 				// Also clean up all listeners in case timeout fires first
 				if (this.ws) {
 					this.ws.removeAllListeners();
 				}
+
 				this._isConnected = false;
 				this.isAuthenticated = false;
 				log.warn("[FeWebSocket] Disconnect timeout - forcing resolve");
