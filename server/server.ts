@@ -433,6 +433,7 @@ export default async function (
 			Config.values.themeColor = defaultTheme.themeColor;
 		}
 
+		let identdInstance: Identification | null = null;
 		new Identification((identHandler, err) => {
 			if (err) {
 				log.error(`Could not start identd server, ${err.message}`);
@@ -442,6 +443,7 @@ export default async function (
 				process.exit(1);
 			}
 
+			identdInstance = identHandler;
 			manager.init(identHandler, sockets);
 		});
 
@@ -487,6 +489,11 @@ export default async function (
 
 				(await import("./plugins/storage.js")).default.emptyDir();
 			}
+
+			// 2.5 Close identd server if running
+			try {
+				(identdInstance as any)?.close?.();
+			} catch {}
 
 			// 3. Close HTTP server with timeout (max 2s wait)
 			await Promise.race([

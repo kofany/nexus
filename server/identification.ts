@@ -13,6 +13,7 @@ class Identification {
 	private connectionId: number;
 	private connections: Map<number, Connection>;
 	private oidentdFile?: string;
+	private server?: net.Server;
 
 	constructor(startedCallback: (identHandler: Identification, err?: Error) => void) {
 		this.connectionId = 0;
@@ -32,19 +33,19 @@ class Identification {
 				);
 			}
 
-			const server = net.createServer(this.serverConnection.bind(this));
+			this.server = net.createServer(this.serverConnection.bind(this));
 
-			server.on("error", (err) => {
+			this.server.on("error", (err) => {
 				startedCallback(this, err);
 			});
 
-			server.listen(
+			this.server.listen(
 				{
 					port: Config.values.identd.port || 113,
 					host: Config.values.bind,
 				},
 				() => {
-					const address = server.address();
+					const address = this.server!.address();
 
 					if (typeof address === "string") {
 						log.info(`Identd server available on ${chalk.green(address)}`);
