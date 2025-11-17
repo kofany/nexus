@@ -1,4 +1,4 @@
-import log from "../../log.js";
+import {log} from "../../logger.js";
 import {Command} from "commander";
 import child from "child_process";
 import chalk from "chalk";

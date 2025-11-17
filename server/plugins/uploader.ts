@@ -6,7 +6,7 @@ import fs from "fs";
 import {fileTypeFromBuffer} from "file-type";
 import {readChunk} from "read-chunk";
 import crypto from "crypto";
-import log from "../log.js";
+import {log} from "../logger.js";
 import contentDisposition from "content-disposition";
 import type {Socket} from "socket.io";
 import {Request, Response} from "express";

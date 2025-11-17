@@ -8,7 +8,7 @@ import Auth from "./plugins/auth.js";
 import {IrssiClient, IrssiUserConfig} from "./irssiClient.js";
 import Config from "./config.js";
 import WebPush from "./plugins/webpush.js";
-import log from "./log.js";
+import {log} from "./logger.js";
 import {Server} from "./server.js";
 
 // SINGLE MODE: Only IrssiClient is supported (no legacy Client)

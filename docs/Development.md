@@ -415,13 +415,15 @@ Create `.vscode/launch.json`:
 #### Console Logging
 
 ```typescript
-import log from "../log";
+import {log} from "../logger.js";
 
 log.info("Server started on port", port);
 log.warn("Connection failed, retrying...");
 log.error("Fatal error:", error);
 log.debug("Debug info:", data);
 ```
+
+**Important:** Always use the **named import** `{log}` from `./logger.js`, never the default import. The logger automatically sanitizes sensitive data like message text, passwords, and tokens.
 
 #### Enable Debug Output
 

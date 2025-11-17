@@ -3,7 +3,7 @@ import fs from "fs";
 import crypto from "crypto";
 import {Crypto} from "@peculiar/webcrypto";
 import * as x509 from "@peculiar/x509";
-import log from "../log.js";
+import {log} from "../logger.js";
 import Config from "../config.js";
 
 // Setup Web Crypto API

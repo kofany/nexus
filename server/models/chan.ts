@@ -1,5 +1,5 @@
 import _ from "lodash";
-import log from "../log.js";
+import {log} from "../logger.js";
 import Config from "../config.js";
 import User from "./user.js";
 import Msg from "./msg.js";

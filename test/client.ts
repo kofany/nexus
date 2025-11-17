@@ -4,7 +4,7 @@ import {ChanConfig} from "../dist/server/models/chan.js";
 import {ChanType} from "../dist/shared/types/chan.js";
 import ClientManager from "../dist/server/clientManager.js";
 import Client from "../dist/server/client.js";
-import log from "../dist/server/log.js";
+import {log} from "../dist/server/logger.js";
 
 import sinon from "sinon";
 

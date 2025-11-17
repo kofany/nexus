@@ -1,4 +1,4 @@
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import fs from "fs";
 import path, {dirname} from "path";

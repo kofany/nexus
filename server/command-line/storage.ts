@@ -1,4 +1,4 @@
-import log from "../log.js";
+import {log} from "../logger.js";
 import {Command} from "commander";
 import ClientManager from "../clientManager.js";
 import Utils from "./utils.js";
