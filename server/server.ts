@@ -8,7 +8,7 @@ import dns from "dns";
 import chalk from "chalk";
 import net from "net";
 
-import log from "./log.js";
+import {log} from "./logger.js";
 import {IrssiClient} from "./irssiClient.js";
 import ClientManager from "./clientManager.js";
 import Uploader from "./plugins/uploader.js";

@@ -18,7 +18,7 @@ import User from "../models/user.js";
 import Prefix from "../models/prefix.js";
 import {ChanType, ChanState} from "../../shared/types/chan.js";
 import {MessageType} from "../../shared/types/msg.js";
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 
 // Callback types for IrssiClient integration
@@ -241,7 +241,7 @@ export class FeWebAdapter {
 	 * 3. server_status - Server connection status
 	 */
 	private handleServerStatus(msg: FeWebMessage): void {
-		log.info(`[FeWebAdapter] Server status: ${msg.server} = ${msg.text}`);
+		log.info(`[FeWebAdapter] Server status update for: ${msg.server}`);
 		const network = this.getOrCreateNetwork(msg.server!);
 		if (!network) return;
 
@@ -956,7 +956,7 @@ export class FeWebAdapter {
 	 * 19. error - Error message
 	 */
 	private handleError(msg: FeWebMessage): void {
-		log.error(`[FeWebAdapter] Error from fe-web: ${msg.text}`);
+		log.error(`[FeWebAdapter] Error from fe-web (type: ${msg.type})`);
 	}
 
 	/**
@@ -975,7 +975,7 @@ export class FeWebAdapter {
 		const channelName = msg.channel || msg.target;
 
 		if (!serverTag || !channelName) {
-			log.warn(`[FeWebAdapter] Invalid mark_read message: ${JSON.stringify(msg)}`);
+			log.warn(`[FeWebAdapter] Invalid mark_read message (missing server or channel)`);
 			return;
 		}
 

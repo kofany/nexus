@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 
-import log from "../../log.js";
+import {log} from "../../logger.js";
 import path from "path";
 import fs from "fs/promises";
 import Config from "../../config.js";

@@ -10,7 +10,7 @@
 import WebSocket from "ws";
 import {EventEmitter} from "events";
 import {FeWebEncryption} from "./feWebEncryption.js";
-import log from "../log.js";
+import {log} from "../logger.js";
 
 // Message types from CLIENT-SPEC.md
 export interface FeWebMessage {
@@ -407,7 +407,7 @@ export class FeWebSocket extends EventEmitter {
 		}
 
 		const json = JSON.stringify(message);
-		log.debug("[FeWebSocket] Sending:", json);
+		log.debug(`[FeWebSocket] Sending message type: ${message.type}`);
 
 		try {
 			if (this.encryption) {
@@ -550,18 +550,18 @@ export class FeWebSocket extends EventEmitter {
 
 				log.debug(`[FeWebSocket] Decrypting binary message (${data.length} bytes)...`);
 				json = await this.encryption.decrypt(data);
-				log.debug(`[FeWebSocket] Decrypted message: ${json}`);
+				log.debug(`[FeWebSocket] Decrypted message received`);
 			} else if (typeof data === "string") {
 				// Text frame - plain JSON
 				json = data;
-				log.debug(`[FeWebSocket] Plain text message: ${json}`);
+				log.debug(`[FeWebSocket] Plain text message received`);
 			} else {
 				log.error("[FeWebSocket] Unexpected message type:", typeof data);
 				return;
 			}
 
 			const message: FeWebMessage = JSON.parse(json);
-			log.debug(`[FeWebSocket] Received: ${JSON.stringify(message)}`);
+			log.debug(`[FeWebSocket] Received message type: ${message.type}`);
 
 			// Emit event for EventEmitter listeners (used in connect() Promise)
 			this.emit(message.type, message);

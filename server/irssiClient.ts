@@ -18,7 +18,7 @@ import fs from "fs";
 import path from "path";
 import type {Socket} from "socket.io";
 
-import log from "./log.js";
+import {log} from "./logger.js";
 import Chan from "./models/chan.js";
 import Msg from "./models/msg.js";
 import User from "./models/user.js";
@@ -617,7 +617,7 @@ export class IrssiClient {
 		});
 
 		this.irssiConnection.on("error", (msg: FeWebMessage) => {
-			log.error(`User ${chalk.bold(this.name)}: irssi WebSocket error: ${msg.text}`);
+			log.error(`User ${chalk.bold(this.name)}: irssi WebSocket error (type: ${msg.type})`);
 		});
 
 		this.irssiConnection.on("auth_ok", () => {
@@ -722,7 +722,7 @@ export class IrssiClient {
 	 */
 	async handleInput(socketId: string, data: {target: number; text: string}): Promise<void> {
 		log.info(
-			`[DEBUG handleInput] socketId=${socketId}, target=${data.target}, text="${data.text}"`
+			`[DEBUG handleInput] socketId=${socketId}, target=${data.target}`
 		);
 
 		if (!this.irssiConnection) {
@@ -2166,14 +2166,14 @@ export class IrssiClient {
 	}
 
 	private handleMessage(networkUuid: string, channelId: number, msg: Msg): void {
-		log.debug(`[IrssiClient] Message: ${msg.text?.substring(0, 50)}`);
+		log.debug(`[IrssiClient] Message received (type: ${msg.type}, from: ${msg.from?.nick || "unknown"})`);
 
 		// Check for duplicate messages (prevents double processing on reconnects)
 		const msgText = msg.text ?? "";
 		const msgTime = msg.time ? msg.time.getTime() : Date.now();
 
 		if (this.messageDedup.isDuplicate(networkUuid, channelId, msgTime, msgText)) {
-			log.debug(`[IrssiClient] Skipping duplicate message: ${msgText.substring(0, 30)}`);
+			log.debug(`[IrssiClient] Skipping duplicate message (type: ${msg.type})`);
 			return;
 		}
 

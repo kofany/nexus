@@ -8,7 +8,7 @@
  * Copy & paste the hooks below into the appropriate locations in the adapter.
  */
 
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import {VariableMutationTracker} from "./variableMutationTracker.js";
 
@@ -337,7 +337,7 @@ export function logLineAddedState(
 	log.info(`
 ${chalk.cyan("[_buffer_line_added]")}
   buffer: ${buffer.fullName || buffer.pointer}
-  message: "${(message.text || "").substring(0, 50)}"
+  message: "[REDACTED]"
   lineRequestedKeys: "${lineRequestedKeys}"
   field count: ${requestedKeys.length}
   fields: [${requestedKeys.join(", ")}]

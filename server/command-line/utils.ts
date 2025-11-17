@@ -1,5 +1,5 @@
 import _ from "lodash";
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import fs from "fs";
 import Helper from "../helper.js";

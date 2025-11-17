@@ -2,7 +2,7 @@ import chalk from "chalk";
 // LEGACY: Client class removed (SINGLE MODE uses IrssiClient only)
 import {IrssiClient} from "../irssiClient.js";
 import ClientManager from "../clientManager.js";
-import log from "../log.js";
+import {log} from "../logger.js";
 
 export type AuthHandler = (
 	manager: ClientManager,

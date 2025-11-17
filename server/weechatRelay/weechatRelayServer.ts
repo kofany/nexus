@@ -24,7 +24,7 @@ import * as https from "https";
 import * as fs from "fs";
 import WebSocket, {WebSocketServer} from "ws";
 import {EventEmitter} from "events";
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import {WeeChatMessage, WeeChatParser} from "./weechatProtocol.js";
 import {WeeChatRelayClient} from "./weechatRelayClient.js";

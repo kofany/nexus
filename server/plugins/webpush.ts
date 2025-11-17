@@ -1,5 +1,5 @@
 import _ from "lodash";
-import log from "../log.js";
+import {log} from "../logger.js";
 import fs from "fs";
 import path from "path";
 import WebPushAPI from "web-push";

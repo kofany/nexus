@@ -1,7 +1,7 @@
 import SqliteMessageStorage from "./plugins/messageStorage/sqlite.js";
 import Config from "./config.js";
 import {DeletionRequest} from "./plugins/messageStorage/types.js";
-import log from "./log.js";
+import {log} from "./logger.js";
 import {MessageType} from "../shared/types/msg.js";
 
 const status_types = [
