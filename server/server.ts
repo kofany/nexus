@@ -489,34 +489,26 @@ export default async function (
 			}
 
 			// 3. Close HTTP server (now safe - no new connections)
-			server?.close(() => {
-				if (suicideTimeout !== null) {
-					clearTimeout(suicideTimeout);
-				}
+			await Promise.race([
+				new Promise<void>((resolve) => {
+					server?.close(() => {
+						log.info("HTTP server closed");
 
-				// Debug: Show what's keeping the process alive
-				log.info("Checking active handles...");
-				const handles = (process as any)._getActiveHandles?.() || [];
-				const requests = (process as any)._getActiveRequests?.() || [];
+						if (suicideTimeout !== null) {
+							clearTimeout(suicideTimeout);
+						}
 
-				log.info(`Active handles: ${handles.length}`);
-				log.info(`Active requests: ${requests.length}`);
-
-				if (handles.length > 0) {
-					log.warn("⚠️  Active handles preventing exit:");
-					handles.forEach((handle: any, idx: number) => {
-						const type = handle.constructor?.name || "Unknown";
-						log.warn(`  [${idx}] ${type}`);
+						process.exit(0);
+						resolve();
 					});
-				}
+				}),
+				new Promise<void>((resolve) => {
+					setTimeout(() => {
+						log.warn("HTTP server close timeout (2s) - forcing exit");
 
-				if (requests.length > 0) {
-					log.warn("⚠️  Active requests preventing exit:");
-					requests.forEach((req: any, idx: number) => {
-						const type = req.constructor?.name || "Unknown";
-						log.warn(`  [${idx}] ${type}`);
-					});
-				}
+						if (suicideTimeout !== null) {
+							clearTimeout(suicideTimeout);
+						}
 
 				// Flush and close Pino logger to release file handles
 				// Give pino-roll transport 100ms to finish writing and close files
