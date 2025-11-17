@@ -1635,6 +1635,8 @@ export class IrssiClient {
 		// Disconnect from irssi
 		if (this.irssiConnection) {
 			await this.irssiConnection.disconnect();
+			// Remove all event listeners to allow proper cleanup and process exit
+			this.irssiConnection.removeAllListeners();
 			this.irssiConnection = null;
 		}
 
@@ -3209,6 +3211,8 @@ export class IrssiClient {
 		}
 
 		await this.weechatRelayServer.stop();
+		// Remove all event listeners to allow proper cleanup and process exit
+		this.weechatRelayServer.removeAllListeners();
 		this.weechatRelayServer = null;
 		this.weechatRelayPassword = null;
 

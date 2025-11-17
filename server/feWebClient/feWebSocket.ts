@@ -344,6 +344,13 @@ export class FeWebSocket extends EventEmitter {
 				return;
 			}
 
+			// Remove all event listeners from WebSocket before closing
+			// This prevents event listeners from blocking Node.js event loop during shutdown
+			this.ws.removeAllListeners("open");
+			this.ws.removeAllListeners("message");
+			this.ws.removeAllListeners("error");
+			this.ws.removeAllListeners("close");
+
 			// Wait for close event before resolving
 			const onClose = () => {
 				this._isConnected = false;
@@ -355,8 +362,12 @@ export class FeWebSocket extends EventEmitter {
 			this.ws.once("close", onClose);
 
 			// Timeout safety - resolve after 1s even if close doesn't come
-			setTimeout(() => {
+			const timeoutId = setTimeout(() => {
 				this.ws?.removeListener("close", onClose);
+				// Also clean up all listeners in case timeout fires first
+				if (this.ws) {
+					this.ws.removeAllListeners();
+				}
 				this._isConnected = false;
 				this.isAuthenticated = false;
 				log.warn("[FeWebSocket] Disconnect timeout - forcing resolve");
