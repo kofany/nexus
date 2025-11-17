@@ -6,7 +6,7 @@ import _ from "lodash";
 import chalk from "chalk";
 import type {SearchOptions} from "ldapts";
 
-import log from "./log.js";
+import {log} from "./logger.js";
 import Helper from "./helper.js";
 import Utils from "./command-line/utils.js";
 import Network from "./models/network.js";
@@ -289,9 +289,7 @@ class Config {
 			}
 		} else if (logsStat && logsStat.mode & 0o001) {
 			log.warn(
-				userLogsPath,
-				"is world readable.",
-				"The log files may be exposed. Please fix the permissions."
+				`${userLogsPath} is world readable. The log files may be exposed. Please fix the permissions.`
 			);
 
 			if (os.platform() !== "win32") {

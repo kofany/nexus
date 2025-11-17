@@ -1,4 +1,4 @@
-import log from "../dist/server/log.js";
+import {log} from "../dist/server/logger.js";
 import Config from "../dist/server/config.js";
 import {expect} from "chai";
 import got from "got";

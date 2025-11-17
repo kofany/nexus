@@ -25,7 +25,7 @@
  */
 
 import {EventEmitter} from "events";
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import {WeeChatMessage, OBJ_HDATA, OBJ_STRING} from "./weechatProtocol.js";
 import {

@@ -18,7 +18,7 @@ import User from "../models/user.js";
 import Prefix from "../models/prefix.js";
 import {ChanType, ChanState} from "../../shared/types/chan.js";
 import {MessageType} from "../../shared/types/msg.js";
-import log from "../log.js";
+import logger, {redactMessage} from "../logger.js";
 import chalk from "chalk";
 
 // Callback types for IrssiClient integration
@@ -80,7 +80,7 @@ export class FeWebAdapter {
 	 * Reset state_dump tracking (call on disconnect to allow fresh state_dump on reconnect)
 	 */
 	resetStateDumpTracking(): void {
-		log.info(`[FeWebAdapter] Resetting state_dump tracking for all networks`);
+		logger.info(`[FeWebAdapter] Resetting state_dump tracking for all networks`);
 		this.stateDumpReceivedForNetwork.clear();
 		this.initEmitted = false;
 	}
@@ -96,7 +96,7 @@ export class FeWebAdapter {
 	 * Register all message handlers according to CLIENT-SPEC.md
 	 */
 	private registerHandlers(): void {
-		log.info("[FeWebAdapter] Registering fe-web message handlers");
+		logger.info("[FeWebAdapter] Registering fe-web message handlers");
 
 		// 1. auth_ok - Authentication successful
 		this.socket.onMessage("auth_ok", (msg) => this.handleAuthOk(msg));
@@ -110,7 +110,7 @@ export class FeWebAdapter {
 		// 4. channel_join - User joined channel
 		this.socket.onMessage("channel_join", (msg) => {
 			void this.handleChannelJoin(msg).catch((err) =>
-				log.error("[FeWebAdapter] channel_join error:", err)
+				logger.error("[FeWebAdapter] channel_join error:", err)
 			);
 		});
 
@@ -153,14 +153,14 @@ export class FeWebAdapter {
 		// 16. state_dump - Initial state dump
 		this.socket.onMessage("state_dump", (msg) => {
 			void this.handleStateDump(msg).catch((err) =>
-				log.error("[FeWebAdapter] state_dump error:", err)
+				logger.error("[FeWebAdapter] state_dump error:", err)
 			);
 		});
 
 		// 17. query_opened - Query window opened
 		this.socket.onMessage("query_opened", (msg) => {
 			void this.handleQueryOpened(msg).catch((err) =>
-				log.error("[FeWebAdapter] query_opened error:", err)
+				logger.error("[FeWebAdapter] query_opened error:", err)
 			);
 		});
 
@@ -190,7 +190,7 @@ export class FeWebAdapter {
 	 * 1. auth_ok - Authentication successful
 	 */
 	private handleAuthOk(msg: FeWebMessage): void {
-		log.info("[FeWebAdapter] Authenticated to fe-web");
+		logger.info("[FeWebAdapter] Authenticated to fe-web");
 		// Wait for state_dump to emit init event
 	}
 
@@ -214,7 +214,7 @@ export class FeWebAdapter {
 		}
 
 		if (!channel) {
-			log.warn(`[FeWebAdapter] Channel ${channelName} not found`);
+			logger.warn(`[FeWebAdapter] Channel ${channelName} not found`);
 			return;
 		}
 
@@ -241,7 +241,8 @@ export class FeWebAdapter {
 	 * 3. server_status - Server connection status
 	 */
 	private handleServerStatus(msg: FeWebMessage): void {
-		log.info(`[FeWebAdapter] Server status: ${msg.server} = ${msg.text}`);
+		// PRIVACY: msg.text here is just "connected"/"disconnected" but we sanitize anyway
+		logger.info(`[FeWebAdapter] Server status update for ${msg.server}`);
 		const network = this.getOrCreateNetwork(msg.server!);
 		if (!network) return;
 
@@ -266,13 +267,13 @@ export class FeWebAdapter {
 			// Set network.nick if not already set (from first channel join during state_dump)
 			if (!network.nick) {
 				network.nick = nick;
-				log.info(
+				logger.info(
 					`[FeWebAdapter] Set network nick for ${network.name}: ${nick} (from first channel join)`
 				);
 			}
 
 			channel = this.createChannel(network, channelName);
-			log.info(`[FeWebAdapter] Created channel ${channelName} on ${msg.server}`);
+			logger.info(`[FeWebAdapter] Created channel ${channelName} on ${msg.server}`);
 			await this.callbacks.onChannelJoin(network.uuid, channel);
 		} else {
 			// Someone else joined
@@ -303,7 +304,7 @@ export class FeWebAdapter {
 
 		const nick = msg.nick!;
 
-		log.debug(
+		logger.debug(
 			`[FeWebAdapter] handleChannelPart: nick="${nick}", network.nick="${
 				network.nick
 			}", match=${nick === network.nick}`
@@ -311,7 +312,7 @@ export class FeWebAdapter {
 
 		// Check if it's our own part
 		if (nick === network.nick) {
-			log.info(
+			logger.info(
 				`[FeWebAdapter] Channel part (OWN): ${channel.name} on ${network.name} - calling onChannelPart callback`
 			);
 			this.callbacks.onChannelPart(network.uuid, channel.id);
@@ -319,7 +320,7 @@ export class FeWebAdapter {
 			network.channels = network.channels.filter((c) => c.id !== channel.id);
 		} else {
 			// Someone else parted
-			log.debug(
+			logger.debug(
 				`[FeWebAdapter] Channel part (OTHER): ${nick} from ${channel.name} on ${network.name} - sending part message`
 			);
 			this.removeUserFromChannel(channel, nick);
@@ -453,7 +454,7 @@ export class FeWebAdapter {
 	 * text field contains JSON array: [{"nick":"alice","prefix":"@"}, ...]
 	 */
 	private handleNicklist(msg: FeWebMessage): void {
-		log.debug(
+		logger.debug(
 			`[FeWebAdapter] handleNicklist: server=${msg.server}, channel=${
 				msg.channel
 			}, text.length=${msg.text?.length || 0}`
@@ -462,14 +463,14 @@ export class FeWebAdapter {
 		const network = this.getOrCreateNetwork(msg.server!);
 
 		if (!network) {
-			log.error(`[FeWebAdapter] Network not found for server: ${msg.server}`);
+			logger.error(`[FeWebAdapter] Network not found for server: ${msg.server}`);
 			return;
 		}
 
 		const channel = this.findChannel(network, msg.channel!);
 
 		if (!channel) {
-			log.error(
+			logger.error(
 				`[FeWebAdapter] Channel not found: ${msg.channel} on ${
 					msg.server
 				}, available: ${network.channels.map((c) => c.name).join(", ")}`
@@ -479,7 +480,7 @@ export class FeWebAdapter {
 
 		try {
 			const nicklist: Array<{nick: string; prefix: string}> = JSON.parse(msg.text || "[]");
-			log.debug(`[FeWebAdapter] Parsed ${nicklist.length} users from nicklist JSON`);
+			logger.debug(`[FeWebAdapter] Parsed ${nicklist.length} users from nicklist JSON`);
 
 			// Clear existing users
 			channel.users.clear();
@@ -503,17 +504,17 @@ export class FeWebAdapter {
 				channel.users.set(user.nick.toLowerCase(), user);
 			});
 
-			log.debug(`[FeWebAdapter] Added ${channel.users.size} users to channel.users Map`);
+			logger.debug(`[FeWebAdapter] Added ${channel.users.size} users to channel.users Map`);
 
 			// Sort users by mode then nick
 			this.sortChannelUsers(channel);
 
 			// Emit nicklist update (convert Map to Array)
 			const usersArray = Array.from(channel.users.values());
-			log.debug(
+			logger.debug(
 				`[FeWebAdapter] Calling onNicklistUpdate with ${usersArray.length} users for channel ${channel.id}`
 			);
-			log.debug(
+			logger.debug(
 				`[FeWebAdapter] First 3 users BEFORE callback: ${JSON.stringify(
 					usersArray
 						.slice(0, 3)
@@ -521,9 +522,9 @@ export class FeWebAdapter {
 				)}`
 			);
 			this.callbacks.onNicklistUpdate(network.uuid, channel.id, usersArray);
-			log.debug(`[FeWebAdapter] onNicklistUpdate callback COMPLETED`);
+			logger.debug(`[FeWebAdapter] onNicklistUpdate callback COMPLETED`);
 		} catch (error) {
-			log.error(`[FeWebAdapter] Failed to parse nicklist: ${error}`);
+			logger.error(`[FeWebAdapter] Failed to parse nicklist: ${error}`);
 		}
 	}
 
@@ -534,28 +535,28 @@ export class FeWebAdapter {
 	private handleNicklistUpdate(msg: FeWebMessage): void {
 		const task = msg.task;
 
-		log.debug(
+		logger.debug(
 			`[FeWebAdapter] handleNicklistUpdate: server=${msg.server}, channel=${msg.channel}, nick=${msg.nick}, task=${task}`
 		);
 
 		const network = this.getOrCreateNetwork(msg.server!);
 
 		if (!network) {
-			log.error(`[FeWebAdapter] Network not found for server: ${msg.server}`);
+			logger.error(`[FeWebAdapter] Network not found for server: ${msg.server}`);
 			return;
 		}
 
 		const channel = this.findChannel(network, msg.channel!);
 
 		if (!channel) {
-			log.error(`[FeWebAdapter] Channel not found: ${msg.channel} on ${msg.server}`);
+			logger.error(`[FeWebAdapter] Channel not found: ${msg.channel} on ${msg.server}`);
 			return;
 		}
 
 		const nick = msg.nick!;
 
 		if (!task) {
-			log.error(`[FeWebAdapter] nicklist_update missing task field`);
+			logger.error(`[FeWebAdapter] nicklist_update missing task field`);
 			return;
 		}
 
@@ -563,13 +564,13 @@ export class FeWebAdapter {
 			case "add":
 				// Add user with no modes
 				this.addUserToChannel(channel, nick);
-				log.debug(`[FeWebAdapter] Added user ${nick} to ${msg.channel}`);
+				logger.debug(`[FeWebAdapter] Added user ${nick} to ${msg.channel}`);
 				break;
 
 			case "remove":
 				// Remove user from nicklist
 				channel.users.delete(nick.toLowerCase());
-				log.debug(`[FeWebAdapter] Removed user ${nick} from ${msg.channel}`);
+				logger.debug(`[FeWebAdapter] Removed user ${nick} from ${msg.channel}`);
 				break;
 
 			case "change": {
@@ -577,7 +578,7 @@ export class FeWebAdapter {
 				const newNick = msg.extra?.new_nick;
 
 				if (!newNick) {
-					log.error(`[FeWebAdapter] Nick change missing new_nick in extra`);
+					logger.error(`[FeWebAdapter] Nick change missing new_nick in extra`);
 					return;
 				}
 
@@ -586,13 +587,13 @@ export class FeWebAdapter {
 				// so check both oldNick and newNick against network.nick
 				const isSelf = network.nick === nick || network.nick === newNick;
 
-				log.info(
+				logger.info(
 					`[FeWebAdapter] nicklist_update change: ${nick} → ${newNick} on ${msg.server} (isSelf: ${isSelf}, network.nick: ${network.nick})`
 				);
 
 				if (isSelf) {
 					network.nick = newNick;
-					log.info(
+					logger.info(
 						`[FeWebAdapter] Updated own nick: ${nick} → ${newNick} on ${msg.server}`
 					);
 
@@ -614,7 +615,7 @@ export class FeWebAdapter {
 					}
 				});
 
-				log.debug(
+				logger.debug(
 					`[FeWebAdapter] Renamed user ${nick} → ${newNick} in ${updatedChannels} channels on ${msg.server}`
 				);
 
@@ -640,7 +641,7 @@ export class FeWebAdapter {
 				break;
 
 			default:
-				log.warn(`[FeWebAdapter] Unknown nicklist_update task: ${task}`);
+				logger.warn(`[FeWebAdapter] Unknown nicklist_update task: ${task}`);
 				return;
 		}
 
@@ -662,7 +663,7 @@ export class FeWebAdapter {
 		const targetUser = channel.users.get(nick.toLowerCase());
 
 		if (!targetUser) {
-			log.warn(`[FeWebAdapter] User ${nick} not found for mode change ${task}`);
+			logger.warn(`[FeWebAdapter] User ${nick} not found for mode change ${task}`);
 			return;
 		}
 
@@ -673,7 +674,7 @@ export class FeWebAdapter {
 		const modeSymbol = network.serverOptions.PREFIX.modeToSymbol[modeChar];
 
 		if (!modeSymbol) {
-			log.warn(`[FeWebAdapter] Unknown mode character: ${modeChar}`);
+			logger.warn(`[FeWebAdapter] Unknown mode character: ${modeChar}`);
 			return;
 		}
 
@@ -687,7 +688,7 @@ export class FeWebAdapter {
 			targetUser.modes = targetUser.modes.filter((m) => m !== modeSymbol);
 		}
 
-		log.debug(
+		logger.debug(
 			`[FeWebAdapter] Updated modes for ${nick} in ${msg.channel}: ${targetUser.modes.join("")}`
 		);
 	}
@@ -708,13 +709,15 @@ export class FeWebAdapter {
 		// so check both oldNick and newNick against network.nick
 		const isSelf = network.nick === oldNick || network.nick === newNick;
 
-		log.info(
+		logger.info(
 			`[FeWebAdapter] Nick change: ${oldNick} → ${newNick} on ${msg.server} (isSelf: ${isSelf}, network.nick: ${network.nick})`
 		);
 
 		if (isSelf) {
 			network.nick = newNick;
-			log.info(`[FeWebAdapter] Own nick changed: ${oldNick} → ${newNick} on ${msg.server}`);
+			logger.info(
+				`[FeWebAdapter] Own nick changed: ${oldNick} → ${newNick} on ${msg.server}`
+			);
 
 			// Emit nick event to update UI (like IRC handler does)
 			this.callbacks.onNickChange(network.uuid, newNick);
@@ -847,7 +850,7 @@ export class FeWebAdapter {
 	 */
 	private async handleStateDump(msg: FeWebMessage): Promise<void> {
 		const serverTag = msg.server!;
-		log.info(`[FeWebAdapter] State dump started for server: ${serverTag}`);
+		logger.info(`[FeWebAdapter] State dump started for server: ${serverTag}`);
 
 		const network = this.getOrCreateNetwork(serverTag);
 		if (!network) return;
@@ -858,7 +861,7 @@ export class FeWebAdapter {
 		const now = Date.now();
 
 		if (alreadyReceived && now - alreadyReceived < 2000) {
-			log.warn(
+			logger.warn(
 				`[FeWebAdapter] ⚠️ DUPLICATE state_dump for ${serverTag} within 2s - IGNORING to prevent channel duplication`
 			);
 			return; // Ignore duplicate state_dump
@@ -866,7 +869,7 @@ export class FeWebAdapter {
 
 		// Mark as received with timestamp
 		this.stateDumpReceivedForNetwork.set(serverTag, now);
-		log.info(`[FeWebAdapter] Processing state_dump for ${serverTag} - clearing channels`);
+		logger.info(`[FeWebAdapter] Processing state_dump for ${serverTag} - clearing channels`);
 
 		// Clear existing channels (except lobby) to prepare for fresh state
 		const lobby = network.channels.find((ch) => ch.type === "lobby");
@@ -875,7 +878,7 @@ export class FeWebAdapter {
 		// Mark network as connected
 		network.connected = true;
 
-		log.info(`[FeWebAdapter] Network ${serverTag} status: connected=${network.connected}`);
+		logger.info(`[FeWebAdapter] Network ${serverTag} status: connected=${network.connected}`);
 
 		// Emit network status update
 		this.callbacks.onNetworkUpdate(network);
@@ -895,7 +898,7 @@ export class FeWebAdapter {
 		this.initEmitted = true;
 
 		const networks = Array.from(this.serverTagToNetworkMap.values());
-		log.info(`[FeWebAdapter] Emitting init event with ${networks.length} networks`);
+		logger.info(`[FeWebAdapter] Emitting init event with ${networks.length} networks`);
 		await this.callbacks.onInit(networks);
 	}
 
@@ -903,7 +906,7 @@ export class FeWebAdapter {
 	 * 17. query_opened - Query window opened
 	 */
 	private async handleQueryOpened(msg: FeWebMessage): Promise<void> {
-		log.info(`[FeWebAdapter] Query opened: ${msg.nick} on ${msg.server}`);
+		logger.info(`[FeWebAdapter] Query opened: ${msg.nick} on ${msg.server}`);
 		const network = this.getOrCreateNetwork(msg.server!);
 		if (!network) return;
 
@@ -913,13 +916,13 @@ export class FeWebAdapter {
 		let channel = this.findChannel(network, nick);
 
 		if (channel) {
-			log.debug(`[FeWebAdapter] Query ${nick} already exists`);
+			logger.debug(`[FeWebAdapter] Query ${nick} already exists`);
 			return;
 		}
 
 		// Create query channel
 		channel = this.createQueryChannel(network, nick);
-		log.info(`[FeWebAdapter] Created query channel for ${nick} on ${msg.server}`);
+		logger.info(`[FeWebAdapter] Created query channel for ${nick} on ${msg.server}`);
 		await this.callbacks.onChannelJoin(network.uuid, channel);
 	}
 
@@ -927,7 +930,7 @@ export class FeWebAdapter {
 	 * 18. query_closed - Query window closed
 	 */
 	private handleQueryClosed(msg: FeWebMessage): void {
-		log.info(`[FeWebAdapter] Query closed: ${msg.nick} on ${msg.server}`);
+		logger.info(`[FeWebAdapter] Query closed: ${msg.nick} on ${msg.server}`);
 		const network = this.getOrCreateNetwork(msg.server!);
 		if (!network) return;
 
@@ -939,7 +942,7 @@ export class FeWebAdapter {
 		);
 
 		if (channelIndex === -1) {
-			log.debug(`[FeWebAdapter] Query ${nick} not found`);
+			logger.debug(`[FeWebAdapter] Query ${nick} not found`);
 			return;
 		}
 
@@ -956,14 +959,15 @@ export class FeWebAdapter {
 	 * 19. error - Error message
 	 */
 	private handleError(msg: FeWebMessage): void {
-		log.error(`[FeWebAdapter] Error from fe-web: ${msg.text}`);
+		// PRIVACY: Never log error text (may contain user data)
+		logger.error({msg: redactMessage(msg)}, `[FeWebAdapter] Error from fe-web`);
 	}
 
 	/**
 	 * 20. pong - Pong response
 	 */
 	private handlePong(msg: FeWebMessage): void {
-		log.debug("[FeWebAdapter] Received pong");
+		logger.debug("[FeWebAdapter] Received pong");
 	}
 
 	/**
@@ -975,27 +979,28 @@ export class FeWebAdapter {
 		const channelName = msg.channel || msg.target;
 
 		if (!serverTag || !channelName) {
-			log.warn(`[FeWebAdapter] Invalid mark_read message: ${JSON.stringify(msg)}`);
+			// PRIVACY: Never log full message object
+			logger.warn({msg: redactMessage(msg)}, `[FeWebAdapter] Invalid mark_read message`);
 			return;
 		}
 
 		const network = this.serverTagToNetworkMap.get(serverTag);
 
 		if (!network) {
-			log.warn(`[FeWebAdapter] Network ${serverTag} not found for mark_read`);
+			logger.warn(`[FeWebAdapter] Network ${serverTag} not found for mark_read`);
 			return;
 		}
 
 		const channel = this.findChannel(network, channelName);
 
 		if (!channel) {
-			log.warn(
+			logger.warn(
 				`[FeWebAdapter] Channel ${channelName} not found for mark_read on ${serverTag}`
 			);
 			return;
 		}
 
-		log.info(
+		logger.info(
 			`[FeWebAdapter] Mark read from irssi: ${serverTag}/${channelName} - syncing to all clients`
 		);
 
@@ -1041,10 +1046,10 @@ export class FeWebAdapter {
 			};
 
 			this.serverTagToNetworkMap.set(serverTag, network);
-			log.info(
+			logger.info(
 				`[FeWebAdapter] Created network for server tag: ${serverTag} with lobby channel`
 			);
-			log.debug(
+			logger.debug(
 				`[IrssiClient] Network ${serverTag} serverOptions: ${JSON.stringify(
 					network.serverOptions
 				)}`
@@ -1153,9 +1158,11 @@ export class FeWebAdapter {
 		if (!uuid) {
 			uuid = `network-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 			this.networkUuidMap.set(serverTag, uuid);
-			log.info(`[FeWebAdapter] Created new persistent UUID for server ${serverTag}: ${uuid}`);
+			logger.info(
+				`[FeWebAdapter] Created new persistent UUID for server ${serverTag}: ${uuid}`
+			);
 		} else {
-			log.info(`[FeWebAdapter] Using existing UUID for server ${serverTag}: ${uuid}`);
+			logger.info(`[FeWebAdapter] Using existing UUID for server ${serverTag}: ${uuid}`);
 		}
 
 		return uuid;

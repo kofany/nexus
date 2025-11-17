@@ -8,7 +8,7 @@ import dns from "dns";
 import chalk from "chalk";
 import net from "net";
 
-import log from "./log.js";
+import logger, {log} from "./logger.js";
 import {IrssiClient} from "./irssiClient.js";
 import ClientManager from "./clientManager.js";
 import Uploader from "./plugins/uploader.js";
@@ -518,7 +518,12 @@ export default async function (
 					});
 				}
 
-				process.exit(0);
+				// Flush and close Pino logger to release file handles
+				// Give pino-roll transport 100ms to finish writing and close files
+				logger.flush();
+				setTimeout(() => {
+					process.exit(0);
+				}, 100);
 			});
 		};
 

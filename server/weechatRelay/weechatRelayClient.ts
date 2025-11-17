@@ -8,7 +8,7 @@
 import {EventEmitter} from "events";
 import {Socket as NetSocket} from "net";
 import {WebSocket} from "ws";
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import {WeeChatMessage, WeeChatParser, OBJ_HASHTABLE, OBJ_STRING} from "./weechatProtocol.js";
 import {WeeChatRelayServerConfig} from "./weechatRelayServer.js";

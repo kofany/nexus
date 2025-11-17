@@ -1,5 +1,5 @@
 import _ from "lodash";
-import log from "../log.js";
+import {log} from "../logger.js";
 import fs from "fs";
 import path from "path";
 import WebPushAPI from "web-push";
@@ -30,9 +30,7 @@ class WebPush {
 
 			if (isWorldReadable) {
 				log.warn(
-					vapidPath,
-					"is world readable.",
-					"The file contains secrets. Please fix the permissions."
+					`${vapidPath} is world readable. The file contains secrets. Please fix the permissions.`
 				);
 
 				if (os.platform() !== "win32") {

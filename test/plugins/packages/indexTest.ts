@@ -1,4 +1,4 @@
-import log from "../../../dist/server/log.js";
+import {log} from "../../../dist/server/logger.js";
 import {expect} from "chai";
 import TestUtil from "../../util.ts";
 import sinon from "sinon";

@@ -1,4 +1,4 @@
-import log from "../../../dist/server/log.js";
+import {log} from "../../../dist/server/logger.js";
 import ldapAuth from "../../../dist/server/plugins/auth/ldap.js";
 import Config from "../../../dist/server/config.js";
 import {Client} from "ldapts";

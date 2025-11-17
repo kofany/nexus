@@ -1,7 +1,7 @@
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
-import log from "../log.js";
+import {log} from "../logger.js";
 import Config from "../config.js";
 
 type PolicyOption = {

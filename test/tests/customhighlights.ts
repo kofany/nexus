@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import log from "../../dist/server/log.js";
+import {log} from "../../dist/server/logger.js";
 import Client from "../../dist/server/client.js";
 import TestUtil from "../util.ts";
 import sinon from "sinon";

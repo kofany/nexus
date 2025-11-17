@@ -18,7 +18,7 @@ import fs from "fs";
 import path from "path";
 import type {Socket} from "socket.io";
 
-import log from "./log.js";
+import {log as logger, log, redactMsg} from "./logger.js";
 import Chan from "./models/chan.js";
 import Msg from "./models/msg.js";
 import User from "./models/user.js";
@@ -144,7 +144,7 @@ class MessageDeduplicator {
 		}
 
 		if (keysToDelete.length > 0) {
-			log.debug(`[MessageDeduplicator] Cleaned ${keysToDelete.length} expired entries`);
+			logger.debug(`[MessageDeduplicator] Cleaned ${keysToDelete.length} expired entries`);
 		}
 	}
 }
@@ -337,7 +337,7 @@ export class IrssiClient {
 			this.awayMessage = this.config.clientSettings.awayMessage;
 		}
 
-		log.info(`irssi client created for user ${chalk.bold(this.name)}`);
+		logger.info(`irssi client created for user ${chalk.bold(this.name)}`);
 	}
 
 	/**
@@ -348,14 +348,14 @@ export class IrssiClient {
 	 * - Message storage encryption uses derived key
 	 */
 	async login(userPassword: string): Promise<void> {
-		log.info(`User ${chalk.bold(this.name)} logging in...`);
+		logger.info(`User ${chalk.bold(this.name)} logging in...`);
 
 		// Store user password in memory (for message storage encryption)
 		this.userPassword = userPassword;
 
 		// Check if irssi password is configured
 		if (!this.config.irssiConnection.passwordEncrypted) {
-			log.warn(
+			logger.warn(
 				`User ${chalk.bold(
 					this.name
 				)} has no irssi password configured - skipping connection`
@@ -374,7 +374,7 @@ export class IrssiClient {
 			this.config.irssiConnection.port
 		);
 
-		log.info(`irssi password decrypted for user ${chalk.bold(this.name)}`);
+		logger.info(`irssi password decrypted for user ${chalk.bold(this.name)}`);
 
 		// Step 2: Derive message storage encryption key
 		if (!this.encryptionKey) {
@@ -385,18 +385,18 @@ export class IrssiClient {
 				32,
 				"sha256"
 			);
-			log.info(`Message storage encryption key derived for user ${chalk.bold(this.name)}`);
+			logger.info(`Message storage encryption key derived for user ${chalk.bold(this.name)}`);
 		} else {
-			log.info(`Message storage encryption key already exists (from autoconnect)`);
+			logger.info(`Message storage encryption key already exists (from autoconnect)`);
 		}
 
 		// Step 3: Initialize encrypted message storage (if not already enabled by autoconnect)
 		if (this.config.log && !this.messageStorage) {
 			this.messageStorage = new EncryptedMessageStorage(this.name, this.encryptionKey);
 			await this.messageStorage.enable();
-			log.info(`Encrypted message storage enabled for user ${chalk.bold(this.name)}`);
+			logger.info(`Encrypted message storage enabled for user ${chalk.bold(this.name)}`);
 		} else if (this.messageStorage) {
-			log.info(`Message storage already enabled (from autoconnect)`);
+			logger.info(`Message storage already enabled (from autoconnect)`);
 		}
 
 		// Step 4: Connect to irssi fe-web (ASYNCHRONOUSLY - don't block login!)
@@ -404,11 +404,11 @@ export class IrssiClient {
 		// If it fails, user can still use NexusIRC UI and fix config in Settings
 		// WeeChat Relay will be started automatically after erssi sync (in handleInit)
 		this.connectToIrssi().catch((error) => {
-			log.error(`Failed to connect to irssi for user ${chalk.bold(this.name)}: ${error}`);
+			logger.error(`Failed to connect to irssi for user ${chalk.bold(this.name)}: ${error}`);
 			// Don't throw - user is already logged in to NexusIRC
 		});
 
-		log.info(`User ${chalk.bold(this.name)} logged in successfully`);
+		logger.info(`User ${chalk.bold(this.name)} logged in successfully`);
 	}
 
 	/**
@@ -417,11 +417,11 @@ export class IrssiClient {
 	 * Message storage is enabled using irssiPassword (no userPassword needed!)
 	 */
 	async autoConnectToIrssi(): Promise<void> {
-		log.info(`User ${chalk.bold(this.name)} auto-connecting to irssi...`);
+		logger.info(`User ${chalk.bold(this.name)} auto-connecting to irssi...`);
 
 		// Check if irssi password is configured
 		if (!this.config.irssiConnection.passwordEncrypted) {
-			log.warn(
+			logger.warn(
 				`User ${chalk.bold(
 					this.name
 				)} has no irssi password configured - skipping autoconnect`
@@ -438,7 +438,7 @@ export class IrssiClient {
 			this.config.irssiConnection.port
 		);
 
-		log.info(`irssi password decrypted for user ${chalk.bold(this.name)}`);
+		logger.info(`irssi password decrypted for user ${chalk.bold(this.name)}`);
 
 		// Derive message storage encryption key from irssiPassword
 		// Use fixed salt since we don't have userPassword during autoconnect
@@ -450,13 +450,13 @@ export class IrssiClient {
 			"sha256"
 		);
 
-		log.info(`Message storage encryption key derived for user ${chalk.bold(this.name)}`);
+		logger.info(`Message storage encryption key derived for user ${chalk.bold(this.name)}`);
 
 		// Initialize encrypted message storage
 		if (this.config.log) {
 			this.messageStorage = new EncryptedMessageStorage(this.name, this.encryptionKey);
 			await this.messageStorage.enable();
-			log.info(`Encrypted message storage enabled for user ${chalk.bold(this.name)}`);
+			logger.info(`Encrypted message storage enabled for user ${chalk.bold(this.name)}`);
 		}
 
 		// Connect to irssi (with message storage enabled!)
@@ -468,7 +468,7 @@ export class IrssiClient {
 	 */
 	async connectToIrssi(): Promise<void> {
 		if (this.irssiConnection) {
-			log.warn(`User ${chalk.bold(this.name)} already connected to irssi`);
+			logger.warn(`User ${chalk.bold(this.name)} already connected to irssi`);
 			return;
 		}
 
@@ -484,7 +484,7 @@ export class IrssiClient {
 	 */
 	private async connectToIrssiInternal(): Promise<void> {
 		if (this.irssiConnection) {
-			log.warn(`User ${chalk.bold(this.name)} already connected to irssi`);
+			logger.warn(`User ${chalk.bold(this.name)} already connected to irssi`);
 			return;
 		}
 
@@ -537,7 +537,7 @@ export class IrssiClient {
 				existingUuidMap.set(serverTag, uuid);
 			}
 
-			log.info(
+			logger.info(
 				`[IrssiClient] Loaded ${existingUuidMap.size} persistent network UUIDs from config`
 			);
 		}
@@ -554,7 +554,7 @@ export class IrssiClient {
 		// Connect
 		await this.irssiConnection.connect();
 
-		log.info(
+		logger.info(
 			`User ${chalk.bold(this.name)} connected to irssi at wss://${feWebConfig.host}:${
 				feWebConfig.port
 			} (dual-layer security)`
@@ -572,15 +572,17 @@ export class IrssiClient {
 
 		// Connection events
 		(this.irssiConnection as any).on("connected", () => {
-			log.info(`User ${chalk.bold(this.name)}: irssi WebSocket connected`);
+			logger.info(`User ${chalk.bold(this.name)}: irssi WebSocket connected`);
 		});
 
 		// DISCONNECT HANDLER - czyści sieci i broadcast do przeglądarek
 		(this.irssiConnection as any).on("disconnected", (code: number, reason: string) => {
-			log.warn(`User ${chalk.bold(this.name)}: irssi WebSocket disconnected (code: ${code})`);
+			logger.warn(
+				`User ${chalk.bold(this.name)}: irssi WebSocket disconnected (code: ${code})`
+			);
 
-			log.info(`[DISCONNECT] ===============================================`);
-			log.info(`[DISCONNECT] BEFORE: this.networks.length = ${this.networks.length}`);
+			logger.info(`[DISCONNECT] ===============================================`);
+			logger.info(`[DISCONNECT] BEFORE: this.networks.length = ${this.networks.length}`);
 
 			// CLEAR networks on disconnect
 			const clearedCount = this.networks.length;
@@ -592,24 +594,24 @@ export class IrssiClient {
 				this.feWebAdapter.resetStateDumpTracking();
 			}
 
-			log.info(`[DISCONNECT] AFTER: this.networks.length = ${this.networks.length}`);
-			log.info(`[DISCONNECT] Broadcasting to ${this.attachedBrowsers.size} browsers`);
+			logger.info(`[DISCONNECT] AFTER: this.networks.length = ${this.networks.length}`);
+			logger.info(`[DISCONNECT] Broadcasting to ${this.attachedBrowsers.size} browsers`);
 
 			// Broadcast disconnect status to all browsers
-			log.info(`[DISCONNECT] 1. Sending irssi:status {connected: false}`);
+			logger.info(`[DISCONNECT] 1. Sending irssi:status {connected: false}`);
 			this.broadcastToAllBrowsers("irssi:status" as any, {
 				connected: false,
 				error: `Lost connection to irssi WebSocket (code: ${code})`,
 			});
 
 			// Also send empty init to clear UI networks
-			log.info(`[DISCONNECT] 2. Sending init {networks: []}`);
+			logger.info(`[DISCONNECT] 2. Sending init {networks: []}`);
 			this.broadcastToAllBrowsers("init", {
 				networks: [],
 				active: -1,
 			});
 
-			log.info(
+			logger.info(
 				`User ${chalk.bold(
 					this.name
 				)}: cleared ${clearedCount} networks after irssi disconnect`
@@ -617,15 +619,16 @@ export class IrssiClient {
 		});
 
 		this.irssiConnection.on("error", (msg: FeWebMessage) => {
-			log.error(`User ${chalk.bold(this.name)}: irssi WebSocket error: ${msg.text}`);
+			// PRIVACY: Never log error message text (may contain user data)
+			logger.error(`User ${chalk.bold(this.name)}: irssi WebSocket error occurred`);
 		});
 
 		this.irssiConnection.on("auth_ok", () => {
-			log.info(`User ${chalk.bold(this.name)}: irssi authentication successful`);
+			logger.info(`User ${chalk.bold(this.name)}: irssi authentication successful`);
 		});
 
 		(this.irssiConnection as any).on("auth_fail", () => {
-			log.error(`User ${chalk.bold(this.name)}: irssi authentication failed`);
+			logger.error(`User ${chalk.bold(this.name)}: irssi authentication failed`);
 		});
 
 		// Network/Server management handlers
@@ -653,7 +656,7 @@ export class IrssiClient {
 	 */
 	async handleNamesRequest(socketId: string, data: {target: number}): Promise<void> {
 		if (!this.irssiConnection) {
-			log.error(
+			logger.error(
 				`User ${chalk.bold(this.name)}: cannot request names, not connected to irssi`
 			);
 			return;
@@ -673,7 +676,7 @@ export class IrssiClient {
 		}
 
 		if (!channel || !network) {
-			log.warn(
+			logger.warn(
 				`User ${chalk.bold(this.name)}: channel ${data.target} not found for NAMES request`
 			);
 			return;
@@ -683,7 +686,7 @@ export class IrssiClient {
 		const command = `names ${channel.name}`;
 		await this.irssiConnection.executeCommand(command, network.serverTag);
 
-		log.info(
+		logger.info(
 			`User ${chalk.bold(this.name)}: requested NAMES for ${channel.name} on ${
 				network.serverTag
 			}`
@@ -701,7 +704,9 @@ export class IrssiClient {
 	private sendWindowCommand(serverTag?: string): void {
 		// Only send if at least one browser is connected
 		if (this.attachedBrowsers.size === 0) {
-			log.debug(`[IrssiClient] Skipping /window 1 - no browsers connected (terminal usage)`);
+			logger.debug(
+				`[IrssiClient] Skipping /window 1 - no browsers connected (terminal usage)`
+			);
 			return;
 		}
 
@@ -711,7 +716,7 @@ export class IrssiClient {
 
 		// Send /window 1 to switch to lobby (window 1 is always the first window)
 		this.irssiConnection.executeCommand("window 1", serverTag);
-		log.debug(
+		logger.debug(
 			`[IrssiClient] Sent /window 1 to irssi (browsers connected: ${this.attachedBrowsers.size})`
 		);
 	}
@@ -721,12 +726,12 @@ export class IrssiClient {
 	 * Includes command translation layer for Vue-specific commands
 	 */
 	async handleInput(socketId: string, data: {target: number; text: string}): Promise<void> {
-		log.info(
-			`[DEBUG handleInput] socketId=${socketId}, target=${data.target}, text="${data.text}"`
-		);
+		logger.info(`[DEBUG handleInput] socketId=${socketId}, target=${data.target}`);
 
 		if (!this.irssiConnection) {
-			log.error(`User ${chalk.bold(this.name)}: cannot send input, not connected to irssi`);
+			logger.error(
+				`User ${chalk.bold(this.name)}: cannot send input, not connected to irssi`
+			);
 			return;
 		}
 
@@ -754,7 +759,7 @@ export class IrssiClient {
 				}
 
 				if (!channel || !network) {
-					log.warn(
+					logger.warn(
 						`User ${chalk.bold(this.name)}: channel ${
 							data.target
 						} not found for command`
@@ -779,7 +784,7 @@ export class IrssiClient {
 				const finalCommand = translated || line.substring(1);
 
 				await this.irssiConnection.executeCommand(finalCommand, network.serverTag);
-				log.debug(
+				logger.debug(
 					`User ${chalk.bold(this.name)}: sent command: /${finalCommand} on ${
 						network.serverTag
 					}`
@@ -815,7 +820,7 @@ export class IrssiClient {
 				}
 
 				if (!channel || !network) {
-					log.warn(
+					logger.warn(
 						`User ${chalk.bold(this.name)}: channel ${
 							data.target
 						} not found in any network`
@@ -830,7 +835,7 @@ export class IrssiClient {
 				// Send message to channel with server tag
 				const command = `msg ${channel.name} ${messageText}`;
 				await this.irssiConnection.executeCommand(command, network.serverTag);
-				log.debug(
+				logger.debug(
 					`User ${chalk.bold(this.name)}: sent message to ${channel.name} on ${
 						network.serverTag
 					}`
@@ -860,13 +865,13 @@ export class IrssiClient {
 				// /close → translate based on channel type
 				if (channel.type === ChanType.CHANNEL) {
 					// For channels: /part #channel
-					log.info(
+					logger.info(
 						`[CommandTranslator] /close → /part ${channel.name} (channel) on ${network.serverTag}`
 					);
 					return `part ${channel.name}`;
 				} else if (channel.type === ChanType.QUERY) {
 					// For queries: send close_query message to irssi
-					log.info(
+					logger.info(
 						`[CommandTranslator] /close → close_query ${channel.name} (query) on ${network.serverTag}`
 					);
 					this.irssiConnection?.send({
@@ -887,7 +892,7 @@ export class IrssiClient {
 				// /kickban nick [reason] → /kickban #channel nick [reason]
 				if (channel.type === ChanType.CHANNEL && args.length > 0) {
 					const translated = `${command} ${channel.name} ${args.join(" ")}`;
-					log.info(
+					logger.info(
 						`[CommandTranslator] /${command} ${args.join(" ")} → /${translated} on ${
 							network.serverTag
 						}`
@@ -903,7 +908,7 @@ export class IrssiClient {
 				// /unban nick → /unban #channel nick
 				if (channel.type === ChanType.CHANNEL && args.length > 0) {
 					const translated = `${command} ${channel.name} ${args.join(" ")}`;
-					log.info(
+					logger.info(
 						`[CommandTranslator] /${command} ${args.join(" ")} → /${translated} on ${
 							network.serverTag
 						}`
@@ -917,7 +922,7 @@ export class IrssiClient {
 				// /invite nick → /invite nick #channel
 				if (channel.type === ChanType.CHANNEL && args.length === 1) {
 					const translated = `invite ${args[0]} ${channel.name}`;
-					log.info(
+					logger.info(
 						`[CommandTranslator] /invite ${args[0]} → /${translated} on ${network.serverTag}`
 					);
 					return translated;
@@ -927,7 +932,7 @@ export class IrssiClient {
 
 			case "banlist":
 				// /banlist → /mode #channel +b
-				log.info(
+				logger.info(
 					`[CommandTranslator] /banlist → /mode ${channel.name} +b on ${network.serverTag}`
 				);
 				return `mode ${channel.name} +b`;
@@ -939,7 +944,7 @@ export class IrssiClient {
 					// Check if first arg is a mode string (starts with + or -)
 					if (args[0].startsWith("+") || args[0].startsWith("-")) {
 						const translated = `mode ${channel.name} ${args.join(" ")}`;
-						log.info(
+						logger.info(
 							`[CommandTranslator] /mode ${args.join(" ")} → /${translated} on ${
 								network.serverTag
 							}`
@@ -973,7 +978,7 @@ export class IrssiClient {
 					};
 					const modeString = modeMap[command];
 					const translated = `mode ${channel.name} ${modeString} ${args.join(" ")}`;
-					log.info(
+					logger.info(
 						`[CommandTranslator] /${command} ${args.join(" ")} → /${translated} on ${
 							network.serverTag
 						}`
@@ -995,7 +1000,7 @@ export class IrssiClient {
 					}
 
 					const translated = `action ${channel.name} ${text}`;
-					log.info(
+					logger.info(
 						`[CommandTranslator] /${command} ${args.join(" ")} → /${translated} on ${
 							network.serverTag
 						}`
@@ -1031,7 +1036,7 @@ export class IrssiClient {
 
 						// Get next channel ID from feWebAdapter
 						if (!this.feWebAdapter) {
-							log.error("[CommandTranslator] feWebAdapter not initialized");
+							logger.error("[CommandTranslator] feWebAdapter not initialized");
 							return null;
 						}
 
@@ -1055,14 +1060,14 @@ export class IrssiClient {
 							chan: queryChannel.getFilteredClone(true) as any,
 						});
 
-						log.info(
+						logger.info(
 							`[CommandTranslator] Created query window for ${targetNick} on ${network.serverTag}`
 						);
 
 						// IMPORTANT: Send /query to irssi to create query window there too
 						// This ensures synchronization between Vue and erssi
 						const queryCmd = `query ${targetNick}`;
-						log.info(
+						logger.info(
 							`[CommandTranslator] Sending /query ${targetNick} to irssi for synchronization`
 						);
 						// Send in background (don't wait for response)
@@ -1074,7 +1079,7 @@ export class IrssiClient {
 					// If there's a message, send it
 					if (message) {
 						const translated = `msg ${targetNick} ${message}`;
-						log.info(
+						logger.info(
 							`[CommandTranslator] /${command} ${args.join(
 								" "
 							)} → /${translated} on ${network.serverTag}`
@@ -1083,7 +1088,7 @@ export class IrssiClient {
 					}
 
 					// No message - query window already created and synced to irssi
-					log.info(
+					logger.info(
 						`[CommandTranslator] /${command} ${targetNick} → query window created and synced`
 					);
 					return false; // Don't send to irssi (already sent above if needed)
@@ -1094,7 +1099,7 @@ export class IrssiClient {
 			case "quit":
 				// /quit in lobby → /disconnect (for this network only!)
 				if (channel.type === ChanType.LOBBY) {
-					log.info(
+					logger.info(
 						`[CommandTranslator] /quit → /disconnect (lobby) on ${network.serverTag}`
 					);
 					// irssi command: /disconnect <server_tag>
@@ -1111,7 +1116,7 @@ export class IrssiClient {
 				if (args.length === 1) {
 					const nick = args[0];
 					const translated = `whois ${nick} ${nick}`;
-					log.info(
+					logger.info(
 						`[CommandTranslator] /${command} ${nick} → /${translated} on ${network.serverTag}`
 					);
 					return translated;
@@ -1148,13 +1153,15 @@ export class IrssiClient {
 		}
 
 		if (!targetChannel || !targetNetwork) {
-			log.warn(`User ${chalk.bold(this.name)}: channel ${data.target} not found for more`);
+			logger.warn(`User ${chalk.bold(this.name)}: channel ${data.target} not found for more`);
 			return null;
 		}
 
 		// ALWAYS load from storage (not from cache!)
 		if (!this.messageStorage) {
-			log.warn(`User ${chalk.bold(this.name)}: message storage not enabled, returning empty`);
+			logger.warn(
+				`User ${chalk.bold(this.name)}: message storage not enabled, returning empty`
+			);
 			return {
 				chan: data.target,
 				messages: [],
@@ -1193,7 +1200,7 @@ export class IrssiClient {
 				targetChannel.name
 			);
 
-			log.debug(
+			logger.debug(
 				`User ${chalk.bold(this.name)}: loaded ${messages.length} messages for channel ${
 					data.target
 				} (total: ${totalMessages})`
@@ -1205,7 +1212,7 @@ export class IrssiClient {
 				totalMessages: totalMessages,
 			};
 		} catch (err) {
-			log.error(
+			logger.error(
 				`Failed to load messages for ${targetNetwork.name}/${targetChannel.name}: ${err}`
 			);
 			return {
@@ -1230,7 +1237,7 @@ export class IrssiClient {
 		// JOIN Socket.IO room for efficient broadcasts
 		socket.join(this.socketIoRoomName);
 
-		log.info(
+		logger.info(
 			`User ${chalk.bold(this.name)}: browser attached (${socketId}), total: ${
 				this.attachedBrowsers.size
 			}`
@@ -1241,14 +1248,14 @@ export class IrssiClient {
 		// 2. No irssi password configured → send EMPTY init (allow user to configure in Settings)
 		// 3. Irssi password configured but not connected yet → wait for state_dump
 		if (this.networks.length > 0) {
-			log.info(
+			logger.info(
 				`User ${chalk.bold(this.name)}: sending init to new browser ${socketId} (${
 					this.networks.length
 				} networks)`
 			);
 			void this.sendInitialState(socket, token);
 		} else if (!this.config.irssiConnection.passwordEncrypted) {
-			log.info(
+			logger.info(
 				`User ${chalk.bold(
 					this.name
 				)}: no irssi password configured, sending empty init to ${socketId}`
@@ -1262,7 +1269,7 @@ export class IrssiClient {
 		} else {
 			// Irssi configured but no networks yet - send empty init with status
 			const isConnected = this.irssiConnection?.isConnected() ?? false;
-			log.info(
+			logger.info(
 				`User ${chalk.bold(this.name)}: sending empty init to ${socketId} (irssi ${
 					isConnected ? "connecting" : "NOT connected"
 				})`
@@ -1287,7 +1294,7 @@ export class IrssiClient {
 			this.attachedBrowsers.delete(socketId);
 		}
 
-		log.info(
+		logger.info(
 			`User ${chalk.bold(this.name)}: browser detached (${socketId}), remaining: ${
 				this.attachedBrowsers.size
 			}`
@@ -1304,12 +1311,14 @@ export class IrssiClient {
 	 */
 	private async sendInitialState(socket: Socket, token?: string): Promise<void> {
 		try {
-			log.info(`[IrssiClient] ⏰ TIMING: sendInitialState() START for socket ${socket.id}`);
+			logger.info(
+				`[IrssiClient] ⏰ TIMING: sendInitialState() START for socket ${socket.id}`
+			);
 
 			// STEP 0: Defensive check - ensure unread markers are loaded from storage
 			// This handles the edge case where sendInitialState() is called before handleInit()
 			if (this.messageStorage && this.unreadMarkers.size === 0) {
-				log.info(
+				logger.info(
 					`[IrssiClient] Unread markers not loaded yet, loading from storage (defensive check)...`
 				);
 
@@ -1328,17 +1337,17 @@ export class IrssiClient {
 						});
 					}
 
-					log.info(
+					logger.info(
 						`[IrssiClient] Loaded ${markers.size} unread markers (defensive check)`
 					);
 				} catch (err) {
-					log.error(`Failed to load unread markers in sendInitialState: ${err}`);
+					logger.error(`Failed to load unread markers in sendInitialState: ${err}`);
 				}
 			}
 
 			// STEP 1: Load messages from storage for each channel/query
 			if (this.messageStorage) {
-				log.info(
+				logger.info(
 					`[IrssiClient] Loading messages from storage for ${this.networks.length} networks...`
 				);
 
@@ -1381,7 +1390,7 @@ export class IrssiClient {
 
 								if (firstUnreadMsg) {
 									channel.firstUnread = firstUnreadMsg.id;
-									log.debug(
+									logger.debug(
 										`[IrssiClient] Set firstUnread=${firstUnreadMsg.id} for ${
 											network.name
 										}/${channel.name} (lastReadTime=${new Date(
@@ -1391,23 +1400,23 @@ export class IrssiClient {
 								} else {
 									// All messages are read, set to last message
 									channel.firstUnread = messages[messages.length - 1].id;
-									log.debug(
+									logger.debug(
 										`[IrssiClient] All messages read for ${network.name}/${channel.name}, set firstUnread to last message`
 									);
 								}
 							} else if (messages.length > 0) {
 								// No marker or marker is 0 - set to last message (all unread)
 								channel.firstUnread = messages[0].id;
-								log.debug(
+								logger.debug(
 									`[IrssiClient] No marker for ${network.name}/${channel.name}, set firstUnread to first message`
 								);
 							}
 
-							log.debug(
+							logger.debug(
 								`[IrssiClient] Loaded ${messages.length}/${totalCount} messages for ${network.name}/${channel.name}`
 							);
 						} catch (err) {
-							log.error(
+							logger.error(
 								`Failed to load messages for ${network.name}/${channel.name}: ${err}`
 							);
 							channel.messages = [];
@@ -1458,7 +1467,7 @@ export class IrssiClient {
 				active: this.lastActiveChannel || -1,
 			});
 
-			log.info(
+			logger.info(
 				`[IrssiClient] ⏰ TIMING: sendInitialState() SENT init event for socket ${socket.id} with ${sharedNetworks.length} networks`
 			);
 
@@ -1472,7 +1481,7 @@ export class IrssiClient {
 							id: channel.id,
 							users: usersArray,
 						});
-						log.debug(
+						logger.debug(
 							`[IrssiClient] Sent names for channel ${channel.id} (${usersArray.length} users) in init`
 						);
 					}
@@ -1501,7 +1510,7 @@ export class IrssiClient {
 								marker.unreadCount = unreadCount;
 								this.unreadMarkers.set(key, marker);
 							} catch (err) {
-								log.error(
+								logger.error(
 									`Failed to get unread count for ${net.name}/${channel.name}: ${err}`
 								);
 							}
@@ -1512,16 +1521,18 @@ export class IrssiClient {
 							unread: unreadCount,
 							highlight: marker.dataLevel === DataLevel.HILIGHT ? unreadCount : 0,
 						});
-						log.debug(
+						logger.debug(
 							`[IrssiClient] Sent activity_update for channel ${channel.id} (unread=${unreadCount}, level=${marker.dataLevel}) in init`
 						);
 					}
 				}
 			}
 
-			log.info(`User ${chalk.bold(this.name)}: sent initial state to browser ${socket.id}`);
+			logger.info(
+				`User ${chalk.bold(this.name)}: sent initial state to browser ${socket.id}`
+			);
 		} catch (error) {
-			log.error(`Failed to send initial state to browser ${socket.id}: ${error}`);
+			logger.error(`Failed to send initial state to browser ${socket.id}: ${error}`);
 		}
 	}
 
@@ -1589,15 +1600,15 @@ export class IrssiClient {
 				break;
 			case "network":
 				// New network added - could trigger buffer_opened for server buffer
-				log.debug(`[IrssiClient] network event forwarded to WeeChat adapter`);
+				logger.debug(`[IrssiClient] network event forwarded to WeeChat adapter`);
 				break;
 			case "network:status":
 				// Network status changed
-				log.debug(`[IrssiClient] network:status event forwarded to WeeChat adapter`);
+				logger.debug(`[IrssiClient] network:status event forwarded to WeeChat adapter`);
 				break;
 			case "nick":
 				// Nick changed
-				log.debug(`[IrssiClient] nick event forwarded to WeeChat adapter`);
+				logger.debug(`[IrssiClient] nick event forwarded to WeeChat adapter`);
 				break;
 		}
 	}
@@ -1616,7 +1627,7 @@ export class IrssiClient {
 	 * Disconnect from irssi and cleanup
 	 */
 	async quit(shouldSave = true): Promise<void> {
-		log.info(`User ${chalk.bold(this.name)} quitting...`);
+		logger.info(`User ${chalk.bold(this.name)} quitting...`);
 
 		// Disconnect all browsers via Socket.IO room (efficient)
 		const sockets = await this.manager.sockets.in(this.socketIoRoomName).fetchSockets();
@@ -1659,7 +1670,7 @@ export class IrssiClient {
 			this.manager.saveUser(this as any); // IrssiClient is compatible with Client interface
 		}
 
-		log.info(`User ${chalk.bold(this.name)} quit successfully`);
+		logger.info(`User ${chalk.bold(this.name)} quit successfully`);
 	}
 
 	/**
@@ -1773,7 +1784,7 @@ export class IrssiClient {
 		const channelName = msg.channel || msg.target;
 
 		if (!serverTag || !channelName) {
-			log.warn(
+			logger.warn(
 				`[IrssiClient] Invalid ACTIVITY_UPDATE message (missing server/channel): ${JSON.stringify(
 					msg
 				)}`
@@ -1785,7 +1796,7 @@ export class IrssiClient {
 		const network = this.networks.find((n) => n.serverTag === serverTag);
 
 		if (!network) {
-			log.warn(`[IrssiClient] ACTIVITY_UPDATE for unknown server: ${serverTag}`);
+			logger.warn(`[IrssiClient] ACTIVITY_UPDATE for unknown server: ${serverTag}`);
 			return;
 		}
 
@@ -1795,7 +1806,7 @@ export class IrssiClient {
 		);
 
 		if (!channel) {
-			log.warn(
+			logger.warn(
 				`[IrssiClient] ACTIVITY_UPDATE for unknown channel: ${channelName} on ${serverTag}`
 			);
 			return;
@@ -1806,7 +1817,7 @@ export class IrssiClient {
 		const isChannelOpen = this.isChannelOpenInAnyBrowser(channel.id);
 
 		if (isChannelOpen) {
-			log.debug(
+			logger.debug(
 				`[IrssiClient] Ignoring activity_update for ${network.name}/${channel.name} (channel is open in browser)`
 			);
 			return;
@@ -1841,7 +1852,7 @@ export class IrssiClient {
 			// Update activeWindowInIrssi (user switched to this window in irssi)
 			this.activeWindowInIrssi = key;
 
-			log.debug(
+			logger.debug(
 				`[IrssiClient] Activity cleared: ${network.name}/${channel.name} level=0 unread=0 (active in irssi)`
 			);
 
@@ -1857,7 +1868,7 @@ export class IrssiClient {
 		// New activity (level > 0) - this channel is NO LONGER active in irssi!
 		// Clear activeWindowInIrssi if it was pointing to this channel
 		if (this.activeWindowInIrssi === key) {
-			log.debug(
+			logger.debug(
 				`[IrssiClient] Channel ${network.name}/${channel.name} is no longer active in irssi (got activity level=${dataLevel})`
 			);
 			this.activeWindowInIrssi = null;
@@ -1871,7 +1882,7 @@ export class IrssiClient {
 					marker.unreadCount = count;
 					this.unreadMarkers.set(key, marker);
 
-					log.debug(
+					logger.debug(
 						`[IrssiClient] Activity update: ${network.name}/${channel.name} level=${dataLevel} unread=${count} (from DB)`
 					);
 
@@ -1883,7 +1894,7 @@ export class IrssiClient {
 					});
 				})
 				.catch((err) => {
-					log.error(
+					logger.error(
 						`Failed to get unread count for ${network.name}/${channel.name}: ${err}`
 					);
 					// Fallback: use old increment logic
@@ -1904,7 +1915,7 @@ export class IrssiClient {
 
 		this.unreadMarkers.set(key, marker);
 
-		log.debug(
+		logger.debug(
 			`[IrssiClient] Activity update: ${network.name}/${channel.name} level=${dataLevel} unread=${marker.unreadCount}`
 		);
 
@@ -1922,7 +1933,7 @@ export class IrssiClient {
 	private isChannelOpenInAnyBrowser(channelId: number): boolean {
 		for (const [socketId, session] of this.attachedBrowsers) {
 			if (session.openChannel === channelId) {
-				log.debug(`[IrssiClient] Channel ${channelId} is open in browser ${socketId}`);
+				logger.debug(`[IrssiClient] Channel ${channelId} is open in browser ${socketId}`);
 				return true;
 			}
 		}
@@ -1938,21 +1949,21 @@ export class IrssiClient {
 		const session = this.attachedBrowsers.get(socketId);
 
 		if (!session) {
-			log.warn(`[IrssiClient] open() called for unknown browser ${socketId}`);
+			logger.warn(`[IrssiClient] open() called for unknown browser ${socketId}`);
 			return;
 		}
 
 		// Update openChannel for this browser
 		session.openChannel = channelId;
 
-		log.debug(`[IrssiClient] Browser ${socketId} opened channel ${channelId}`);
+		logger.debug(`[IrssiClient] Browser ${socketId} opened channel ${channelId}`);
 
 		// Find network and channel by channel ID
 		for (const network of this.networks) {
 			const channel = network.channels.find((c) => c.id === channelId);
 
 			if (channel) {
-				log.debug(
+				logger.debug(
 					`[IrssiClient] Found channel ${network.name}/${channel.name} for ID ${channelId}, calling markAsRead()`
 				);
 				// Mark as read (this will broadcast to all browsers and send to irssi)
@@ -1961,7 +1972,7 @@ export class IrssiClient {
 			}
 		}
 
-		log.warn(`[IrssiClient] Channel ${channelId} not found in any network!`);
+		logger.warn(`[IrssiClient] Channel ${channelId} not found in any network!`);
 	}
 
 	/**
@@ -1971,7 +1982,7 @@ export class IrssiClient {
 	 * @param fromIrssi - true if mark_read came from irssi (window switch), false if from browser
 	 */
 	markAsRead(network: string, channel: string, fromIrssi: boolean = false): void {
-		log.debug(
+		logger.debug(
 			`[IrssiClient] markAsRead() called: ${network}/${channel} (fromIrssi=${fromIrssi})`
 		);
 
@@ -1989,19 +2000,25 @@ export class IrssiClient {
 				this.messageStorage
 					.saveUnreadMarker(network, channel, marker.lastReadTime)
 					.catch((err) => {
-						log.error(`Failed to save unread marker for ${network}/${channel}: ${err}`);
+						logger.error(
+							`Failed to save unread marker for ${network}/${channel}: ${err}`
+						);
 					});
 			}
 		} else {
-			log.debug(`[IrssiClient] No marker found for ${network}/${channel}, creating new one`);
+			logger.debug(
+				`[IrssiClient] No marker found for ${network}/${channel}, creating new one`
+			);
 		}
 
-		log.debug(`[IrssiClient] Marked as read: ${network}/${channel} (fromIrssi=${fromIrssi})`);
+		logger.debug(
+			`[IrssiClient] Marked as read: ${network}/${channel} (fromIrssi=${fromIrssi})`
+		);
 
 		// If mark_read came from irssi, update activeWindowInIrssi
 		if (fromIrssi) {
 			this.activeWindowInIrssi = key;
-			log.debug(`[IrssiClient] Active window in irssi: ${key}`);
+			logger.debug(`[IrssiClient] Active window in irssi: ${key}`);
 		}
 
 		// Find network and channel IDs for broadcast
@@ -2021,7 +2038,7 @@ export class IrssiClient {
 				// Send mark_read to irssi ONLY if NOT from irssi
 				// This prevents infinite loop and unnecessary window switches
 				if (this.irssiConnection && !fromIrssi) {
-					log.debug(
+					logger.debug(
 						`[IrssiClient] Preparing to send mark_read to irssi (connection exists, fromIrssi=${fromIrssi})`
 					);
 
@@ -2032,16 +2049,16 @@ export class IrssiClient {
 							server: net.serverTag,
 							target: chan.name,
 						});
-						log.debug(
+						logger.debug(
 							`[IrssiClient] ✅ Sent mark_read to irssi for ${net.serverTag}/${chan.name}`
 						);
 					} else {
-						log.debug(
+						logger.debug(
 							`[IrssiClient] ❌ Skipping mark_read for ${net.serverTag}/${chan.name} (not connected)`
 						);
 					}
 				} else {
-					log.debug(
+					logger.debug(
 						`[IrssiClient] ❌ NOT sending mark_read to irssi (connection=${!!this
 							.irssiConnection}, fromIrssi=${fromIrssi})`
 					);
@@ -2055,7 +2072,7 @@ export class IrssiClient {
 	 * Syncs read status to all browsers
 	 */
 	private handleMarkReadFromIrssi(networkUuid: string, channelName: string): void {
-		log.info(
+		logger.info(
 			`[IrssiClient] Mark read from irssi: ${networkUuid}/${channelName} - syncing to all clients`
 		);
 
@@ -2072,7 +2089,7 @@ export class IrssiClient {
 		const nick = msg.nick;
 
 		if (!serverTag || !nick) {
-			log.warn(
+			logger.warn(
 				`[IrssiClient] Invalid query_closed message (missing server/nick): ${JSON.stringify(
 					msg
 				)}`
@@ -2084,7 +2101,7 @@ export class IrssiClient {
 		const network = this.networks.find((n) => n.serverTag === serverTag);
 
 		if (!network) {
-			log.warn(`[IrssiClient] query_closed for unknown server: ${serverTag}`);
+			logger.warn(`[IrssiClient] query_closed for unknown server: ${serverTag}`);
 			return;
 		}
 
@@ -2097,11 +2114,11 @@ export class IrssiClient {
 		);
 
 		if (!query) {
-			log.warn(`[IrssiClient] query_closed for unknown query: ${nick} on ${serverTag}`);
+			logger.warn(`[IrssiClient] query_closed for unknown query: ${nick} on ${serverTag}`);
 			return;
 		}
 
-		log.info(`[IrssiClient] Query closed in irssi: ${nick} on ${serverTag}`);
+		logger.info(`[IrssiClient] Query closed in irssi: ${nick} on ${serverTag}`);
 
 		// Remove query from network
 		const index = network.channels.indexOf(query);
@@ -2115,13 +2132,15 @@ export class IrssiClient {
 			chan: query.id,
 		});
 
-		log.debug(`[IrssiClient] Broadcasted part for query ${query.id} (${nick}) to all browsers`);
+		logger.debug(
+			`[IrssiClient] Broadcasted part for query ${query.id} (${nick}) to all browsers`
+		);
 	}
 
 	// FeWebAdapter callback handlers
 
 	private handleNetworkUpdate(network: NetworkData): void {
-		log.debug(
+		logger.debug(
 			`[IrssiClient] Network update: ${network.name} (connected: ${network.connected})`
 		);
 
@@ -2138,7 +2157,9 @@ export class IrssiClient {
 		// If this is a new network that just connected, send full network to frontend
 		// This happens when user connects to a server via /CONNECT or NetworkManager
 		if (isNewNetwork && network.connected) {
-			log.info(`[IrssiClient] New network connected: ${network.name} - sending to frontend`);
+			logger.info(
+				`[IrssiClient] New network connected: ${network.name} - sending to frontend`
+			);
 
 			// Send network event to all browsers (so they add it to the network list)
 			// Use the same format as Client.connect() uses (server/client.ts:350)
@@ -2166,14 +2187,16 @@ export class IrssiClient {
 	}
 
 	private handleMessage(networkUuid: string, channelId: number, msg: Msg): void {
-		log.debug(`[IrssiClient] Message: ${msg.text?.substring(0, 50)}`);
+		// PRIVACY: Never log message text content
+		logger.debug({msg: redactMsg(msg)}, `[IrssiClient] Message received (type: ${msg.type})`);
 
 		// Check for duplicate messages (prevents double processing on reconnects)
 		const msgText = msg.text ?? "";
 		const msgTime = msg.time ? msg.time.getTime() : Date.now();
 
 		if (this.messageDedup.isDuplicate(networkUuid, channelId, msgTime, msgText)) {
-			log.debug(`[IrssiClient] Skipping duplicate message: ${msgText.substring(0, 30)}`);
+			// PRIVACY: Never log message text, even for duplicates
+			logger.debug(`[IrssiClient] Skipping duplicate message`);
 			return;
 		}
 
@@ -2204,7 +2227,7 @@ export class IrssiClient {
 
 			// Save encrypted to SQLite (async - don't await!)
 			this.messageStorage.index(networkForStorage, channelForStorage, msg).catch((err) => {
-				log.error(
+				logger.error(
 					`Failed to save message to storage for ${network.name}/${channel.name}: ${err}`
 				);
 			});
@@ -2235,7 +2258,7 @@ export class IrssiClient {
 		// This prevents irssi from sending activity_update
 		// DON'T send mark_read if channel is already active in irssi!
 		if (isChannelOpenInBrowser && !isChannelActiveInIrssi && network && channel && !msg.self) {
-			log.debug(
+			logger.debug(
 				`[IrssiClient] Channel ${channelId} is open in browser, marking as read in irssi`
 			);
 			this.markAsRead(network.uuid, channel.name, false); // fromIrssi=false
@@ -2246,7 +2269,7 @@ export class IrssiClient {
 	}
 
 	private async handleChannelJoin(networkUuid: string, channel: Chan): Promise<void> {
-		log.info(`[IrssiClient] Channel join: ${channel.name}`);
+		logger.info(`[IrssiClient] Channel join: ${channel.name}`);
 
 		// DON'T load messages from storage here!
 		// Frontend will request them via lazy loading (more request) if needed.
@@ -2258,9 +2281,11 @@ export class IrssiClient {
 			try {
 				const count = await this.messageStorage.getMessageCount(networkUuid, channel.name);
 				channel.totalMessagesInStorage = count;
-				log.debug(`[IrssiClient] Channel ${channel.name} has ${count} messages in storage`);
+				logger.debug(
+					`[IrssiClient] Channel ${channel.name} has ${count} messages in storage`
+				);
 			} catch (err) {
-				log.error(`Failed to get message count for ${channel.name}: ${err}`);
+				logger.error(`Failed to get message count for ${channel.name}: ${err}`);
 				channel.totalMessagesInStorage = 0;
 			}
 		}
@@ -2290,7 +2315,7 @@ export class IrssiClient {
 		const network = this.networks.find((n) => n.uuid === data.networkUuid);
 
 		if (!network) {
-			log.warn(
+			logger.warn(
 				`User ${chalk.bold(this.name)}: Network ${
 					data.networkUuid
 				} not found for part_channel`
@@ -2301,7 +2326,7 @@ export class IrssiClient {
 		const channel = network.channels.find((c) => c.id === data.channelId);
 
 		if (!channel) {
-			log.debug(
+			logger.debug(
 				`User ${chalk.bold(this.name)}: Channel ${
 					data.channelId
 				} already removed (idempotent)`
@@ -2311,7 +2336,7 @@ export class IrssiClient {
 
 		const {ChanType} = await import("../shared/types/chan.js");
 
-		log.info(
+		logger.info(
 			`User ${chalk.bold(this.name)}: Part channel ${channel.name} on ${
 				network.name
 			} (client-driven)`
@@ -2334,7 +2359,7 @@ export class IrssiClient {
 			if (channel.type === ChanType.CHANNEL) {
 				// Send /part for channels (executeCommand returns void)
 				this.irssiConnection.executeCommand(`part ${channel.name}`, network.serverTag);
-				log.debug(
+				logger.debug(
 					`User ${chalk.bold(this.name)}: Sent /part ${
 						channel.name
 					} to irssi in background`
@@ -2346,7 +2371,7 @@ export class IrssiClient {
 					server: network.serverTag,
 					nick: channel.name,
 				});
-				log.debug(
+				logger.debug(
 					`User ${chalk.bold(this.name)}: Sent close_query for ${
 						channel.name
 					} to irssi in background`
@@ -2359,7 +2384,7 @@ export class IrssiClient {
 	}
 
 	private handleChannelPart(networkUuid: string, channelId: number): void {
-		log.info(`[IrssiClient] Channel part: ${channelId}`);
+		logger.info(`[IrssiClient] Channel part: ${channelId}`);
 
 		// Broadcast to all browsers
 		this.broadcastToAllBrowsers("part", {
@@ -2391,7 +2416,7 @@ export class IrssiClient {
 	}
 
 	private handleNicklistUpdate(networkUuid: string, channelId: number, users: User[]): void {
-		log.debug(`[IrssiClient] Nicklist update: ${channelId} (${users.length} users)`);
+		logger.debug(`[IrssiClient] Nicklist update: ${channelId} (${users.length} users)`);
 
 		// DON'T send 'users' event - it triggers frontend to request /names which is wasteful!
 		// In irssi mode we already have the data, just send 'names' event directly
@@ -2410,7 +2435,7 @@ export class IrssiClient {
 	}
 
 	private handleTopicUpdate(networkUuid: string, channelId: number, topic: string): void {
-		log.debug(`[IrssiClient] Topic update: ${channelId}`);
+		logger.debug(`[IrssiClient] Topic update: ${channelId}`);
 
 		// Broadcast to all browsers
 		this.broadcastToAllBrowsers("topic", {
@@ -2420,7 +2445,7 @@ export class IrssiClient {
 	}
 
 	private handleNickChange(networkUuid: string, newNick: string): void {
-		log.info(`[IrssiClient] Nick change: ${networkUuid} → ${newNick}`);
+		logger.info(`[IrssiClient] Nick change: ${networkUuid} → ${newNick}`);
 
 		// Broadcast to all browsers
 		this.broadcastToAllBrowsers("nick", {
@@ -2430,16 +2455,20 @@ export class IrssiClient {
 	}
 
 	private async handleInit(networks: NetworkData[]): Promise<void> {
-		log.info(`[HANDLEINIT] ========================================`);
-		log.info(`[HANDLEINIT] Init with ${networks.length} networks`);
-		log.info(`[HANDLEINIT] BEFORE assignment: this.networks.length = ${this.networks.length}`);
+		logger.info(`[HANDLEINIT] ========================================`);
+		logger.info(`[HANDLEINIT] Init with ${networks.length} networks`);
+		logger.info(
+			`[HANDLEINIT] BEFORE assignment: this.networks.length = ${this.networks.length}`
+		);
 		this.networks = networks;
-		log.info(`[HANDLEINIT] AFTER assignment: this.networks.length = ${this.networks.length}`);
-		log.info(`[HANDLEINIT] attachedBrowsers.size = ${this.attachedBrowsers.size}`);
+		logger.info(
+			`[HANDLEINIT] AFTER assignment: this.networks.length = ${this.networks.length}`
+		);
+		logger.info(`[HANDLEINIT] attachedBrowsers.size = ${this.attachedBrowsers.size}`);
 
 		// Load unread markers from storage FIRST (persistent read status across restarts!)
 		if (this.messageStorage) {
-			log.info(`[IrssiClient] Loading unread markers from storage...`);
+			logger.info(`[IrssiClient] Loading unread markers from storage...`);
 
 			try {
 				const markers = await this.messageStorage.loadUnreadMarkers();
@@ -2460,15 +2489,15 @@ export class IrssiClient {
 					});
 				}
 
-				log.info(`[IrssiClient] Loaded ${markers.size} unread markers from storage`);
+				logger.info(`[IrssiClient] Loaded ${markers.size} unread markers from storage`);
 			} catch (err) {
-				log.error(`Failed to load unread markers from storage: ${err}`);
+				logger.error(`Failed to load unread markers from storage: ${err}`);
 			}
 		}
 
 		// Load messages from storage for all channels (on node restart!)
 		if (this.messageStorage) {
-			log.info(
+			logger.info(
 				`[IrssiClient] Loading messages from storage for ${networks.length} networks...`
 			);
 
@@ -2509,7 +2538,7 @@ export class IrssiClient {
 
 							if (firstUnreadMsg) {
 								channel.firstUnread = firstUnreadMsg.id;
-								log.debug(
+								logger.debug(
 									`[IrssiClient] Set firstUnread=${firstUnreadMsg.id} for ${
 										network.name
 									}/${channel.name} (lastReadTime=${new Date(
@@ -2519,23 +2548,23 @@ export class IrssiClient {
 							} else {
 								// All messages are read, set to last message
 								channel.firstUnread = messages[messages.length - 1].id;
-								log.debug(
+								logger.debug(
 									`[IrssiClient] All messages read for ${network.name}/${channel.name}, set firstUnread to last message`
 								);
 							}
 						} else if (messages.length > 0) {
 							// No marker or marker is 0 - set to first message (all unread)
 							channel.firstUnread = messages[0].id;
-							log.debug(
+							logger.debug(
 								`[IrssiClient] No marker for ${network.name}/${channel.name}, set firstUnread to first message`
 							);
 						}
 
-						log.info(
+						logger.info(
 							`[IrssiClient] Loaded ${messages.length} messages for ${network.name}/${channel.name} from storage`
 						);
 					} catch (err) {
-						log.error(
+						logger.error(
 							`Failed to load messages for ${network.name}/${channel.name}: ${err}`
 						);
 						channel.messages = [];
@@ -2557,7 +2586,7 @@ export class IrssiClient {
 				NETWORK: net.serverOptions.NETWORK,
 			};
 
-			log.debug(
+			logger.debug(
 				`[IrssiClient] Network ${net.name} serverOptions:`,
 				JSON.stringify(serverOptions)
 			);
@@ -2576,7 +2605,7 @@ export class IrssiClient {
 		}) as any[];
 
 		// Log structure for debugging
-		log.debug(
+		logger.debug(
 			`[IrssiClient] Init event structure: ${sharedNetworks.length} networks, ` +
 				`channels: ${sharedNetworks
 					.map((n) => `${n.name}(${n.channels.length})`)
@@ -2584,7 +2613,7 @@ export class IrssiClient {
 		);
 
 		// Broadcast to all browsers
-		log.info(
+		logger.info(
 			`[HANDLEINIT] Broadcasting init to ${this.attachedBrowsers.size} browsers with ${sharedNetworks.length} networks`
 		);
 		this.broadcastToAllBrowsers("init", {
@@ -2592,7 +2621,9 @@ export class IrssiClient {
 			active: -1,
 		});
 
-		log.info(`[IrssiClient] ⏰ TIMING: Sent init event with ${sharedNetworks.length} networks`);
+		logger.info(
+			`[IrssiClient] ⏰ TIMING: Sent init event with ${sharedNetworks.length} networks`
+		);
 
 		// Send names event for each channel with users
 		// This ensures frontend has nicklist data immediately after init
@@ -2604,7 +2635,7 @@ export class IrssiClient {
 						id: channel.id,
 						users: usersArray,
 					});
-					log.info(
+					logger.info(
 						`[IrssiClient] ⏰ TIMING: Sent names for channel ${channel.id} (${usersArray.length} users) after init`
 					);
 				}
@@ -2616,21 +2647,23 @@ export class IrssiClient {
 			const uuidMap = this.feWebAdapter.getNetworkUuidMap();
 			this.config.networkUuidMap = Object.fromEntries(uuidMap);
 			this.manager.saveUser(this as any); // IrssiClient is compatible with Client interface
-			log.info(`[IrssiClient] Saved ${uuidMap.size} network UUIDs to config for persistence`);
+			logger.info(
+				`[IrssiClient] Saved ${uuidMap.size} network UUIDs to config for persistence`
+			);
 		}
 
 		// Start WeeChat Relay server (if enabled and not already running)
 		// This allows Lith to connect immediately after erssi sync, without waiting for Vue frontend
 		if (this.config.weechatRelay?.enabled && !this.weechatRelayServer) {
-			log.info(`[IrssiClient] Starting WeeChat Relay after erssi sync...`);
+			logger.info(`[IrssiClient] Starting WeeChat Relay after erssi sync...`);
 			this.startWeeChatRelay().catch((error) => {
-				log.error(
+				logger.error(
 					`Failed to start WeeChat Relay for user ${chalk.bold(this.name)}: ${error}`
 				);
 			});
 		}
 
-		log.info(`[IrssiClient] ⏰ TIMING: handleInit() COMPLETED`);
+		logger.info(`[IrssiClient] ⏰ TIMING: handleInit() COMPLETED`);
 	}
 
 	/**
@@ -2646,14 +2679,14 @@ export class IrssiClient {
 		const requestId = msg.response_to;
 
 		if (!requestId) {
-			log.warn("[IrssiClient] Received command_result without response_to");
+			logger.warn("[IrssiClient] Received command_result without response_to");
 			return;
 		}
 
 		const pending = this.pendingRequests.get(requestId);
 
 		if (!pending) {
-			log.warn(`[IrssiClient] Received command_result for unknown request ${requestId}`);
+			logger.warn(`[IrssiClient] Received command_result for unknown request ${requestId}`);
 			return;
 		}
 
@@ -2674,14 +2707,14 @@ export class IrssiClient {
 		const requestId = msg.response_to;
 
 		if (!requestId) {
-			log.warn("[IrssiClient] Received network_list_response without response_to");
+			logger.warn("[IrssiClient] Received network_list_response without response_to");
 			return;
 		}
 
 		const pending = this.pendingListRequests.get(requestId);
 
 		if (!pending) {
-			log.warn(
+			logger.warn(
 				`[IrssiClient] Received network_list_response for unknown request ${requestId}`
 			);
 			return;
@@ -2701,14 +2734,14 @@ export class IrssiClient {
 		const requestId = msg.response_to;
 
 		if (!requestId) {
-			log.warn("[IrssiClient] Received server_list_response without response_to");
+			logger.warn("[IrssiClient] Received server_list_response without response_to");
 			return;
 		}
 
 		const pending = this.pendingListRequests.get(requestId);
 
 		if (!pending) {
-			log.warn(
+			logger.warn(
 				`[IrssiClient] Received server_list_response for unknown request ${requestId}`
 			);
 			return;
@@ -2777,7 +2810,7 @@ export class IrssiClient {
 	 * List all IRC networks from irssi config
 	 */
 	async listIrssiNetworks(): Promise<IrssiNetwork[]> {
-		log.info(`[IrssiClient] Listing networks for user ${this.name}`);
+		logger.info(`[IrssiClient] Listing networks for user ${this.name}`);
 		const networks = (await this.sendIrssiListRequest("network_list")) as any[];
 		return networks.map((net: any) => snakeToCamel(net) as IrssiNetwork);
 	}
@@ -2786,7 +2819,7 @@ export class IrssiClient {
 	 * List all servers (optionally filtered by network)
 	 */
 	async listIrssiServers(networkName?: string): Promise<IrssiServer[]> {
-		log.info(
+		logger.info(
 			`[IrssiClient] Listing servers for user ${this.name}${
 				networkName ? ` (network: ${networkName})` : ""
 			}`
@@ -2800,7 +2833,7 @@ export class IrssiClient {
 	 * Add IRC network to irssi config
 	 */
 	async addIrssiNetwork(networkData: NetworkFormData): Promise<CommandResult> {
-		log.info(`[IrssiClient] Adding network ${networkData.name} for user ${this.name}`);
+		logger.info(`[IrssiClient] Adding network ${networkData.name} for user ${this.name}`);
 
 		const irssiNetwork = networkFormToIrssi(networkData);
 
@@ -2823,13 +2856,15 @@ export class IrssiClient {
 					successCount++;
 				} else {
 					failCount++;
-					log.warn(
+					logger.warn(
 						`Failed to add server ${server.address}:${server.port}: ${serverResult.message}`
 					);
 				}
 			} catch (error: any) {
 				failCount++;
-				log.error(`Error adding server ${server.address}:${server.port}: ${error.message}`);
+				logger.error(
+					`Error adding server ${server.address}:${server.port}: ${error.message}`
+				);
 			}
 		}
 
@@ -2852,14 +2887,14 @@ export class IrssiClient {
 		}
 
 		this.irssiConnection.executeCommand(command, server);
-		log.info(`[IrssiClient] Executed command: ${command}${server ? ` on ${server}` : ""}`);
+		logger.info(`[IrssiClient] Executed command: ${command}${server ? ` on ${server}` : ""}`);
 	}
 
 	/**
 	 * Remove IRC network from irssi config
 	 */
 	async removeIrssiNetwork(name: string): Promise<CommandResult> {
-		log.info(`[IrssiClient] Removing network ${name} for user ${this.name}`);
+		logger.info(`[IrssiClient] Removing network ${name} for user ${this.name}`);
 		return await this.sendIrssiRequest("network_remove", {name});
 	}
 
@@ -2867,7 +2902,7 @@ export class IrssiClient {
 	 * Add server to irssi config
 	 */
 	async addIrssiServer(serverData: ServerFormData, chatnet: string): Promise<CommandResult> {
-		log.info(
+		logger.info(
 			`[IrssiClient] Adding server ${serverData.address}:${serverData.port} to network ${chatnet} for user ${this.name}`
 		);
 		const irssiServer = serverFormToIrssi(serverData, chatnet);
@@ -2882,7 +2917,7 @@ export class IrssiClient {
 		port: number,
 		chatnet?: string
 	): Promise<CommandResult> {
-		log.info(
+		logger.info(
 			`[IrssiClient] Removing server ${address}:${port}${
 				chatnet ? ` from network ${chatnet}` : ""
 			} for user ${this.name}`
@@ -2900,19 +2935,19 @@ export class IrssiClient {
 	 * Start WeeChat Relay server for this user
 	 */
 	async startWeeChatRelay(): Promise<void> {
-		log.info(
+		logger.info(
 			`${chalk.cyan("[WeeChat Relay]")} startWeeChatRelay() called for user ${chalk.bold(
 				this.name
 			)}`
 		);
-		log.info(
+		logger.info(
 			`${chalk.cyan("[WeeChat Relay]")} Config:`,
 			JSON.stringify(this.config.weechatRelay)
 		);
 
 		// Validate config
 		if (!this.config.weechatRelay?.enabled) {
-			log.info(
+			logger.info(
 				`${chalk.yellow("[WeeChat Relay]")} Not enabled for user ${chalk.bold(this.name)}`
 			);
 			return;
@@ -2923,7 +2958,7 @@ export class IrssiClient {
 			this.config.weechatRelay.port < 1024 ||
 			this.config.weechatRelay.port > 65535
 		) {
-			log.warn(
+			logger.warn(
 				`${chalk.yellow("[WeeChat Relay]")} Invalid port for user ${chalk.bold(
 					this.name
 				)}: ${this.config.weechatRelay.port}`
@@ -2932,7 +2967,7 @@ export class IrssiClient {
 		}
 
 		if (!this.config.weechatRelay.passwordEncrypted) {
-			log.warn(
+			logger.warn(
 				`${chalk.yellow("[WeeChat Relay]")} No password configured for user ${chalk.bold(
 					this.name
 				)}`
@@ -2941,7 +2976,7 @@ export class IrssiClient {
 		}
 
 		if (this.weechatRelayServer) {
-			log.warn(
+			logger.warn(
 				`${chalk.yellow("[WeeChat Relay]")} Already running for user ${chalk.bold(
 					this.name
 				)}`
@@ -2950,7 +2985,7 @@ export class IrssiClient {
 		}
 
 		// Decrypt WeeChat password
-		log.info(
+		logger.info(
 			`${chalk.cyan("[WeeChat Relay]")} Decrypting password for user ${chalk.bold(this.name)}`
 		);
 		const {decryptIrssiPassword} = await import("./irssiConfigHelper.js");
@@ -2976,14 +3011,14 @@ export class IrssiClient {
 
 			if (useSelfSigned) {
 				// OPTION 1: Self-signed (auto-generate)
-				log.info(`${chalk.cyan("[WeeChat Relay]")} Using self-signed certificate...`);
+				logger.info(`${chalk.cyan("[WeeChat Relay]")} Using self-signed certificate...`);
 				const {generateSelfSignedCert} = await import("./weechatRelay/sslCertGenerator.js");
 				const certInfo = await generateSelfSignedCert(this.name, certsDir);
 				certPath = certInfo.certPath;
 				keyPath = certInfo.keyPath;
 			} else {
 				// OPTION 2: Custom cert
-				log.info(`${chalk.cyan("[WeeChat Relay]")} Using custom certificate...`);
+				logger.info(`${chalk.cyan("[WeeChat Relay]")} Using custom certificate...`);
 
 				// Check if cert files already exist (e.g., Let's Encrypt)
 				const certExists = fs.existsSync(certPath);
@@ -2991,23 +3026,23 @@ export class IrssiClient {
 
 				if (certExists && keyExists) {
 					// Files exist - use them!
-					log.info(
+					logger.info(
 						`${chalk.green("[WeeChat Relay]")} ✅ Using existing certificate files`
 					);
-					log.info(`${chalk.green("[WeeChat Relay]")}    Cert: ${certPath}`);
-					log.info(`${chalk.green("[WeeChat Relay]")}    Key:  ${keyPath}`);
+					logger.info(`${chalk.green("[WeeChat Relay]")}    Cert: ${certPath}`);
+					logger.info(`${chalk.green("[WeeChat Relay]")}    Key:  ${keyPath}`);
 				} else if (
 					this.config.weechatRelay.customCert &&
 					this.config.weechatRelay.customKey
 				) {
 					// Files don't exist but user provided cert/key in config - save them!
-					log.info(
+					logger.info(
 						`${chalk.cyan("[WeeChat Relay]")} Saving custom certificate from config...`
 					);
 					fs.writeFileSync(certPath, this.config.weechatRelay.customCert);
 					fs.writeFileSync(keyPath, this.config.weechatRelay.customKey);
 					fs.chmodSync(keyPath, 0o600); // Secure permissions
-					log.info(
+					logger.info(
 						`${chalk.green(
 							"[WeeChat Relay]"
 						)} ✅ Custom certificate saved to ${certPath}`
@@ -3029,19 +3064,19 @@ export class IrssiClient {
 		}
 
 		// Import WeeChat Relay components
-		log.info(`${chalk.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
+		logger.info(`${chalk.cyan("[WeeChat Relay]")} Importing WeeChat Relay components...`);
 		const {WeeChatRelayServer} = await import("./weechatRelay/weechatRelayServer.js");
 		const {NodeToWeeChatAdapter} = await import("./weechatRelay/nodeToWeechatAdapter.js");
 		const {WeeChatToNodeAdapter} = await import("./weechatRelay/weechatToNodeAdapter.js");
 
 		// Create shared NodeToWeeChatAdapter (one per user, shared by all clients)
 		if (!this.weechatNodeAdapter) {
-			log.info(`${chalk.cyan("[WeeChat Relay]")} Creating NodeToWeeChatAdapter...`);
+			logger.info(`${chalk.cyan("[WeeChat Relay]")} Creating NodeToWeeChatAdapter...`);
 			this.weechatNodeAdapter = new NodeToWeeChatAdapter(this);
 		}
 
 		// Create server
-		log.info(`${chalk.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer...`);
+		logger.info(`${chalk.cyan("[WeeChat Relay]")} Creating WeeChatRelayServer...`);
 		this.weechatRelayServer = new WeeChatRelayServer({
 			port: this.config.weechatRelay.port,
 			host: "0.0.0.0", // Listen on all interfaces
@@ -3059,21 +3094,21 @@ export class IrssiClient {
 		// Setup lazy emit optimization - start forwarding when first client connects
 		this.weechatRelayServer.on("clients:first", () => {
 			this.shouldForwardToWeechat = true;
-			log.info(
+			logger.info(
 				`${chalk.green("[WeeChat Relay]")} Starting event forwarding for user ${this.name}`
 			);
 		});
 
 		this.weechatRelayServer.on("clients:none", () => {
 			this.shouldForwardToWeechat = false;
-			log.info(
+			logger.info(
 				`${chalk.yellow("[WeeChat Relay]")} Stopping event forwarding for user ${this.name}`
 			);
 		});
 
 		// Setup event handlers
 		this.weechatRelayServer.on("client:authenticated", (clientId: string, username: string) => {
-			log.info(
+			logger.info(
 				`${chalk.green("[WeeChat Relay]")} Client authenticated: ${clientId} for user ${
 					this.name
 				}`
@@ -3083,7 +3118,7 @@ export class IrssiClient {
 			const relayClient = this.weechatRelayServer.getClient(clientId);
 
 			if (!relayClient) {
-				log.error(`Relay client not found: ${clientId}`);
+				logger.error(`Relay client not found: ${clientId}`);
 				return;
 			}
 
@@ -3093,7 +3128,7 @@ export class IrssiClient {
 
 			// Connect line_data events to THIS relayClient
 			const lineDataHandler = async (data: any) => {
-				log.info(
+				logger.info(
 					`${chalk.cyan("[Erssi->WeeChat]")} Sending line_data to ${clientId}: ${
 						data.message
 					}`
@@ -3167,7 +3202,7 @@ export class IrssiClient {
 		});
 
 		this.weechatRelayServer.on("client:close", (clientId: string) => {
-			log.info(`${chalk.yellow("[WeeChat Relay]")} Client closed: ${clientId}`);
+			logger.info(`${chalk.yellow("[WeeChat Relay]")} Client closed: ${clientId}`);
 
 			// Cleanup adapters and handlers
 			const relayClient = this.weechatRelayServer.getClient(clientId);
@@ -3192,10 +3227,10 @@ export class IrssiClient {
 		});
 
 		// Start server
-		log.info(`${chalk.cyan("[WeeChat Relay]")} Starting server...`);
+		logger.info(`${chalk.cyan("[WeeChat Relay]")} Starting server...`);
 		await this.weechatRelayServer.start();
 
-		log.info(
+		logger.info(
 			`${chalk.green("[WeeChat Relay]")} ✅ Started for user ${chalk.bold(
 				this.name
 			)} on port ${this.config.weechatRelay.port}`
@@ -3216,7 +3251,7 @@ export class IrssiClient {
 		this.weechatRelayServer = null;
 		this.weechatRelayPassword = null;
 
-		log.info(`${chalk.yellow("[WeeChat Relay]")} Stopped for user ${chalk.bold(this.name)}`);
+		logger.info(`${chalk.yellow("[WeeChat Relay]")} Stopped for user ${chalk.bold(this.name)}`);
 	}
 }
 
