@@ -488,38 +488,53 @@ export default async function (
 				(await import("./plugins/storage.js")).default.emptyDir();
 			}
 
-			// 3. Close HTTP server (now safe - no new connections)
-			server?.close(() => {
-				if (suicideTimeout !== null) {
-					clearTimeout(suicideTimeout);
-				}
-
-				// Debug: Show what's keeping the process alive
-				log.info("Checking active handles...");
-				const handles = (process as any)._getActiveHandles?.() || [];
-				const requests = (process as any)._getActiveRequests?.() || [];
-
-				log.info(`Active handles: ${handles.length}`);
-				log.info(`Active requests: ${requests.length}`);
-
-				if (handles.length > 0) {
-					log.warn("⚠️  Active handles preventing exit:");
-					handles.forEach((handle: any, idx: number) => {
-						const type = handle.constructor?.name || "Unknown";
-						log.warn(`  [${idx}] ${type}`);
+			// 3. Close HTTP server with timeout (max 2s wait)
+			await Promise.race([
+				new Promise<void>((resolve) => {
+					server?.close(() => {
+						log.info("HTTP server closed");
+						resolve();
 					});
-				}
+				}),
+				new Promise<void>((resolve) => {
+					setTimeout(() => {
+						log.warn("HTTP server close timeout (2s) - forcing shutdown");
+						resolve();
+					}, 2000);
+				}),
+			]);
 
-				if (requests.length > 0) {
-					log.warn("⚠️  Active requests preventing exit:");
-					requests.forEach((req: any, idx: number) => {
-						const type = req.constructor?.name || "Unknown";
-						log.warn(`  [${idx}] ${type}`);
-					});
-				}
+			// 4. Clean exit
+			if (suicideTimeout !== null) {
+				clearTimeout(suicideTimeout);
+			}
 
-				process.exit(0);
-			});
+			log.info("Graceful shutdown complete");
+
+			// Debug: Check what's keeping process alive
+			const handles = (process as any)._getActiveHandles?.() || [];
+			const requests = (process as any)._getActiveRequests?.() || [];
+
+			log.info(`Before exit - Active handles: ${handles.length}, Active requests: ${requests.length}`);
+
+			if (handles.length > 0) {
+				log.warn("⚠️  Handles still active:");
+				handles.forEach((handle: any, idx: number) => {
+					const type = handle.constructor?.name || "Unknown";
+					log.warn(`  [${idx}] ${type}`);
+				});
+			}
+
+			// Force immediate exit
+			log.warn("🔴 Calling process.exit(0)...");
+			process.exit(0);
+			log.error("❌ THIS SHOULD NEVER PRINT - process.exit(0) didn't work!");
+
+			// Backup exit strategy - if process.exit(0) didn't work, kill after 100ms
+			setTimeout(() => {
+				log.error("💀 process.exit(0) failed - using SIGKILL");
+				process.kill(process.pid, "SIGKILL");
+			}, 100);
 		};
 
 		/* eslint-disable @typescript-eslint/no-misused-promises */

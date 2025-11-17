@@ -412,26 +412,64 @@ export class WeeChatRelayServer extends EventEmitter {
 	 * Stop the server
 	 */
 	async stop(): Promise<void> {
-		// Close all clients
+		// Forcefully close all clients (terminate WebSocket, destroy TCP sockets)
 		for (const client of this.clients.values()) {
-			client.close();
+			try {
+				const socket = (client as any).socket;
+
+				if (socket instanceof WebSocket) {
+					// Forceful WebSocket termination (doesn't wait for handshake)
+					socket.terminate();
+				} else {
+					// TCP socket - destroy immediately
+					socket.destroy();
+				}
+			} catch (err) {
+				log.error(
+					`${chalk.red("[WeeChat Relay]")} Error terminating client: ${err}`
+				);
+			}
 		}
 
 		this.clients.clear();
 
-		// Close main server (TCP/TLS or HTTPS for WSS)
+		// Close main server (TCP/TLS or HTTPS for WSS) with timeout
 		if (this.server) {
-			await new Promise<void>((resolve) => {
-				this.server!.close(() => resolve());
-			});
+			await Promise.race([
+				new Promise<void>((resolve) => {
+					this.server!.close(() => resolve());
+				}),
+				new Promise<void>((resolve) =>
+					setTimeout(() => {
+						log.warn(
+							`${chalk.yellow(
+								"[WeeChat Relay]"
+							)} Server close timeout (2s) - forcing shutdown`
+						);
+						resolve();
+					}, 2000)
+				),
+			]);
 			this.server = null;
 		}
 
-		// Close WebSocket server
+		// Close WebSocket server with timeout
 		if (this.wsServer) {
-			await new Promise<void>((resolve) => {
-				this.wsServer!.close(() => resolve());
-			});
+			await Promise.race([
+				new Promise<void>((resolve) => {
+					this.wsServer!.close(() => resolve());
+				}),
+				new Promise<void>((resolve) =>
+					setTimeout(() => {
+						log.warn(
+							`${chalk.yellow(
+								"[WeeChat Relay]"
+							)} WebSocket server close timeout (2s) - forcing shutdown`
+						);
+						resolve();
+					}, 2000)
+				),
+			]);
 			this.wsServer = null;
 		}
 
