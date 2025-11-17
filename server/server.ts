@@ -525,6 +525,16 @@ export default async function (
 				});
 			}
 
+			// Reset TTY to sane state to avoid stuck terminals
+			try {
+				const stdin: any = process.stdin;
+				if (stdin && typeof stdin.setRawMode === "function") {
+					stdin.setRawMode(false);
+				}
+				stdin.pause();
+				stdin.unref?.();
+			} catch {}
+
 			// Force immediate exit
 			log.warn("🔴 Calling process.exit(0)...");
 			process.exit(0);
