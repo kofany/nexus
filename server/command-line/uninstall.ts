@@ -1,4 +1,4 @@
-import log from "../log.js";
+import {log} from "../logger.js";
 import chalk from "chalk";
 import {Command} from "commander";
 import Config from "../config.js";

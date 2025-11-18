@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import sinon from "sinon";
 
-import log from "../../dist/server/log.js";
+import {log} from "../../dist/server/logger.js";
 import Config from "../../dist/server/config.js";
 import TestUtil from "../util.ts";
 

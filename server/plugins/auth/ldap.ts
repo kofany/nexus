@@ -1,7 +1,7 @@
 import {Client} from "ldapts";
 import chalk from "chalk";
 
-import log from "../../log.js";
+import {log} from "../../logger.js";
 import Config from "../../config.js";
 import type {AuthHandler} from "../auth.js";
 

@@ -8,7 +8,7 @@
  * Copy & paste the hooks below into the appropriate locations in the adapter.
  */
 
-import log from "../log.js";
+import logger from "../logger.js";
 import chalk from "chalk";
 import {VariableMutationTracker} from "./variableMutationTracker.js";
 
@@ -77,21 +77,21 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 
 	// Log mutations
 	tracker.on("mutate", (event) => {
-		log.warn(
+		logger.warn(
 			`${chalk.magenta("[MUTATION]")} lineRequestedKeys: "${event.oldValue}" → "${
 				event.newValue
 			}"`
 		);
 
 		if (event.stack) {
-			log.debug(`${chalk.dim("  Stack:")} ${event.stack}`);
+			logger.debug(`${chalk.dim("  Stack:")} ${event.stack}`);
 		}
 
 		// EARLY WARNING: Suspicious field counts
 		const newKeys = event.newValue ? event.newValue.split(",") : [];
 
 		if (event.oldValue && newKeys.length === 0) {
-			log.error(
+			logger.error(
 				`${chalk.red("[BUG RISK]")} lineRequestedKeys was cleared! Old value had ${
 					event.oldValue.split(",").length
 				} fields`
@@ -103,7 +103,7 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 			newKeys.length < 3 &&
 			newKeys.length !== event.oldValue.split(",").length
 		) {
-			log.warn(
+			logger.warn(
 				`${chalk.yellow("[WARNING]")} Suspiciously few fields (${
 					newKeys.length
 				}) in lineRequestedKeys`
@@ -113,11 +113,11 @@ export function setupLineRequestedKeysTracker(): VariableMutationTracker<string>
 
 	// Log validation errors
 	tracker.on("validation-error", (event) => {
-		log.error(
+		logger.error(
 			`${chalk.red("[VALIDATION ERROR]")} Invalid lineRequestedKeys: "${event.newValue}"`
 		);
-		log.error(`${chalk.red("  Error:")} ${event.validationError}`);
-		log.error(`${chalk.red("  This will cause wrong field count in _buffer_line_added!")}`);
+		logger.error(`${chalk.red("  Error:")} ${event.validationError}`);
+		logger.error(`${chalk.red("  This will cause wrong field count in _buffer_line_added!")}`);
 	});
 
 	return tracker;
@@ -141,7 +141,7 @@ export function logHDataRequest(id: string, args: string, currentLineRequestedKe
 	const path = spaceIdx > 0 ? args.substring(0, spaceIdx) : args;
 	const keys = spaceIdx > 0 ? args.substring(spaceIdx + 1) : "";
 
-	log.info(`
+	logger.info(`
 ╔══════════════════════════════════════════════╗
 ║ HData Request [${id}]
 ╠══════════════════════════════════════════════╣
@@ -166,7 +166,7 @@ export function logHDataRequest(id: string, args: string, currentLineRequestedKe
  * ```
  */
 export function logLineKeysUpdate(source: string, newValue: string, oldValue: string): void {
-	log.info(`
+	logger.info(`
 ${chalk.magenta("[SET lineRequestedKeys]")} from ${source}
   Old: "${oldValue}"
   New: "${newValue}"
@@ -219,7 +219,7 @@ export function validateLineAddedState(
 	}
 
 	if (issues.length > 0) {
-		log.error(`
+		logger.error(`
 ${chalk.red("[ASSERTION FAILURE]")} sendLineAdded state is invalid:
 ${issues.map((issue) => `  - ${issue}`).join("\n")}
 lineRequestedKeys: "${lineRequestedKeys}"
@@ -248,7 +248,7 @@ clientUsesHDataHistory: ${clientUsesHDataHistory}
  * }
  *
  * // In error handler:
- * log.error(this.requestTracker.getFormattedHistory());
+ * logger.error(this.requestTracker.getFormattedHistory());
  * ```
  */
 export class RequestHistoryTracker {
@@ -334,10 +334,11 @@ export function logLineAddedState(
 		? lineRequestedKeys.split(",").map((k) => k.trim())
 		: [];
 
-	log.info(`
+	// PRIVACY: Never log message text content, even in debug mode
+	logger.info(`
 ${chalk.cyan("[_buffer_line_added]")}
   buffer: ${buffer.fullName || buffer.pointer}
-  message: "${(message.text || "").substring(0, 50)}"
+  message: [REDACTED - privacy protection]
   lineRequestedKeys: "${lineRequestedKeys}"
   field count: ${requestedKeys.length}
   fields: [${requestedKeys.join(", ")}]
@@ -358,7 +359,7 @@ ${chalk.cyan("[_buffer_line_added]")}
  *         clientUsesHDataHistory: this.clientUsesHDataHistory,
  *         requestHistory: this.requestTracker.getFormattedHistory(),
  *     });
- *     log.error(report);
+ *     logger.error(report);
  * }
  * ```
  */

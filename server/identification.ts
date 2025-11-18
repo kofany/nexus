@@ -3,7 +3,7 @@ import net, {Socket} from "net";
 import chalk from "chalk";
 import Helper from "./helper.js";
 import Config from "./config.js";
-import log from "./log.js";
+import {log} from "./logger.js";
 
 type Connection = {
 	socket: Socket;

@@ -10,7 +10,7 @@
 import WebSocket from "ws";
 import {EventEmitter} from "events";
 import {FeWebEncryption} from "./feWebEncryption.js";
-import log from "../log.js";
+import {log as logger, redactMessage, sanitize} from "../logger.js";
 
 // Message types from CLIENT-SPEC.md
 export interface FeWebMessage {
@@ -181,7 +181,7 @@ export class FeWebSocket extends EventEmitter {
 	async connect(): Promise<void> {
 		// Derive encryption key if encryption is enabled (REQUIRED for fe-web v1.5)
 		if (this.encryption) {
-			log.debug("[FeWebSocket] Deriving encryption key (fe-web v1.5)...");
+			logger.debug("[FeWebSocket] Deriving encryption key (fe-web v1.5)...");
 			await this.encryption.deriveKey();
 		}
 
@@ -197,7 +197,7 @@ export class FeWebSocket extends EventEmitter {
 
 			const encStatus = this.encryption ? "AES-256-GCM" : "plain";
 			const tlsStatus = this.config.useTLS ? "TLS" : "plain";
-			log.debug(
+			logger.debug(
 				`[FeWebSocket] Connecting to ${url} (Layer 1: ${tlsStatus}, Layer 2: ${encStatus})...`
 			);
 
@@ -227,7 +227,7 @@ export class FeWebSocket extends EventEmitter {
 				wsOptions.minVersion = "TLSv1.2";
 				wsOptions.maxVersion = "TLSv1.3";
 
-				log.debug(
+				logger.debug(
 					`[FeWebSocket] SSL/TLS options: rejectUnauthorized=${wsOptions.rejectUnauthorized}, minVersion=TLSv1.2, maxVersion=TLSv1.3`
 				);
 			}
@@ -238,7 +238,7 @@ export class FeWebSocket extends EventEmitter {
 				// options: object (TLS options go here!)
 				this.ws = new WebSocket(url, undefined, wsOptions);
 			} catch (error) {
-				log.error(`[FeWebSocket] Failed to create WebSocket: ${error}`);
+				logger.error(`[FeWebSocket] Failed to create WebSocket: ${error}`);
 				reject(error);
 				return;
 			}
@@ -252,8 +252,10 @@ export class FeWebSocket extends EventEmitter {
 
 			// Register auth handler BEFORE opening connection (use .once() to ensure it runs only once)
 			this.once("auth_ok", (msg: FeWebMessage) => {
-				log.debug("[FeWebSocket] authHandler called (ONCE), msg.type:", msg.type);
-				log.debug("[FeWebSocket] Authenticated - resolving promise");
+				logger.debug(
+					`[FeWebSocket] authHandler called (ONCE), msg.type: ${String(msg.type)}`
+				);
+				logger.debug("[FeWebSocket] Authenticated - resolving promise");
 				this.isAuthenticated = true;
 				clearTimeout(authTimeout);
 
@@ -265,14 +267,14 @@ export class FeWebSocket extends EventEmitter {
 					this.syncServer(this.config.defaultServer);
 				}
 
-				log.debug("[FeWebSocket] Calling resolve()");
+				logger.debug("[FeWebSocket] Calling resolve()");
 				resolve();
-				log.debug("[FeWebSocket] resolve() called");
+				logger.debug("[FeWebSocket] resolve() called");
 			});
 
 			// Connection opened
 			this.ws.on("open", () => {
-				log.debug("[FeWebSocket] WebSocket connected, waiting for auth_ok...");
+				logger.debug("[FeWebSocket] WebSocket connected, waiting for auth_ok...");
 				this._isConnected = true;
 				this.currentReconnectDelay = this.config.reconnectDelay;
 			});
@@ -284,14 +286,16 @@ export class FeWebSocket extends EventEmitter {
 
 			// Connection error
 			this.ws.on("error", (error: Error) => {
-				log.error(`[FeWebSocket] WebSocket error: ${error.message}`);
+				logger.error(`[FeWebSocket] WebSocket error: ${error.message}`);
 				reject(error);
 			});
 
 			// Connection closed
 			this.ws.on("close", (code: number, reason: Buffer) => {
 				const reasonStr = reason.toString();
-				log.debug(`[FeWebSocket] WebSocket closed (code: ${code}, reason: ${reasonStr})`);
+				logger.debug(
+					`[FeWebSocket] WebSocket closed (code: ${code}, reason: ${reasonStr})`
+				);
 				this._isConnected = false;
 				this.isAuthenticated = false;
 				this.stopPing();
@@ -309,7 +313,7 @@ export class FeWebSocket extends EventEmitter {
 					const authError = new Error(
 						"Authentication failed - invalid or missing password"
 					);
-					log.error("[FeWebSocket]", authError.message);
+					logger.error(`[FeWebSocket] ${String(authError.message)}`);
 					reject(authError);
 					return; // Don't attempt reconnection on auth failure
 				}
@@ -327,7 +331,7 @@ export class FeWebSocket extends EventEmitter {
 	 */
 	disconnect(): Promise<void> {
 		return new Promise((resolve) => {
-			log.debug("[FeWebSocket] Disconnecting...");
+			logger.debug("[FeWebSocket] Disconnecting...");
 			this.config.reconnect = false; // Disable auto-reconnect
 
 			if (this.reconnectTimer !== null) {
@@ -355,7 +359,7 @@ export class FeWebSocket extends EventEmitter {
 			const onClose = () => {
 				this._isConnected = false;
 				this.isAuthenticated = false;
-				log.debug("[FeWebSocket] Disconnect complete");
+				logger.debug("[FeWebSocket] Disconnect complete");
 				resolve();
 			};
 
@@ -372,7 +376,7 @@ export class FeWebSocket extends EventEmitter {
 
 				this._isConnected = false;
 				this.isAuthenticated = false;
-				log.warn("[FeWebSocket] Disconnect timeout - forcing resolve");
+				logger.warn("[FeWebSocket] Disconnect timeout - forcing resolve");
 				resolve();
 			}, 1000);
 
@@ -388,7 +392,7 @@ export class FeWebSocket extends EventEmitter {
 	send(message: FeWebMessage): void {
 		// Call async version but don't wait
 		this.sendAsync(message).catch((error) => {
-			log.error("[FeWebSocket] Failed to send message:", error);
+			logger.error(`[FeWebSocket] Failed to send message: ${String(error)}`);
 		});
 	}
 
@@ -397,7 +401,7 @@ export class FeWebSocket extends EventEmitter {
 	 */
 	private async sendAsync(message: FeWebMessage): Promise<void> {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-			log.error("[FeWebSocket] Cannot send message: not connected");
+			logger.error("[FeWebSocket] Cannot send message: not connected");
 			return;
 		}
 
@@ -407,7 +411,8 @@ export class FeWebSocket extends EventEmitter {
 		}
 
 		const json = JSON.stringify(message);
-		log.debug("[FeWebSocket] Sending:", json);
+		const safeMsg = sanitize(message as unknown as Record<string, unknown>);
+		logger.debug({msg: safeMsg}, `[FeWebSocket] Sending message type: ${message.type}`);
 
 		try {
 			if (this.encryption) {
@@ -419,7 +424,7 @@ export class FeWebSocket extends EventEmitter {
 				this.ws.send(json);
 			}
 		} catch (error) {
-			log.error(`[FeWebSocket] Encryption failed: ${error}`);
+			logger.error(`[FeWebSocket] Encryption failed: ${error}`);
 			throw error;
 		}
 	}
@@ -478,7 +483,7 @@ export class FeWebSocket extends EventEmitter {
 			command = "/" + command;
 		}
 
-		log.debug(
+		logger.debug(
 			`[FeWebSocket] Executing command: ${command}`,
 			server ? `on server: ${server}` : ""
 		);
@@ -510,7 +515,7 @@ export class FeWebSocket extends EventEmitter {
 	 * Close query window (CLIENT-SPEC.md: close_query)
 	 */
 	closeQuery(server: string, nick: string): void {
-		log.debug(`[FeWebSocket] Closing query: ${nick} on ${server}`);
+		logger.debug(`[FeWebSocket] Closing query: ${nick} on ${server}`);
 		this.send({
 			type: "close_query",
 			server: server,
@@ -530,7 +535,7 @@ export class FeWebSocket extends EventEmitter {
 	 */
 	private async handleMessage(data: WebSocket.Data): Promise<void> {
 		try {
-			log.debug(
+			logger.debug(
 				`[FeWebSocket] Received message, type: ${
 					Buffer.isBuffer(data) ? "binary" : typeof data
 				}, length: ${Buffer.isBuffer(data) ? data.length : (data as string).length}`
@@ -542,26 +547,32 @@ export class FeWebSocket extends EventEmitter {
 			if (Buffer.isBuffer(data)) {
 				// Binary frame - decrypt
 				if (!this.encryption) {
-					log.error(
+					logger.error(
 						"[FeWebSocket] Received encrypted message but encryption is disabled"
 					);
 					return;
 				}
 
-				log.debug(`[FeWebSocket] Decrypting binary message (${data.length} bytes)...`);
+				logger.debug(`[FeWebSocket] Decrypting binary message (${data.length} bytes)...`);
 				json = await this.encryption.decrypt(data);
-				log.debug(`[FeWebSocket] Decrypted message: ${json}`);
+				// PRIVACY: Never log decrypted message content
+				logger.debug(`[FeWebSocket] Decrypted message received`);
 			} else if (typeof data === "string") {
 				// Text frame - plain JSON
 				json = data;
-				log.debug(`[FeWebSocket] Plain text message: ${json}`);
+				// PRIVACY: Never log plain text message content
+				logger.debug(`[FeWebSocket] Plain text message received`);
 			} else {
-				log.error("[FeWebSocket] Unexpected message type:", typeof data);
+				logger.error(`[FeWebSocket] Unexpected message type: ${String(typeof data)}`);
 				return;
 			}
 
 			const message: FeWebMessage = JSON.parse(json);
-			log.debug(`[FeWebSocket] Received: ${JSON.stringify(message)}`);
+			// PRIVACY: Only log message type, never full content
+			logger.debug(
+				{msg: redactMessage(message)},
+				`[FeWebSocket] Received message type: ${message.type}`
+			);
 
 			// Emit event for EventEmitter listeners (used in connect() Promise)
 			this.emit(message.type, message);
@@ -570,21 +581,25 @@ export class FeWebSocket extends EventEmitter {
 			const handlers = this.messageHandlers.get(message.type as ServerMessageType);
 
 			if (handlers) {
-				log.debug(
+				logger.debug(
 					`[FeWebSocket] Calling ${handlers.length} handler(s) for type: ${message.type}`
 				);
 				handlers.forEach((handler) => {
 					try {
 						handler(message);
 					} catch (error) {
-						log.error(`[FeWebSocket] Error in handler for ${message.type}: ${error}`);
+						logger.error(
+							`[FeWebSocket] Error in handler for ${message.type}: ${error}`
+						);
 					}
 				});
 			} else {
-				log.warn(`[FeWebSocket] No handlers registered for message type: ${message.type}`);
+				logger.warn(
+					`[FeWebSocket] No handlers registered for message type: ${message.type}`
+				);
 			}
 		} catch (error) {
-			log.error(`[FeWebSocket] Failed to parse message: ${error}`);
+			logger.error(`[FeWebSocket] Failed to parse message: ${error}`);
 		}
 	}
 
@@ -619,13 +634,13 @@ export class FeWebSocket extends EventEmitter {
 			return; // Already scheduled
 		}
 
-		log.debug(`[FeWebSocket] Reconnecting in ${this.currentReconnectDelay}ms...`);
+		logger.debug(`[FeWebSocket] Reconnecting in ${this.currentReconnectDelay}ms...`);
 
 		this.reconnectTimer = setTimeout(() => {
 			this.reconnectTimer = null;
 
 			this.connect().catch((error) => {
-				log.error("[FeWebSocket] Reconnection failed:", error);
+				logger.error(`[FeWebSocket] Reconnection failed: ${String(error)}`);
 
 				// Exponential backoff
 				this.currentReconnectDelay = Math.min(
