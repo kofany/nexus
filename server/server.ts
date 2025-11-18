@@ -489,9 +489,26 @@ export default async function (
 			}
 
 			// 3. Close HTTP server (now safe - no new connections)
+			// Force close all active HTTP connections to allow clean shutdown
+			server?.closeAllConnections();
+
+			let forceExitTimeout: NodeJS.Timeout | null = null;
+
 			await Promise.race([
 				new Promise<void>((resolve) => {
-					server?.close(() => {
+					if (!server) {
+						log.warn("HTTP server is null, skipping close");
+						resolve();
+						return;
+					}
+
+					log.info("Initiating HTTP server close...");
+					server.close(() => {
+						// Cancel force exit timeout - server closed successfully
+						if (forceExitTimeout !== null) {
+							clearTimeout(forceExitTimeout);
+						}
+
 						log.info("HTTP server closed");
 
 						if (suicideTimeout !== null) {
@@ -503,20 +520,23 @@ export default async function (
 					});
 				}),
 				new Promise<void>((resolve) => {
-					setTimeout(() => {
+					forceExitTimeout = setTimeout(() => {
 						log.warn("HTTP server close timeout (2s) - forcing exit");
 
 						if (suicideTimeout !== null) {
 							clearTimeout(suicideTimeout);
 						}
 
-				// Flush and close Pino logger to release file handles
-				// Give pino-roll transport 100ms to finish writing and close files
-				logger.flush();
-				setTimeout(() => {
-					process.exit(0);
-				}, 100);
-			});
+						// Flush and close Pino logger to release file handles
+						// Give pino-roll transport 100ms to finish writing and close files
+						logger.flush();
+						setTimeout(() => {
+							process.exit(0);
+						}, 100);
+						resolve();
+					}, 2000);
+				}),
+			]);
 		};
 
 		/* eslint-disable @typescript-eslint/no-misused-promises */
