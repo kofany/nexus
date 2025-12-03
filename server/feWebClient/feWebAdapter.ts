@@ -487,16 +487,17 @@ export class FeWebAdapter {
 
 			// Add all users with their modes
 			nicklist.forEach((userEntry) => {
-				// Convert prefix symbol (@, +, %, !) to mode character (o, v, h, Y)
+				// Convert prefix symbols (@, +, %, !) to mode characters (o, v, h, Y)
 				// using network's PREFIX mapping
-				const modeChar = this.prefixToMode(userEntry.prefix, network);
+				// NOTE: prefix can be multi-char like "@+" for op+voice
+				const modeChars = this.prefixesToModes(userEntry.prefix, network);
 
 				// User constructor expects modes: string[] (mode characters)
 				// and will convert them to symbols using PREFIX.modeToSymbol
 				const user = new User(
 					{
 						nick: userEntry.nick,
-						modes: modeChar ? [modeChar] : [], // Array of mode characters
+						modes: modeChars, // Array of mode characters
 					},
 					network.serverOptions.PREFIX // Prefix for symbol conversion
 				);
@@ -1173,24 +1174,30 @@ export class FeWebAdapter {
 	}
 
 	/**
-	 * Convert IRC prefix symbol to mode character
+	 * Convert IRC prefix symbols to mode characters
 	 * Uses the same mapping as network.serverOptions.PREFIX
 	 *
-	 * @param prefix - Symbol from fe-web nicklist (@, +, %, !, etc.)
+	 * @param prefix - Symbols from fe-web nicklist (e.g., "@", "@+", "@%+")
 	 * @param network - Network to get PREFIX mapping from
-	 * @returns Mode character (o, v, h, Y, etc.) or empty string
+	 * @returns Array of mode characters (e.g., ["o"], ["o", "v"], ["o", "h", "v"])
 	 */
-	private prefixToMode(prefix: string, network: NetworkData): string {
-		if (!prefix) return "";
+	private prefixesToModes(prefix: string, network: NetworkData): string[] {
+		if (!prefix) return [];
 
-		// Find mode character for this symbol in PREFIX mapping
-		for (const p of network.serverOptions.PREFIX.prefix) {
-			if (p.symbol === prefix) {
-				return p.mode;
+		const modes: string[] = [];
+
+		// Iterate through each character in the prefix string
+		for (const symbol of prefix) {
+			// Find mode character for this symbol in PREFIX mapping
+			for (const p of network.serverOptions.PREFIX.prefix) {
+				if (p.symbol === symbol) {
+					modes.push(p.mode);
+					break;
+				}
 			}
 		}
 
-		return "";
+		return modes;
 	}
 
 	/**
