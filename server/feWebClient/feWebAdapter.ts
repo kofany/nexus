@@ -1041,7 +1041,8 @@ export class FeWebAdapter {
 				serverOptions: {
 					CHANTYPES: ["#", "&", "!"], // Standard IRC channel types
 					PREFIX: new Prefix([
-						{symbol: "!", mode: "Y"}, // Owner (rare)
+						{symbol: "~", mode: "q"}, // Owner
+						{symbol: "&", mode: "a"}, // Admin/protected
 						{symbol: "@", mode: "o"}, // Op
 						{symbol: "%", mode: "h"}, // Halfop
 						{symbol: "+", mode: "v"}, // Voice
