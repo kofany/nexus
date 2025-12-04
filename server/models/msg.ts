@@ -81,7 +81,6 @@ class Msg {
 			case MessageType.MONOSPACE_BLOCK:
 			case MessageType.ERROR:
 			case MessageType.TOPIC_SET_BY:
-			case MessageType.MODE_CHANNEL:
 			case MessageType.MODE_USER:
 			case MessageType.RAW:
 			case MessageType.WHOIS:

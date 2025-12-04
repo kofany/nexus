@@ -653,47 +653,48 @@ export class IrssiClient {
 
 	/**
 	 * Handle NAMES request from browser (refresh nicklist)
+	 * Returns cached nicklist from channel.users - no need to query fe-web/IRC
+	 * since erssi/irssi maintains up-to-date nicklist via JOIN/PART/QUIT/NICK/MODE signals
 	 */
-	async handleNamesRequest(socketId: string, data: {target: number}): Promise<void> {
-		if (!this.irssiConnection) {
-			logger.error(
-				`User ${chalk.bold(this.name)}: cannot request names, not connected to irssi`
+	handleNamesRequest(socketId: string, data: {target: number}): void {
+		const session = this.attachedBrowsers.get(socketId);
+
+		if (!session) {
+			logger.warn(
+				`User ${chalk.bold(this.name)}: browser ${socketId} not found for NAMES request`
 			);
 			return;
 		}
 
 		// Find channel in ALL networks
 		let channel: Chan | undefined;
-		let network: NetworkData | undefined;
 
 		for (const net of this.networks) {
 			channel = net.channels.find((c) => c.id === data.target);
 
 			if (channel) {
-				network = net;
 				break;
 			}
 		}
 
-		if (!channel || !network) {
+		if (!channel) {
 			logger.warn(
 				`User ${chalk.bold(this.name)}: channel ${data.target} not found for NAMES request`
 			);
 			return;
 		}
 
-		// Execute /NAMES command in irssi to refresh internal state
-		const command = `names ${channel.name}`;
-		await this.irssiConnection.executeCommand(command, network.serverTag);
+		// Return cached nicklist - erssi/irssi maintains up-to-date nicklist
+		// No need to execute /NAMES command and waste IRC traffic
+		const usersArray = Array.from(channel.users.values());
+		session.socket.emit("names", {
+			id: channel.id,
+			users: usersArray,
+		});
 
-		logger.info(
-			`User ${chalk.bold(this.name)}: requested NAMES for ${channel.name} on ${
-				network.serverTag
-			}`
+		logger.debug(
+			`User ${chalk.bold(this.name)}: returned cached NAMES for channel ${channel.id} (${usersArray.length} users)`
 		);
-
-		// fe-web will send nicklist message after executing NAMES
-		// We don't need to do anything else here - the nicklist handler will take care of it
 	}
 
 	/**

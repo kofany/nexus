@@ -638,6 +638,10 @@ export class FeWebAdapter {
 			case "-v":
 			case "+h":
 			case "-h":
+			case "+q": // owner (~)
+			case "-q":
+			case "+a": // admin (&)
+			case "-a":
 				this.applyNicklistModeChange(channel, network, msg, task, nick);
 				break;
 
